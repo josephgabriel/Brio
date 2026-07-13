@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Ambiente
+.env
+
+# Editor
+.vscode/
+.idea/
+
+# Alembic (versionamos o script, não caches)
+alembic/__pycache__/
