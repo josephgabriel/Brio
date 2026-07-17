@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.infrastructure.config import settings
+from app.interface.api.v1.routers import auth, provas
 
 app = FastAPI(
-    title = "Brio API",
+    title="Brio API",
     version="0.1.0",
-    description="API da plataforma da BRIO.",
+    description="API da plataforma Brio de organização de estudos.",
 )
 
 app.add_middleware(
@@ -16,11 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
-def health_check() -> dict[str,str]:
-    return {"status": "ok", "environment": settings.environment}
+app.include_router(auth.router)
+app.include_router(provas.router)
 
-"""
+
+@app.get("/health")
+def health_check() -> dict[str, str]:
+    """
     Endpoint de verificação de saúde da API.
 
     Serve para dois propósitos:
@@ -30,3 +34,4 @@ def health_check() -> dict[str,str]:
        para saber se a aplicação está saudável e reiniciá-la caso
        contrário.
     """
+    return {"status": "ok", "environment": settings.environment}

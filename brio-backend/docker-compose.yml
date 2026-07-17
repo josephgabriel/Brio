@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: brio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: brio
+      POSTGRES_PASSWORD: brio
+      POSTGRES_DB: brio
+    ports:
+      - "5432:5432"
+    volumes:
+      - brio_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  brio_postgres_data:

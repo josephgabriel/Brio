@@ -7,3 +7,6 @@ gravados no banco (tabelas, colunas, foreign keys). A Entidade
 descreve a regra de negócio. Vamos ter uma pequena camada de
 conversão entre os dois dentro dos repositórios.
 """
+
+from app.infrastructure.db.models.prova import ProvaModel  # noqa: F401
+from app.infrastructure.db.models.usuario import UsuarioModel  # noqa: F401
