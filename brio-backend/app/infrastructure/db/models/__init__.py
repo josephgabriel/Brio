@@ -1,12 +1,13 @@
 """
-Modelos SQLAlchemy (mapeamento objeto-relacional para o Postgres).
+Importar cada modelo aqui garante que ele seja registrado em
+Base.metadata assim que este pacote for importado -- é isso que o
+Alembic usa para detectar tabelas automaticamente (autogenerate).
 
-Cuidado: um Model SQLAlchemy NÃO é a mesma coisa que uma Entidade de
-domínio (app/domain/entities/). O Model descreve como os dados são
-gravados no banco (tabelas, colunas, foreign keys). A Entidade
-descreve a regra de negócio. Vamos ter uma pequena camada de
-conversão entre os dois dentro dos repositórios.
+Se você criar um novo modelo e esquecer de importá-lo aqui, o
+Alembic simplesmente não vai "enxergar" a tabela nova.
 """
 
 from app.infrastructure.db.models.prova import ProvaModel  # noqa: F401
+from app.infrastructure.db.models.revisao import RevisaoModel  # noqa: F401
+from app.infrastructure.db.models.sessao_estudo import SessaoEstudoModel  # noqa: F401
 from app.infrastructure.db.models.usuario import UsuarioModel  # noqa: F401
