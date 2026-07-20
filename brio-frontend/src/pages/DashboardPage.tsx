@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"
 
 async function fetchHealth() {
@@ -15,7 +17,7 @@ export function DashboardPage() {
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-neutral-950">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-white dark:bg-neutral-950">
       <div className="text-center">
         <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
           Brio
@@ -28,6 +30,16 @@ export function DashboardPage() {
           </p>
         )}
       </div>
+
+      <Card className="w-72">
+        <CardHeader>
+          <CardTitle>Teste de tokens</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          <Button>Primário (índigo)</Button>
+          <p className="font-mono text-2xl">00:42:17</p>
+        </CardContent>
+      </Card>
     </div>
   )
 }
