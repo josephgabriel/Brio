@@ -30,5 +30,12 @@ class SQLAlchemyProvaRepository(ProvaRepository):
         return prova
     
     def deletar(self, prova: ProvaModel) -> None:
-        self.db.delete(prova)
-        self.db.commit()
+        try:
+            self.db.delete(prova)
+            self.db.commit()
+        except IntegrityError:
+            self.db.rollback()
+            raise ProvaComDadosVinculadosError(
+                "Não é possível excluir uma prova com sessões de estudo ou "
+                "revisões registradas. Arquive-a em vez de excluir."
+            )

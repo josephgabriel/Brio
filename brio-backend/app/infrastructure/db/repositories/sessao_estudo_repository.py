@@ -35,3 +35,7 @@ class SQLAlchemySessaoEstudoRepository(SessaoEstudoRepository):
         self.db.commit()
         self.db.refresh(sessao)
         return sessao
+    
+    def deletar(self, sessao: SessaoEstudoModel) -> None:
+        self.db.delete(sessao)
+        self.db.commit()

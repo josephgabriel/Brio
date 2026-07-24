@@ -16,3 +16,6 @@ class SessaoEstudoRepository(ABC):
 
     @abstractmethod
     def atualizar(self, sessao: SessaoEstudoModel) -> SessaoEstudoModel: ...
+
+    @abstractmethod
+    def deletar(self, sessao: SessaoEstudoModel) -> None: ...

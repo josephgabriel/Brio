@@ -6,9 +6,8 @@ from app.infrastructure.db.models.sessao_estudo import SessaoEstudoModel
 
 
 class SessaoIniciarSchema(BaseModel):
-    prova_id: int
-    disciplina: str = Field(min_length=1, max_length=200)
-    assunto: str = Field(min_length=1, max_length=200)
+    disciplina_id: int
+    topico_id: int
     objetivo: str | None = Field(default=None, max_length=500)
 
 

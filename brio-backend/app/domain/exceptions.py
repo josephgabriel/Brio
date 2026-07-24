@@ -55,3 +55,22 @@ class RevisaoJaConcluidaError(Exception):
     """Lançado ao tentar concluir uma revisão que já foi concluída antes."""
 
     pass
+
+class ProvaComDadosVinculadosError(Exception):
+    """
+    Lançado ao tentar excluir uma prova que já tem sessões de estudo
+    ou revisões vinculadas. Em vez de excluir, o usuário deve arquivar.
+    """
+
+    pass
+
+class DisciplinaNaoEncontradaError(Exception):
+    """Mesma lógica de ProvaNaoEncontradaError, aplicada a disciplinas."""
+
+    pass
+
+
+class TopicoNaoEncontradoError(Exception):
+    """Mesma lógica, aplicada a tópicos."""
+
+    pass

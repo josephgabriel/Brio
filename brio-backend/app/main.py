@@ -2,7 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.infrastructure.config import settings
-from app.interface.api.v1.routers import auth, dashboard, estatisticas, provas, revisoes, sessoes
+from app.interface.api.v1.routers import (
+    auth,
+    dashboard,
+    disciplinas,
+    estatisticas,
+    provas,
+    revisoes,
+    sessoes,
+    topicos,
+)
 
 app = FastAPI(
     title="Brio API",
@@ -24,6 +33,8 @@ app.include_router(sessoes.router)
 app.include_router(revisoes.router)
 app.include_router(dashboard.router)
 app.include_router(estatisticas.router)
+app.include_router(disciplinas.router)
+app.include_router(topicos.router)
 
 
 @app.get("/health")

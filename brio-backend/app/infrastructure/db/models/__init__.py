@@ -11,3 +11,5 @@ from app.infrastructure.db.models.prova import ProvaModel  # noqa: F401
 from app.infrastructure.db.models.revisao import RevisaoModel  # noqa: F401
 from app.infrastructure.db.models.sessao_estudo import SessaoEstudoModel  # noqa: F401
 from app.infrastructure.db.models.usuario import UsuarioModel  # noqa: F401
+from app.infrastructure.db.models.disciplina import DisciplinaModel
+from app.infrastructure.db.models.topico import TopicoModel

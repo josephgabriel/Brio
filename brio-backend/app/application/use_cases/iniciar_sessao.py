@@ -1,6 +1,7 @@
-from app.application.interfaces.prova_repository import ProvaRepository
+from app.application.interfaces.disciplina_repository import DisciplinaRepository
 from app.application.interfaces.sessao_estudo_repository import SessaoEstudoRepository
-from app.application.use_cases.obter_provas import ObterProva
+from app.application.interfaces.topico_repository import TopicoRepository
+from app.domain.exceptions import DisciplinaNaoEncontradaError, TopicoNaoEncontradoError
 from app.infrastructure.db.models.sessao_estudo import SessaoEstudoModel
 
 
@@ -8,31 +9,39 @@ class IniciarSessao:
     def __init__(
         self,
         sessao_repository: SessaoEstudoRepository,
-        prova_repository: ProvaRepository,
+        disciplina_repository: DisciplinaRepository,
+        topico_repository: TopicoRepository,
     ) -> None:
         self.sessao_repository = sessao_repository
-        self.obter_prova = ObterProva(prova_repository)
+        self.disciplina_repository = disciplina_repository
+        self.topico_repository = topico_repository
 
     def executar(
         self,
         usuario_id: int,
-        prova_id: int,
-        disciplina: str,
-        assunto: str,
+        disciplina_id: int,
+        topico_id: int,
         objetivo: str | None = None,
     ) -> SessaoEstudoModel:
-        # Reaproveita o ObterProva -- isso já garante que a prova
-        # existe E pertence a esse usuário, levantando
-        # ProvaNaoEncontradaError caso contrário. Sem essa checagem,
-        # seria possível registrar horas de estudo contra a prova de
-        # outra pessoa.
-        self.obter_prova.executar(prova_id, usuario_id)
+        disciplina = self.disciplina_repository.buscar_por_id(disciplina_id)
+        if disciplina is None or disciplina.usuario_id != usuario_id:
+            raise DisciplinaNaoEncontradaError(f"Disciplina {disciplina_id} não encontrada")
+
+        topico = self.topico_repository.buscar_por_id(topico_id)
+        if (
+            topico is None
+            or topico.usuario_id != usuario_id
+            or topico.disciplina_id != disciplina_id
+        ):
+            raise TopicoNaoEncontradoError(f"Tópico {topico_id} não encontrado")
 
         sessao = SessaoEstudoModel(
             usuario_id=usuario_id,
-            prova_id=prova_id,
-            disciplina=disciplina,
-            assunto=assunto,
+            prova_id=disciplina.prova_id,
+            disciplina_id=disciplina.id,
+            topico_id=topico.id,
+            disciplina=disciplina.nome,
+            assunto=topico.nome,
             objetivo=objetivo,
         )
         return self.sessao_repository.criar(sessao)

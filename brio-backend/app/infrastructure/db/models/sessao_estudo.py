@@ -17,6 +17,13 @@ class SessaoEstudoModel(Base):
         Integer, ForeignKey("provas.id"), nullable=False, index=True
     )
 
+    disciplina_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("disciplinas.id"), nullable=True, index=True
+    )
+    topico_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("topicos.id"), nullable=True, index=True
+    )
+
     disciplina: Mapped[str] = mapped_column(String(200), nullable=False)
     assunto: Mapped[str] = mapped_column(String(200), nullable=False)
     objetivo: Mapped[str | None] = mapped_column(String(500))

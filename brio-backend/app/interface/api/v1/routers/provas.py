@@ -80,7 +80,7 @@ def atualizar(
     return ProvaResponseSchema.from_model(prova)
 
 
-@router.delete("/{prova_id}", status_code=status.HTTP_204_NO_CONTENT)
+router.delete("/{prova_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar(
     prova_id: int,
     usuario: UsuarioModel = Depends(get_current_user),
@@ -93,3 +93,5 @@ def deletar(
         use_case.executar(prova_id=prova_id, usuario_id=usuario.id)
     except ProvaNaoEncontradaError as erro:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
+    except ProvaComDadosVinculadosError as erro:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(erro))
