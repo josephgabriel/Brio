@@ -16,7 +16,7 @@ class ProvaCreateSchema(BaseModel):
     tipo: TipoProva
     instituicao_banca: str | None = Field(default=None, max_length=200)
     cargo: str | None = Field(default=None, max_length=200)
-    data_prova: date
+    data_prova: date | None = None
     data_divulgacao_edital: date | None = None
     horas_disponiveis_dia: float = Field(gt=0, le=24)
     dias_disponiveis_semana: int = Field(ge=1, le=7)
@@ -42,14 +42,14 @@ class ProvaResponseSchema(BaseModel):
     tipo: TipoProva
     instituicao_banca: str | None
     cargo: str | None
-    data_prova: date
+    data_prova: date | None
     data_divulgacao_edital: date | None
     horas_disponiveis_dia: float
     dias_disponiveis_semana: int
     prioridade: PrioridadeProva
     status: StatusProva
     criada_em: datetime
-    dias_restantes: int
+    dias_restantes: int | None
 
     @classmethod
     def from_model(cls, prova: ProvaModel) -> "ProvaResponseSchema":

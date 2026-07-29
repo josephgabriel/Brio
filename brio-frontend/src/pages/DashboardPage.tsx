@@ -7,6 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CardMetrica } from "@/components/shared/CardMetrica"
 import { obterDashboard } from "@/features/dashboard/api/dashboard-api"
 
+function variantePrioridade(
+  prioridade: string,
+): "prioridade_alta" | "prioridade_media" | "prioridade_baixa" {
+  if (prioridade === "alta") return "prioridade_alta"
+  if (prioridade === "media") return "prioridade_media"
+  return "prioridade_baixa"
+}
+
 export function DashboardPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard"],
@@ -72,18 +80,27 @@ export function DashboardPage() {
           {data.provas.map((prova) => (
             <Link key={prova.id} to={`/provas/${prova.id}`}>
               <Card className="transition-colors hover:border-primary">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{prova.nome}</CardTitle>
-                    <Badge variant="secondary">{prova.tipo}</Badge>
+                 <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">{prova.nome}</CardTitle>
+                  <div className="flex gap-1.5">
+                    <Badge variant={variantePrioridade(prova.prioridade)}>
+                      {prova.prioridade}
+                    </Badge>
+                    <Badge variant={prova.status === "ativa" ? "default" : "secondary"}>
+                      {prova.status}
+                    </Badge>
                   </div>
-                </CardHeader>
+                </div>
+              </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    {prova.dias_restantes >= 0
+                  {prova.dias_restantes === null
+                    ? "Data não definida"
+                    : prova.dias_restantes >= 0
                       ? `${prova.dias_restantes} dias restantes`
                       : "Prova já passou"}
-                  </p>
+                </p>
                 </CardContent>
               </Card>
             </Link>

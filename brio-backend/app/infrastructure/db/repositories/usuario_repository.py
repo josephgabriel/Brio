@@ -16,3 +16,8 @@ class SQLAlchemyUsuarioRepository(UsuarioRepository):
         self.db.commit()
         self.db.refresh(usuario)
         return usuario
+    
+    def atualizar(self, usuario: UsuarioModel) -> UsuarioModel:
+        self.db.commit()
+        self.db.refresh(usuario)
+        return usuario

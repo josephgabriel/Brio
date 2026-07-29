@@ -15,12 +15,15 @@ import {
   deletarTopico,
   listarTopicos,
 } from "@/features/topicos/api/topicos-api"
+import type { Topico } from "@/features/topicos/types"
+import { obterProva } from "@/features/provas/api/provas-api"
 
 interface GerenciadorMateriasProps {
   provaId: number
+  onSelecionarTopico?: (topico: Topico) => void
 }
 
-export function GerenciadorMaterias({ provaId }: GerenciadorMateriasProps) {
+export function GerenciadorMaterias({ provaId, onSelecionarTopico }: GerenciadorMateriasProps) {
   const [disciplinaExpandidaId, setDisciplinaExpandidaId] = useState<number | null>(null)
   const [novaDisciplina, setNovaDisciplina] = useState("")
   const queryClient = useQueryClient()
@@ -29,6 +32,13 @@ export function GerenciadorMaterias({ provaId }: GerenciadorMateriasProps) {
     queryKey: ["disciplinas", provaId],
     queryFn: () => listarDisciplinas(provaId),
   })
+
+  const { data: prova } = useQuery({
+    queryKey: ["provas", provaId],
+    queryFn: () => obterProva(provaId),
+  })
+
+  const podeSelecionarTopico = prova?.status === "ativa"
 
   const criarDisciplinaMutation = useMutation({
     mutationFn: () => criarDisciplina(provaId, novaDisciplina),
@@ -46,7 +56,7 @@ export function GerenciadorMaterias({ provaId }: GerenciadorMateriasProps) {
   })
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 p-6">
       <h2 className="text-lg font-semibold">Matérias e Conteúdos</h2>
 
       <div className="flex gap-2">
@@ -81,6 +91,7 @@ export function GerenciadorMaterias({ provaId }: GerenciadorMateriasProps) {
               )
             }
             onExcluir={() => deletarDisciplinaMutation.mutate(disciplina.id)}
+            onSelecionarTopico={podeSelecionarTopico ? onSelecionarTopico : undefined}
           />
         ))}
       </div>
@@ -93,9 +104,16 @@ interface DisciplinaItemProps {
   expandida: boolean
   onToggle: () => void
   onExcluir: () => void
+  onSelecionarTopico?: (topico: Topico) => void
 }
 
-function DisciplinaItem({ disciplina, expandida, onToggle, onExcluir }: DisciplinaItemProps) {
+function DisciplinaItem({
+  disciplina,
+  expandida,
+  onToggle,
+  onExcluir,
+  onSelecionarTopico,
+}: DisciplinaItemProps) {
   const [novoTopico, setNovoTopico] = useState("")
   const queryClient = useQueryClient()
 
@@ -144,27 +162,36 @@ function DisciplinaItem({ disciplina, expandida, onToggle, onExcluir }: Discipli
               {disciplina.nivel_conhecimento}%
             </span>
           </div>
-          <Button type="button" variant="ghost" size="sm" onClick={onExcluir}>
-            <Trash2 className="size-4" />
-          </Button>
+         
         </div>
       </div>
 
       {expandida && (
         <div className="flex flex-col gap-2 border-t border-border p-3">
-          {topicos?.map((topico) => (
-            <div key={topico.id} className="flex items-center justify-between text-sm">
-              <span>{topico.nome}</span>
-              <Button
+          {topicos?.map((topico) =>
+            onSelecionarTopico ? (
+              <button
+                key={topico.id}
                 type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => deletarTopicoMutation.mutate(topico.id)}
+                onClick={() => onSelecionarTopico(topico)}
+                className="flex items-center justify-between rounded-md p-1.5 text-left text-sm hover:bg-accent"
               >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </div>
-          ))}
+                <span>{topico.nome}</span>
+              </button>
+            ) : (
+              <div key={topico.id} className="flex items-center justify-between text-sm">
+                <span>{topico.nome}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => deletarTopicoMutation.mutate(topico.id)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+            ),
+          )}
 
           <div className="flex gap-2">
             <Input

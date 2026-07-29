@@ -74,3 +74,9 @@ class TopicoNaoEncontradoError(Exception):
     """Mesma lógica, aplicada a tópicos."""
 
     pass
+
+class TokenInvalidoError(Exception):
+    pass
+
+class ProvaNaoDisponivelError(Exception):
+    pass

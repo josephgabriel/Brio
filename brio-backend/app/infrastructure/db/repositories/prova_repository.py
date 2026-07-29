@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-
+from sqlalchemy import case
 from app.application.interfaces.prova_repository import ProvaRepository
-from app.infrastructure.db.models.prova import ProvaModel
+from app.infrastructure.db.models.prova import ProvaModel, PrioridadeProva
 
 class SQLAlchemyProvaRepository(ProvaRepository):
     def __init__(self, db: Session) -> None:
@@ -14,10 +14,17 @@ class SQLAlchemyProvaRepository(ProvaRepository):
         return prova
     
     def listar_por_usuario(self, usuario_id: int) -> list[ProvaModel]:
+        ordem_prioridade = case(
+            (ProvaModel.prioridade == PrioridadeProva.ALTA, 0),
+            (ProvaModel.prioridade == PrioridadeProva.MEDIA, 1),
+            (ProvaModel.prioridade == PrioridadeProva.BAIXA, 2),
+            else_=3,
+        )
+
         return (
             self.db.query(ProvaModel)
             .filter(ProvaModel.usuario_id == usuario_id)
-            .order_by(ProvaModel.data_prova.asc())
+            .order_by(ordem_prioridade, ProvaModel.data_prova.asc().nulls_last())
             .all()
         )
     

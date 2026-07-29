@@ -21,16 +21,24 @@ class SQLAlchemyRevisaoRepository(RevisaoRepository):
         return self.db.query(RevisaoModel).filter(RevisaoModel.id == revisao_id).first()
     
     def listar_por_usuario(
-            self,
-            usuario_id: int,
-            prova_id: int | None = None,
-            apenas_pendentes: bool = False,
+        self,
+        usuario_id: int,
+        prova_id: int | None = None,
+        apenas_pendentes: bool = False,
+        data_inicio: date | None = None,
+        data_fim: date | None = None,
     ) -> list[RevisaoModel]:
         query = self.db.query(RevisaoModel).filter(RevisaoModel.usuario_id == usuario_id)
+
         if prova_id is not None:
             query = query.filter(RevisaoModel.prova_id == prova_id)
         if apenas_pendentes:
             query = query.filter(RevisaoModel.concluida_em.is_(None))
+        if data_inicio is not None:
+            query = query.filter(RevisaoModel.data_agendada >= data_inicio)
+        if data_fim is not None:
+            query = query.filter(RevisaoModel.data_agendada <= data_fim)
+
         return query.order_by(RevisaoModel.data_agendada.asc()).all()
     
     def listar_ate_data(self, usuario_id: int, data_limite: date) -> list[RevisaoModel]:

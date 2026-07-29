@@ -20,6 +20,7 @@ import {
   deletarProva,
   obterProva,
   arquivarProva,
+  desarquivarProva,
 } from "@/features/provas/api/provas-api"
 
 import type { ProvaFormData } from "@/features/provas/types"
@@ -73,7 +74,7 @@ export function ProvaFormPage() {
         tipo: provaExistente.tipo,
         instituicao_banca: provaExistente.instituicao_banca ?? "",
         cargo: provaExistente.cargo ?? "",
-        data_prova: provaExistente.data_prova,
+        data_prova: provaExistente.data_prova ?? "",
         data_divulgacao_edital:
           provaExistente.data_divulgacao_edital ?? "",
         horas_disponiveis_dia: provaExistente.horas_disponiveis_dia,
@@ -118,6 +119,14 @@ export function ProvaFormPage() {
         queryKey: ["provas"],
       })
 
+      navigate("/provas")
+    },
+  })
+
+  const desarquivar = useMutation({
+    mutationFn: () => desarquivarProva(provaId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["provas"] })
       navigate("/provas")
     },
   })
@@ -248,28 +257,30 @@ export function ProvaFormPage() {
                 data_prova: e.target.value,
               })
             }
-            required
           />
         </div>
 
         {/* Data do edital */}
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data_divulgacao_edital">
-            Data de divulgação do edital
-          </Label>
+        {form.tipo === "concurso" && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="data_divulgacao_edital">
+              Data de divulgação do edital
+            </Label>
 
-          <Input
-            id="data_divulgacao_edital"
-            type="date"
-            value={form.data_divulgacao_edital}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                data_divulgacao_edital: e.target.value,
-              })
-            }
-          />
-        </div>
+            <Input
+              id="data_divulgacao_edital"
+              type="date"
+              value={form.data_divulgacao_edital}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  data_divulgacao_edital: e.target.value,
+                })
+              }
+            />
+          </div>
+        )}
+
 
         {/* Disponibilidade */}
         <div className="grid grid-cols-2 gap-4">
@@ -400,6 +411,21 @@ export function ProvaFormPage() {
           )}
         </div>
       </form>
+
+      {estaEditando && provaExistente?.status === "arquivada" && (
+        <div className="mt-4 rounded-md border border-border p-3">
+          <p className="mb-2 text-sm text-muted-foreground">Esta prova está arquivada.</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => desarquivar.mutate()}
+            disabled={desarquivar.isPending}
+          >
+            {desarquivar.isPending ? "Restaurando..." : "Desarquivar prova"}
+          </Button>
+        </div>
+      )}
       
     </div>
   )

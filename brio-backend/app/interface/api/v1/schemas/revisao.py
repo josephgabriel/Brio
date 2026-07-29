@@ -9,6 +9,7 @@ class RevisaoResponseSchema(BaseModel):
     id: int
     prova_id: int
     sessao_estudo_id: int
+    topico_id: int | None
     disciplina: str
     assunto: str
     intervalo_numero: int
@@ -29,6 +30,7 @@ class RevisaoResponseSchema(BaseModel):
             id=revisao.id,
             prova_id=revisao.prova_id,
             sessao_estudo_id=revisao.sessao_estudo_id,
+            topico_id=revisao.topico_id,
             disciplina=revisao.disciplina,
             assunto=revisao.assunto,
             intervalo_numero=revisao.intervalo_numero,

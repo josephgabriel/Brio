@@ -22,11 +22,17 @@ export async function finalizarSessao(
     method: "PATCH",
     body: JSON.stringify(dados),
   })
-  if (!response.ok) throw new Error("Não foi possível finalizar a sessão")
-  return response.json()
+  if (!response.ok) {
+    const erro = await response.json().catch(() => null)
+    throw new Error(erro?.detail ?? "Não foi possível finalizar a sessão")
+   }
+   return response.json()
 }
 
 export async function cancelarSessao(id: number): Promise<void> {
   const response = await apiFetch(`/api/v1/sessoes/${id}`, { method: "DELETE" })
-  if (!response.ok) throw new Error("Não foi possível cancelar a sessão")
+  if (!response.ok) {
+    const erro = await response.json().catch(() => null)
+    throw new Error(erro?.detail ?? "Não foi possível cancelar a sessão que já foi finalizada")
+  }
 }

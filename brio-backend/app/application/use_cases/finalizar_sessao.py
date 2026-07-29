@@ -53,6 +53,7 @@ class FinalizarSessao:
                 usuario_id=usuario_id,
                 prova_id=sessao.prova_id,
                 sessao_estudo_id=sessao.id,
+                topico_id = sessao.topico_id,
                 disciplina=sessao.disciplina,
                 assunto=sessao.assunto,
                 intervalo_numero=numero,
@@ -60,6 +61,7 @@ class FinalizarSessao:
             )
             for numero, data in enumerate(datas, start=1)
         ]
+        
         self.revisao_repository.criar_varias(revisoes)
 
         # Novo: atualiza o nível de conhecimento da disciplina

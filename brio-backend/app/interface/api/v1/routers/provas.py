@@ -16,6 +16,7 @@ from app.interface.api.v1.schemas.prova import (
     ProvaResponseSchema,
     ProvaUpdateSchema,
 )
+from app.infrastructure.metricas.registrador_eventos import RegistradorEventos
 
 router = APIRouter(prefix="/api/v1/provas", tags=["provas"])
 
@@ -29,6 +30,8 @@ def criar(
     repository = SQLAlchemyProvaRepository(db)
     use_case = CriarProva(repository)
     prova = use_case.executar(usuario_id=usuario.id, **dados.model_dump())
+    
+    RegistradorEventos(db).registrar("prova_criada", usuario.id)
     return ProvaResponseSchema.from_model(prova)
 
 

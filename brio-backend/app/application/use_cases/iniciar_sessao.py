@@ -1,7 +1,9 @@
 from app.application.interfaces.disciplina_repository import DisciplinaRepository
 from app.application.interfaces.sessao_estudo_repository import SessaoEstudoRepository
 from app.application.interfaces.topico_repository import TopicoRepository
-from app.domain.exceptions import DisciplinaNaoEncontradaError, TopicoNaoEncontradoError
+from app.application.interfaces.prova_repository import ProvaRepository
+from app.domain.exceptions import DisciplinaNaoEncontradaError, TopicoNaoEncontradoError, ProvaNaoDisponivelError
+from app.infrastructure.db.models.prova import StatusProva
 from app.infrastructure.db.models.sessao_estudo import SessaoEstudoModel
 
 
@@ -11,10 +13,12 @@ class IniciarSessao:
         sessao_repository: SessaoEstudoRepository,
         disciplina_repository: DisciplinaRepository,
         topico_repository: TopicoRepository,
+        prova_repository: ProvaRepository,
     ) -> None:
         self.sessao_repository = sessao_repository
         self.disciplina_repository = disciplina_repository
         self.topico_repository = topico_repository
+        self.prova_repository = prova_repository
 
     def executar(
         self,
@@ -35,6 +39,13 @@ class IniciarSessao:
         ):
             raise TopicoNaoEncontradoError(f"Tópico {topico_id} não encontrado")
 
+        prova = self.prova_repository.buscar_por_id(disciplina.prova_id)
+        if prova is None or prova.status != StatusProva.ATIVA:
+            status_atual = prova.status.value if prova else "desconhecido"
+            raise ProvaNaoDisponivelError(
+                f"Não é possível iniciar uma sessão nessa prova (status: {status_atual})"
+            )
+        
         sessao = SessaoEstudoModel(
             usuario_id=usuario_id,
             prova_id=disciplina.prova_id,

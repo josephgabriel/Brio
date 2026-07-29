@@ -31,6 +31,10 @@ from app.interface.api.v1.schemas.sessao_estudo import (
 
 from app.infrastructure.db.repositories.disciplina_repository import SQLAlchemyDisciplinaRepository
 from app.infrastructure.db.repositories.topico_repository import SQLAlchemyTopicoRepository
+from app.infrastructure.metricas.registrador_eventos import RegistradorEventos
+from app.application.interfaces.prova_repository import ProvaRepository
+from app.domain.exceptions import ProvaNaoDisponivelError
+from app.infrastructure.db.repositories.prova_repository import SQLAlchemyProvaRepository
 
 router = APIRouter(prefix="/api/v1/sessoes", tags=["sessoes"])
 
@@ -44,12 +48,21 @@ def iniciar(
     sessao_repository = SQLAlchemySessaoEstudoRepository(db)
     disciplina_repository = SQLAlchemyDisciplinaRepository(db)
     topico_repository = SQLAlchemyTopicoRepository(db)
-    use_case = IniciarSessao(sessao_repository, disciplina_repository, topico_repository)
+    prova_repository = SQLAlchemyProvaRepository(db)
+    use_case = IniciarSessao(
+        sessao_repository, disciplina_repository, topico_repository, prova_repository
+        )
 
     try:
         sessao = use_case.executar(usuario_id=usuario.id, **dados.model_dump())
-    except (ProvaNaoEncontradaError, DisciplinaNaoEncontradaError, TopicoNaoEncontradoError) as erro:
+    except (
+        ProvaNaoEncontradaError, DisciplinaNaoEncontradaError, TopicoNaoEncontradoError
+        ) as erro:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
+    except ProvaNaoDisponivelError as erro:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail= str(erro))
+    
+    RegistradorEventos(db).registrar("sessao_iniciada", usuario.id)
 
     return SessaoResponseSchema.from_model(sessao)
 
@@ -75,6 +88,7 @@ def finalizar(
     except SessaoJaFinalizadaError as erro:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(erro))
 
+    RegistradorEventos(db).registrar("sessao_finalizada", usuario.id)
     return SessaoResponseSchema.from_model(sessao)
 
 

@@ -20,6 +20,10 @@ class RevisaoModel(Base):
         Integer, ForeignKey("sessoes_estudo.id"), nullable=False, index=True
     )
 
+    topico_id: Mapped[int| None] = mapped_column(
+        Integer, ForeignKey("topicos.id"), nullable=True, index=True
+    )
+    
     disciplina: Mapped[str] = mapped_column(String(200), nullable=False)
     assunto: Mapped[str] = mapped_column(String(200), nullable=False)
 

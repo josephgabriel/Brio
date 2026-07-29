@@ -29,3 +29,18 @@ def get_current_user(
         raise credenciais_invalidas
     
     return usuario
+
+def get_usuario_admin(
+    usuario: UsuarioModel = Depends(get_current_user),
+) -> UsuarioModel:
+    """
+    Dependency que exige que o usuário logado seja administrador.
+    Reaproveita get_current_user (autenticação) e adiciona uma
+    checagem de autorização por cima.
+    """
+    if not usuario.eh_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso restrito a administradores",
+        )
+    return usuario

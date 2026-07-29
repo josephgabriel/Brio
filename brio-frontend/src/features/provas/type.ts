@@ -8,14 +8,14 @@ nome: string
 tipo: TipoProva
 instituicao_banca: string | null
 cargo: string | null
-data_prova: string
+data_prova: string | null
 data_divulgacao_edital: string | null
 horas_disponiveis_dia: number
 doas_disponiveis_semana: number
 prioridade: PrioridadeProva
 status: StatusProva
 criada_em: string
-dias_restantes: number
+dias_restantes: number | null
 }
 
 export interface ProvaFormData {
@@ -23,7 +23,7 @@ export interface ProvaFormData {
   tipo: TipoProva
   instituicao_banca: string
   cargo: string
-  data_prova: string
+  data_prova: string | null
   data_divulgacao_edital: string
   horas_disponiveis_dia: number
   dias_disponiveis_semana: number

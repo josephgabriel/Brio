@@ -13,8 +13,12 @@ class ListarRevisoes:
         usuario_id: int,
         prova_id: int | None = None,
         apenas_pendentes: bool = False,
+        data_inicio: date | None = None,
+        data_fim: date | None = None,
     ) -> list[RevisaoModel]:
-        return self.repository.listar_por_usuario(usuario_id, prova_id, apenas_pendentes)
+        return self.repository.listar_por_usuario(
+            usuario_id, prova_id, apenas_pendentes, data_inicio, data_fim
+        )
 
 
 class ListarRevisoesDeHoje:
@@ -22,6 +26,4 @@ class ListarRevisoesDeHoje:
         self.repository = repository
 
     def executar(self, usuario_id: int) -> list[RevisaoModel]:
-        # "De hoje" inclui atrasadas -- revisão que venceu ontem e
-        # não foi feita continua aparecendo até ser concluída.
         return self.repository.listar_ate_data(usuario_id, date.today())

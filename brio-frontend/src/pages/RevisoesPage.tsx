@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Check } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,14 +9,42 @@ import { Card, CardContent } from "@/components/ui/card"
 import { concluirRevisao, listarRevisoes } from "@/features/revisoes/api/revisoes-api"
 import type { StatusRevisao } from "@/features/revisoes/types"
 
-type Filtro = "todas" | "pendente" | "atrasada" | "concluida"
+type FiltroStatus = "ativas" | "pendente" | "atrasada" | "concluida" | "todas"
+type Periodo = "todas" | "hoje" | "7dias" | "30dias"
 
-const FILTROS: { valor: Filtro; label: string }[] = [
-  { valor: "todas", label: "Todas" },
+const FILTROS_STATUS: { valor: FiltroStatus; label: string }[] = [
+  { valor: "ativas", label: "Ativas" },
   { valor: "pendente", label: "Pendentes" },
   { valor: "atrasada", label: "Atrasadas" },
   { valor: "concluida", label: "Concluídas" },
+  { valor: "todas", label: "Todas" },
 ]
+
+const PERIODOS: { valor: Periodo; label: string }[] = [
+  { valor: "todas", label: "Todas as datas" },
+  { valor: "hoje", label: "Hoje" },
+  { valor: "7dias", label: "Próximos 7 dias" },
+  { valor: "30dias", label: "Próximos 30 dias" },
+]
+
+function paraISO(data: Date): string {
+  return data.toISOString().slice(0, 10)
+}
+
+function calcularIntervalo(periodo: Periodo): { dataInicio?: string; dataFim?: string } {
+  if (periodo === "todas") return {}
+
+  const hoje = new Date()
+  if (periodo === "hoje") {
+    const hojeISO = paraISO(hoje)
+    return { dataInicio: hojeISO, dataFim: hojeISO }
+  }
+
+  const dias = periodo === "7dias" ? 6 : 29
+  const fim = new Date(hoje)
+  fim.setDate(fim.getDate() + dias)
+  return { dataInicio: paraISO(hoje), dataFim: paraISO(fim) }
+}
 
 function corDoStatus(status: StatusRevisao) {
   if (status === "concluida") return "bg-status-excelente text-white"
@@ -28,12 +57,14 @@ function formatarData(data: string) {
 }
 
 export function RevisoesPage() {
-  const [filtro, setFiltro] = useState<Filtro>("todas")
+  const navigate = useNavigate()
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>("ativas")
+  const [periodo, setPeriodo] = useState<Periodo>("todas")
   const queryClient = useQueryClient()
 
   const { data: revisoes, isLoading } = useQuery({
-    queryKey: ["revisoes"],
-    queryFn: listarRevisoes,
+    queryKey: ["revisoes", periodo],
+    queryFn: () => listarRevisoes(calcularIntervalo(periodo)),
   })
 
   const concluir = useMutation({
@@ -43,25 +74,46 @@ export function RevisoesPage() {
     },
   })
 
-  const revisoesFiltradas = revisoes?.filter((revisao) =>
-    filtro === "todas" ? true : revisao.status === filtro,
-  )
+  const revisoesFiltradas = revisoes?.filter((revisao) => {
+    if (filtroStatus === "todas") return true
+    if (filtroStatus === "ativas") return revisao.status !== "concluida"
+    return revisao.status === filtroStatus
+  })
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Revisões</h1>
 
-      <div className="flex gap-2">
-        {FILTROS.map(({ valor, label }) => (
-          <Button
-            key={valor}
-            variant={filtro === valor ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFiltro(valor)}
-          >
-            {label}
-          </Button>
-        ))}
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">Prazo</p>
+        <div className="flex flex-wrap gap-2">
+          {PERIODOS.map(({ valor, label }) => (
+            <Button
+              key={valor}
+              variant={periodo === valor ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPeriodo(valor)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">Status</p>
+        <div className="flex flex-wrap gap-2">
+          {FILTROS_STATUS.map(({ valor, label }) => (
+            <Button
+              key={valor}
+              variant={filtroStatus === valor ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFiltroStatus(valor)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {isLoading && <p className="text-muted-foreground">Carregando...</p>}
@@ -72,7 +124,13 @@ export function RevisoesPage() {
 
       <div className="flex flex-col gap-3">
         {revisoesFiltradas?.map((revisao) => (
-          <Card key={revisao.id}>
+          <Card 
+          key={revisao.id}
+          className={revisao.topico_id ? "cursor-pointer transition-colors hover:border-primary" : ""}
+            onClick={() => {
+              if (revisao.topico_id) navigate(`/topicos/${revisao.topico_id}/anotacao`)
+            }}
+            >
             <CardContent className="flex items-center justify-between py-4">
               <div className="flex items-center gap-3">
                 <Badge className={corDoStatus(revisao.status)}>{revisao.status}</Badge>

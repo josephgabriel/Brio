@@ -15,3 +15,6 @@ class UsuarioModel(Base):
     criado_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    email_verificado: Mapped[bool] = mapped_column(default=False, nullable=False)
+    eh_admin: Mapped[bool] = mapped_column(default=False, nullable=False)
+    

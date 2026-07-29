@@ -35,28 +35,13 @@ export function EstatisticasPage() {
     return <p className="text-destructive">Não foi possível carregar as estatísticas.</p>
   }
 
-  const disciplinas = Object.keys(data.horas_por_disciplina)
-  const horasPorDisciplina = Object.values(data.horas_por_disciplina)
-
-  const dadosBarra = {
-    labels: disciplinas,
-    datasets: [
-      {
-        label: "Horas estudadas",
-        data: horasPorDisciplina,
-        backgroundColor: COR_CIANO,
-        borderRadius: 6,
-      },
-    ],
-  }
-
   const dadosLinha = {
     labels: data.evolucao_semanal.map((ponto) => formatarSemana(ponto.semana_inicio)),
     datasets: [
       {
         label: "Horas por semana",
         data: data.evolucao_semanal.map((ponto) => ponto.horas),
-        borderColor: COR_BORDA,
+        borderColor: COR_CIANO,
         backgroundColor: COR_CIANO,
         tension: 0.3,
       },
@@ -65,7 +50,12 @@ export function EstatisticasPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-semibold">Estatísticas</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Estatísticas Gerais</h1>
+        <p className="text-sm text-muted-foreground">
+          Visão geral da sua produtividade. Para números por matéria, acesse a prova específica.
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <CardMetrica label="Total de horas" valor={`${data.total_horas_estudadas}h`} />
@@ -77,20 +67,9 @@ export function EstatisticasPage() {
         <CardMetrica label="Aprendizado médio" valor={`${data.media_aprendizado}%`} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Horas por disciplina</h2>
-          {disciplinas.length === 0 ? (
-            <p className="text-muted-foreground">Sem dados ainda.</p>
-          ) : (
-            <Bar data={dadosBarra} options={OPCOES_COMUNS} />
-          )}
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Evolução semanal</h2>
-          <Line data={dadosLinha} options={OPCOES_COMUNS} />
-        </div>
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-4 text-lg font-semibold">Evolução semanal</h2>
+        <Line data={dadosLinha} options={OPCOES_COMUNS} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

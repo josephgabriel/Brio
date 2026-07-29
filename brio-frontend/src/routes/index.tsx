@@ -11,10 +11,18 @@ import { ProvasPage } from "@/pages/ProvaPage"
 import { RegisterPage } from "@/pages/RegisterPage"
 import { RevisoesPage } from "@/pages/RevisoesPage"
 import { SessaoPage } from "@/pages/SessaoPage"
+import { ProvaEstatisticasPage } from "@/pages/ProvaEstatisticasPage"
+import { TopicoAnotacaoPage } from "@/pages/TopicoAnotacaoPage"
+import { EsqueciSenhaPage } from "@/pages/EsqueciSenhaPage"
+import { RedefinirSenhaPage } from "@/pages/RedefinirSenhaPage"
+import { VerificarEmailPage } from "@/pages/VerificarEmailPage"
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/registro", element: <RegisterPage /> },
+  { path: "/verificar-email", element: <VerificarEmailPage /> },
+  { path: "/esqueci-senha", element: <EsqueciSenhaPage /> },
+  { path: "/redefinir-senha", element: <RedefinirSenhaPage /> },
   {
     element: <ProtectedRoute />,
     children: [
@@ -29,6 +37,8 @@ export const router = createBrowserRouter([
           { path: "/sessoes", element: <SessaoPage /> },
           { path: "/revisoes", element: <RevisoesPage /> },
           { path: "/estatisticas", element: <EstatisticasPage /> },
+          { path: "/provas/:id/estatisticas", element: <ProvaEstatisticasPage /> },
+          { path: "/topicos/:id/anotacao", element: <TopicoAnotacaoPage /> },
         ],
       },
     ],

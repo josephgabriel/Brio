@@ -6,6 +6,7 @@ function paraPayloadApi(dados: ProvaFormData) {
     ...dados,
     instituicao_banca: dados.instituicao_banca || null,
     cargo: dados.cargo || null,
+    data_prova: dados.data_prova || null,
     data_divulgacao_edital: dados.data_divulgacao_edital || null,
   }
 }
@@ -54,5 +55,14 @@ export async function arquivarProva(id: number): Promise<Prova> {
     body: JSON.stringify({ status: "arquivada" }),
   })
   if (!response.ok) throw new Error("Não foi possível arquivar a prova")
+  return response.json()
+}
+
+export async function desarquivarProva(id: number): Promise<Prova> {
+  const response = await apiFetch(`/api/v1/provas/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ status: "ativa" }),
+  })
+  if (!response.ok) throw new Error("Não foi possível desarquivar a prova")
   return response.json()
 }

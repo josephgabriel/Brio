@@ -14,12 +14,13 @@ class CriarProva:
 
     def executar(
         self,
+        *,
         usuario_id: int,
         nome: str,
         tipo: TipoProva,
-        data_prova: date,
         horas_disponiveis_dia: float,
         dias_disponiveis_semana: int,
+        data_prova: date | None = None,
         instituicao_banca: str | None = None,
         cargo: str | None = None,
         data_divulgacao_edital: date | None = None,

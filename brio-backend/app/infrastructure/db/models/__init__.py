@@ -13,3 +13,5 @@ from app.infrastructure.db.models.sessao_estudo import SessaoEstudoModel  # noqa
 from app.infrastructure.db.models.usuario import UsuarioModel  # noqa: F401
 from app.infrastructure.db.models.disciplina import DisciplinaModel
 from app.infrastructure.db.models.topico import TopicoModel
+from app.infrastructure.db.models.anotacao import AnotacaoModel
+from app.infrastructure.db.models.evento_metrica import EventoMetricaModel

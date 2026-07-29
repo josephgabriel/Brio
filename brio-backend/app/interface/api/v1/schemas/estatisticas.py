@@ -13,7 +13,6 @@ class PontoEvolucaoSemanalSchema(BaseModel):
 class EstatisticasResponseSchema(BaseModel):
     total_horas_estudadas: float
     total_sessoes: int
-    horas_por_disciplina: dict[str, float]
     evolucao_semanal: list[PontoEvolucaoSemanalSchema]
     taxa_conclusao_revisoes: float
     media_concentracao: float
@@ -27,7 +26,6 @@ class EstatisticasResponseSchema(BaseModel):
         return cls(
             total_horas_estudadas=dados.total_horas_estudadas,
             total_sessoes=dados.total_sessoes,
-            horas_por_disciplina=dados.horas_por_disciplina,
             evolucao_semanal=[
                 PontoEvolucaoSemanalSchema(semana_inicio=p.semana_inicio, horas=p.horas)
                 for p in dados.evolucao_semanal

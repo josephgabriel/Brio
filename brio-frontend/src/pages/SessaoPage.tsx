@@ -1,6 +1,6 @@
-import { type SubmitEvent, useState } from "react"
+import { type SubmitEvent, useEffect, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Pause, Play, RotateCcw, SkipForward } from "lucide-react"
+import { Menu, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,8 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { EditorAnotacao } from "@/components/shared/EditorAnotacao"
 import { GerenciadorMaterias } from "@/components/shared/GerenciadorMaterias"
 import { LiquidTimer } from "@/components/shared/LiquidTimer"
+import { obterAnotacao, salvarAnotacao } from "@/features/anotacoes/api/anotacoes-api"
 import { listarDisciplinas } from "@/features/disciplinas/api/disciplinas-api"
 import { listarProvas } from "@/features/provas/api/provas-api"
 import {
@@ -21,31 +24,11 @@ import {
   finalizarSessao,
   iniciarSessao,
 } from "@/features/sessoes/api/sessoes-api"
+import { useSessaoAtiva } from "@/features/sessoes/sessao-ativa-context"
 import { listarTopicos } from "@/features/topicos/api/topicos-api"
-import { type ConfigPomodoro, usePomodoro } from "@/hooks/usePomodoro"
-
-const CHAVE_SESSAO_ATIVA = "brio_sessao_ativa"
-
-interface SessaoAtiva {
-  id: number
-  provaId: number
-  iniciada_em: string
-  disciplina: string
-  assunto: string
-  configPomodoro: ConfigPomodoro
-}
-
-function lerSessaoAtiva(): SessaoAtiva | null {
-  const salvo = localStorage.getItem(CHAVE_SESSAO_ATIVA)
-  return salvo ? JSON.parse(salvo) : null
-}
-
-const CONFIG_PADRAO: ConfigPomodoro = {
-  focoMinutos: 25,
-  pausaCurtaMinutos: 5,
-  pausaLongaMinutos: 10,
-  ciclosAtePausaLonga: 2,
-}
+import type { Topico } from "@/features/topicos/types"
+import { type ConfigPomodoro } from "@/hooks/usePomodoro"
+import { Link } from "react-router-dom"
 
 const ROTULO_FASE: Record<string, string> = {
   foco: "Foco",
@@ -54,29 +37,36 @@ const ROTULO_FASE: Record<string, string> = {
 }
 
 export function SessaoPage() {
-  const [sessaoAtiva, setSessaoAtiva] = useState<SessaoAtiva | null>(lerSessaoAtiva)
+  const { sessaoAtiva, pomodoro, iniciarSessaoAtiva, encerrarSessaoAtiva } = useSessaoAtiva()
 
   const [provaId, setProvaId] = useState("")
   const [disciplinaId, setDisciplinaId] = useState("")
   const [topicoId, setTopicoId] = useState("")
   const [objetivo, setObjetivo] = useState("")
 
-  const [focoMinutos, setFocoMinutos] = useState(String(CONFIG_PADRAO.focoMinutos))
-  const [pausaCurtaMinutos, setPausaCurtaMinutos] = useState(
-    String(CONFIG_PADRAO.pausaCurtaMinutos),
-  )
-  const [pausaLongaMinutos, setPausaLongaMinutos] = useState(
-    String(CONFIG_PADRAO.pausaLongaMinutos),
-  )
-  const [ciclosAtePausaLonga, setCiclosAtePausaLonga] = useState(
-    String(CONFIG_PADRAO.ciclosAtePausaLonga),
-  )
+  const [focoMinutos, setFocoMinutos] = useState("25")
+  const [pausaCurtaMinutos, setPausaCurtaMinutos] = useState("5")
+  const [pausaLongaMinutos, setPausaLongaMinutos] = useState("10")
+  const [ciclosAtePausaLonga, setCiclosAtePausaLonga] = useState("2")
 
   const [concentracao, setConcentracao] = useState("3")
   const [dificuldade, setDificuldade] = useState("3")
   const [aprendizado, setAprendizado] = useState("70")
 
+  const [menuAberto, setMenuAberto] = useState(false)
+  const [topicoVisualizado, setTopicoVisualizado] = useState<{
+    id: number
+    nome: string
+  } | null>(null)
+
+  // Sempre que a sessão ativa mudar (nova sessão, ou encerrou), volta a
+  // visualização para o tópico da própria sessão.
+  useEffect(() => {
+    setTopicoVisualizado(null)
+  }, [sessaoAtiva?.id])
+
   const { data: provas } = useQuery({ queryKey: ["provas"], queryFn: listarProvas })
+    const provasAtivas = provas?.filter((prova) => prova.status === "ativa")
 
   const { data: disciplinas } = useQuery({
     queryKey: ["disciplinas", provaId],
@@ -90,10 +80,19 @@ export function SessaoPage() {
     enabled: !!disciplinaId,
   })
 
-  const pomodoro = usePomodoro(
-    sessaoAtiva?.configPomodoro ?? CONFIG_PADRAO,
-    sessaoAtiva?.id ?? null,
-  )
+  const topicoAtual = sessaoAtiva
+    ? (topicoVisualizado ?? { id: sessaoAtiva.topicoId, nome: sessaoAtiva.assunto })
+    : null
+
+  const { data: anotacao } = useQuery({
+    queryKey: ["anotacao", topicoAtual?.id],
+    queryFn: () => obterAnotacao(topicoAtual!.id),
+    enabled: !!topicoAtual,
+  })
+
+  const salvarAnotacaoMutation = useMutation({
+    mutationFn: (html: string) => salvarAnotacao(topicoAtual!.id, html),
+  })
 
   const iniciar = useMutation({
     mutationFn: () =>
@@ -109,16 +108,15 @@ export function SessaoPage() {
         pausaLongaMinutos: Number(pausaLongaMinutos),
         ciclosAtePausaLonga: Number(ciclosAtePausaLonga),
       }
-      const nova: SessaoAtiva = {
+      iniciarSessaoAtiva({
         id: sessao.id,
         provaId: Number(provaId),
+        topicoId: Number(topicoId),
         iniciada_em: sessao.iniciada_em,
         disciplina: sessao.disciplina,
         assunto: sessao.assunto,
         configPomodoro,
-      }
-      localStorage.setItem(CHAVE_SESSAO_ATIVA, JSON.stringify(nova))
-      setSessaoAtiva(nova)
+      })
     },
   })
 
@@ -130,28 +128,29 @@ export function SessaoPage() {
         aprendizado_percentual: Number(aprendizado),
       }),
     onSuccess: () => {
-      localStorage.removeItem(CHAVE_SESSAO_ATIVA)
-      if (sessaoAtiva) {
-        localStorage.removeItem(`brio_pomodoro_estado_${sessaoAtiva.id}`)
-      }
-      setSessaoAtiva(null)
+      encerrarSessaoAtiva()
       setProvaId("")
       setDisciplinaId("")
       setTopicoId("")
       setObjetivo("")
     },
+    onError: (erro: Error) => {
+      if (erro.message.includes("já foi finalizada")){
+        encerrarSessaoAtiva()
+      }
+    },
   })
 
   const cancelar = useMutation({
     mutationFn: () => cancelarSessao(sessaoAtiva!.id),
-    onSuccess: () => {
-      localStorage.removeItem(CHAVE_SESSAO_ATIVA)
-      if (sessaoAtiva) {
-        localStorage.removeItem(`brio_pomodoro_estado_${sessaoAtiva.id}`)
+    onSuccess: () => encerrarSessaoAtiva(),
+     onError: (erro: Error) => {
+      if (erro.message.includes("já foi finalizado")) {
+        encerrarSessaoAtiva()
       }
-      setSessaoAtiva(null)
     },
   })
+   
 
   function handleIniciar(evento: SubmitEvent<HTMLFormElement>) {
     evento.preventDefault()
@@ -163,105 +162,146 @@ export function SessaoPage() {
     finalizar.mutate()
   }
 
+  function handleSelecionarTopico(topico: Topico) {
+    setTopicoVisualizado({ id: topico.id, nome: topico.nome })
+    setMenuAberto(false)
+  }
+
   if (sessaoAtiva) {
     return (
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div className="order-2 lg:order-1">
-          <GerenciadorMaterias provaId={sessaoAtiva.provaId} />
-        </div>
+      <div className="relative">
+        <Sheet open={menuAberto} onOpenChange={setMenuAberto}>
+          <SheetContent side="left" className="w-80 overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Matérias e Conteúdos</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">
+              <GerenciadorMaterias
+                provaId={sessaoAtiva.provaId}
+                onSelecionarTopico={handleSelecionarTopico}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
 
-        <div className="order-1 flex flex-col items-center gap-6 text-center lg:order-2">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              {sessaoAtiva.disciplina} — {sessaoAtiva.assunto}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="mb-6"
+          onClick={() => setMenuAberto(true)}
+        >
+          <Menu className="size-4" />
+        </Button>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="text-left">
+            <p className="mb-2 text-sm font-medium text-muted-foreground">
+              Anotações — {topicoAtual?.nome}
             </p>
-            <p className="text-xs text-muted-foreground">
-              Ciclo {pomodoro.cicloAtual} de {sessaoAtiva.configPomodoro.ciclosAtePausaLonga}
-            </p>
-          </div>
-
-          <LiquidTimer
-            progresso={pomodoro.progresso}
-            tempoFormatado={pomodoro.tempoFormatado}
-            label={ROTULO_FASE[pomodoro.fase]}
-          />
-
-          <div className="flex flex-wrap justify-center gap-2">
-            {pomodoro.pausado ? (
-              <Button type="button" variant="outline" onClick={pomodoro.retomar}>
-                <Play className="size-4" />
-                Retomar
-              </Button>
-            ) : (
-              <Button type="button" variant="outline" onClick={pomodoro.pausar}>
-                <Pause className="size-4" />
-                Pausar
-              </Button>
+            {anotacao && (
+              <EditorAnotacao
+                conteudoInicial={anotacao.conteudo_html}
+                onSalvar={(html) => salvarAnotacaoMutation.mutate(html)}
+              />
             )}
-            <Button type="button" variant="outline" onClick={pomodoro.pularFase}>
-              <SkipForward className="size-4" />
-              Pular
-            </Button>
-            <Button type="button" variant="outline" onClick={pomodoro.reiniciar}>
-              <RotateCcw className="size-4" />
-              Reiniciar
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => cancelar.mutate()}
-              disabled={cancelar.isPending}
-            >
-              Cancelar sessão
-            </Button>
           </div>
 
-          <form
-            onSubmit={handleFinalizar}
-            className="flex w-full flex-col gap-4 border-t border-border pt-6"
-          >
-            <p className="text-sm text-muted-foreground">Terminou de estudar? Avalie a sessão:</p>
+          <div className="flex flex-col items-center gap-6 text-center">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                {sessaoAtiva.disciplina} — {sessaoAtiva.assunto}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Ciclo {pomodoro.cicloAtual} de {sessaoAtiva.configPomodoro.ciclosAtePausaLonga}
+              </p>
+            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="concentracao">Concentração (1-5)</Label>
-              <Input
-                id="concentracao"
-                type="number"
-                min="1"
-                max="5"
-                value={concentracao}
-                onChange={(e) => setConcentracao(e.target.value)}
-                required
-              />
+            <LiquidTimer
+              progresso={pomodoro.progresso}
+              tempoFormatado={pomodoro.tempoFormatado}
+              label={ROTULO_FASE[pomodoro.fase]}
+            />
+
+            <div className="flex flex-wrap justify-center gap-2">
+              {pomodoro.pausado ? (
+                <Button type="button" variant="outline" onClick={pomodoro.retomar}>
+                  <Play className="size-4" />
+                  Retomar
+                </Button>
+              ) : (
+                <Button type="button" variant="outline" onClick={pomodoro.pausar}>
+                  <Pause className="size-4" />
+                  Pausar
+                </Button>
+              )}
+              <Button type="button" variant="outline" onClick={pomodoro.pularFase}>
+                <SkipForward className="size-4" />
+                Pular
+              </Button>
+              <Button type="button" variant="outline" onClick={pomodoro.reiniciar}>
+                <RotateCcw className="size-4" />
+                Reiniciar
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => cancelar.mutate()}
+                disabled={cancelar.isPending}
+              >
+                Cancelar sessão
+              </Button>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="dificuldade">Dificuldade (1-5)</Label>
-              <Input
-                id="dificuldade"
-                type="number"
-                min="1"
-                max="5"
-                value={dificuldade}
-                onChange={(e) => setDificuldade(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="aprendizado">Aprendizado (0-100%)</Label>
-              <Input
-                id="aprendizado"
-                type="number"
-                min="0"
-                max="100"
-                value={aprendizado}
-                onChange={(e) => setAprendizado(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" disabled={finalizar.isPending}>
-              {finalizar.isPending ? "Finalizando..." : "Finalizar sessão"}
-            </Button>
-          </form>
+
+            <form
+              onSubmit={handleFinalizar}
+              className="flex w-full flex-col gap-4 border-t border-border pt-6"
+            >
+              <p className="text-sm text-muted-foreground">
+                Terminou de estudar? Avalie a sessão:
+              </p>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="concentracao">Concentração (1-5)</Label>
+                <Input
+                  id="concentracao"
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={concentracao}
+                  onChange={(e) => setConcentracao(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="dificuldade">Dificuldade (1-5)</Label>
+                <Input
+                  id="dificuldade"
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={dificuldade}
+                  onChange={(e) => setDificuldade(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="aprendizado">Aprendizado (0-100%)</Label>
+                <Input
+                  id="aprendizado"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={aprendizado}
+                  onChange={(e) => setAprendizado(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={finalizar.isPending}>
+                {finalizar.isPending ? "Finalizando..." : "Finalizar sessão"}
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     )
@@ -283,16 +323,29 @@ export function SessaoPage() {
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione uma prova" />
+              <SelectValue placeholder="Selecione uma prova">
+              {provasAtivas?.find((p) => String(p.id) === provaId)?.nome}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {provas?.map((prova) => (
+              {provasAtivas?.map((prova) => (
                 <SelectItem key={prova.id} value={String(prova.id)}>
                   {prova.nome}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          {provasAtivas !== undefined && provasAtivas.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma prova cadastrada.{" "}
+            <Link to="/provas/nova" className="text-primary hover:underline">
+              Cadastre uma
+            </Link>
+            .
+          </p>
+        )}
+
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -316,6 +369,16 @@ export function SessaoPage() {
               ))}
             </SelectContent>
           </Select>
+          {provaId && disciplinas !== undefined && disciplinas.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma matéria cadastrada.{" "}
+            <Link to={`/provas/${provaId}`} className="text-primary hover:underline">
+              Cadastre uma
+            </Link>
+            .
+          </p>
+        )}
+
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -332,6 +395,15 @@ export function SessaoPage() {
               ))}
             </SelectContent>
           </Select>
+          {disciplinaId && topicos !== undefined && topicos.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Nenhum tópico cadastrado.{" "}
+            <Link to={`/provas/${provaId}`} className="text-primary hover:underline">
+              Cadastre um
+            </Link>
+            .
+          </p>
+        )}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -388,6 +460,10 @@ export function SessaoPage() {
             </div>
           </div>
         </div>
+
+        {iniciar.isError && (
+          <p className="text-sm text-destructive">{iniciar.error.message}</p>
+        )}
 
         <Button type="submit" disabled={!topicoId || iniciar.isPending}>
           {iniciar.isPending ? "Iniciando..." : "Iniciar sessão"}

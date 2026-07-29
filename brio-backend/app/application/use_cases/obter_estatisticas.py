@@ -22,7 +22,6 @@ class PontoEvolucaoSemanal:
 class EstatisticasData:
     total_horas_estudadas: float
     total_sessoes: int
-    horas_por_disciplina: dict[str, float]
     evolucao_semanal: list[PontoEvolucaoSemanal]
     taxa_conclusao_revisoes: float
     media_concentracao: float
@@ -45,14 +44,6 @@ class ObterEstatisticas:
             s for s in sessoes if s.finalizada_em is not None and s.duracao_minutos is not None
         ]
 
-        # Horas por disciplina
-        minutos_por_disciplina: dict[str, list[int]] = defaultdict(list)
-        for sessao in finalizadas:
-            minutos_por_disciplina[sessao.disciplina].append(sessao.duracao_minutos)
-        horas_por_disciplina = {
-            disciplina: calcular_horas_estudadas(minutos)
-            for disciplina, minutos in minutos_por_disciplina.items()
-        }
 
         # Evolução semanal (últimas 8 semanas)
         semanas = gerar_semanas_recentes(quantidade=8)
@@ -92,7 +83,6 @@ class ObterEstatisticas:
                 [s.duracao_minutos for s in finalizadas]
             ),
             total_sessoes=len(finalizadas),
-            horas_por_disciplina=horas_por_disciplina,
             evolucao_semanal=evolucao_semanal,
             taxa_conclusao_revisoes=taxa_conclusao,
             media_concentracao=media_concentracao,

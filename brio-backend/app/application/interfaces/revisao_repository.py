@@ -17,6 +17,8 @@ class RevisaoRepository(ABC):
         usuario_id: int,
         prova_id: int | None = None,
         apenas_pendentes: bool = False,
+        data_inicio: date | None = None,
+        data_fim: date | None = None,
     ) -> list[RevisaoModel]: ...
 
     @abstractmethod

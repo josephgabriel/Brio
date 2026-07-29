@@ -13,6 +13,10 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
+    frontend_url: str = "http://localhost:5173"
+    email_verificacao_expira_horas: int = 24
+    redefinicao_senha_expira_minutos: int = 15
+
 settings = Settings()
 
 """

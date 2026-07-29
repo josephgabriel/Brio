@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from datetime import date
+
 
 from app.application.use_cases.concluir_revisao import ConcluirRevisao
 from app.application.use_cases.listar_revisoes import ListarRevisoes, ListarRevisoesDeHoje
@@ -20,13 +22,19 @@ router = APIRouter(prefix="/api/v1/revisoes", tags=["revisoes"])
 def listar(
     prova_id: int | None = None,
     apenas_pendentes: bool = False,
+    data_inicio: date | None = None,
+    data_fim: date | None = None,
     usuario: UsuarioModel = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyRevisaoRepository(db)
     use_case = ListarRevisoes(repository)
     revisoes = use_case.executar(
-        usuario_id=usuario.id, prova_id=prova_id, apenas_pendentes=apenas_pendentes
+        usuario_id=usuario.id,
+        prova_id=prova_id,
+        apenas_pendentes=apenas_pendentes,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
     )
     return [RevisaoResponseSchema.from_model(revisao) for revisao in revisoes]
 

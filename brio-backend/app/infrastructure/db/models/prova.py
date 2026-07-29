@@ -47,7 +47,7 @@ class ProvaModel(Base):
     tipo: Mapped[TipoProva] = mapped_column(Enum(TipoProva), nullable=False)
     instituicao_banca: Mapped[str | None] = mapped_column(String(200))
     cargo: Mapped[str | None] = mapped_column(String(200))
-    data_prova: Mapped[date] = mapped_column(Date, nullable=False)
+    data_prova: Mapped[date | None] = mapped_column(Date, nullable=True)
     data_divulgacao_edital: Mapped[date | None] = mapped_column(Date)
     horas_disponiveis_dia: Mapped[float] = mapped_column(Float, nullable=False)
     dias_disponiveis_semana: Mapped[int] = mapped_column(Integer, nullable=False)
