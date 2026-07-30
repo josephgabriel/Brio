@@ -1,4 +1,4 @@
-import { Bar, Line } from "react-chartjs-2"
+import { Line } from "react-chartjs-2"
 import { useQuery } from "@tanstack/react-query"
 
 import "@/lib/chart-setup"

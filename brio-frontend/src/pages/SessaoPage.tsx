@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Menu, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, type Variants } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,21 +43,30 @@ const formVariants = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.15 } },
 }
 
-const anotacoesVariants = {
-  hidden: { opacity: 0, x: -25 },
+const anotacoesVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    x: 20,
+  },
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.25, ease: "easeOut" },
+    transition: {
+      duration: 0.3,
+      ease: "easeOut",
+    },
   },
 }
 
-const controlesVariants = {
+const controlesVariants: Variants = {
   hidden: { opacity: 0, y: 15 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.2, ease: "easeOut" },
+    transition: {
+      duration: 0.2,
+      ease: "easeOut",
+    },
   },
 }
 
@@ -264,7 +273,7 @@ export function SessaoPage() {
           <div className="flex flex-col items-center gap-6 text-center">
             <motion.div
               layout
-              transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+              transition={{ duration: 0.3, ease: "easeOut" as const }}
               className="flex flex-col items-center gap-6 text-center w-full"
             >
               <div>

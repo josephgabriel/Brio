@@ -111,7 +111,6 @@ function DisciplinaItem({
   disciplina,
   expandida,
   onToggle,
-  onExcluir,
   onSelecionarTopico,
 }: DisciplinaItemProps) {
   const [novoTopico, setNovoTopico] = useState("")

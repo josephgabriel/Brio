@@ -1,4 +1,4 @@
-import { type SubmitEvent, useState } from "react"
+import { useState, type FormEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import { useForceDarkMode } from "@/hooks/useForceDarkMode"
@@ -34,10 +34,10 @@ export function RegisterPage() {
     onSuccess: () => navigate("/login"),
   })
 
-  function handleSubmit(evento: FormEvent) {
-    evento.preventDefault()
-    mutation.mutate()
-  }
+function handleSubmit(evento: FormEvent<HTMLFormElement>) {
+  evento.preventDefault()
+  mutation.mutate()
+}
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

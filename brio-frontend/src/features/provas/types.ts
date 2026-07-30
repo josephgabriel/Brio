@@ -11,7 +11,7 @@ cargo: string | null
 data_prova: string | null
 data_divulgacao_edital: string | null
 horas_disponiveis_dia: number
-doas_disponiveis_semana: number
+dias_disponiveis_semana: number
 prioridade: PrioridadeProva
 status: StatusProva
 criada_em: string
