@@ -70,13 +70,13 @@
 :root {
 
     --background: #ffffff;
-    --foreground: #111827;
+    --foreground: #000000;
 
     --card: #ffffff;
-    --card-foreground: #111827;
+    --card-foreground: #000000;
 
     --popover: #ffffff;
-    --popover-foreground: #111827;
+    --popover-foreground: #000000;
 
     /* Marca */
 
@@ -119,7 +119,7 @@
     /* Sidebar */
 
     --sidebar: #F8FAF9;
-    --sidebar-foreground: #111827;
+    --sidebar-foreground: #000000;
 
     --sidebar-primary: #10B981;
     --sidebar-primary-foreground: #ffffff;
@@ -133,13 +133,13 @@
 
 .dark {
 
-    --background: #0F172A;
+    --background: #000000;
     --foreground: #F8FAFC;
 
-    --card: #111827;
+    --card: #000000;
     --card-foreground: #F8FAFC;
 
-    --popover: #111827;
+    --popover: #000000;
     --popover-foreground: #F8FAFC;
 
     --primary: #34D399;
@@ -167,7 +167,7 @@
     --chart-4: #A7F3D0;
     --chart-5: #D1FAE5;
 
-    --sidebar: #111827;
+    --sidebar: #000000;
     --sidebar-foreground: #F8FAFC;
 
     --sidebar-primary: #34D399;

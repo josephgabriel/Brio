@@ -4,7 +4,8 @@ import StarterKit from "@tiptap/starter-kit"
 import { TextStyle } from "@tiptap/extension-text-style"
 import Color from "@tiptap/extension-color"
 import Highlight from "@tiptap/extension-highlight"
-import { Ban, Bold, Italic, List, ListOrdered } from "lucide-react"
+import { AlignCenter, AlignLeft, AlignRight, Ban, Bold, Italic, List, ListOrdered } from "lucide-react"
+import TextAlign from "@tiptap/extension-text-align"
 
 import { Button } from "@/components/ui/button"
 import { useDebounce } from "@/hooks/useDebounce"
@@ -29,7 +30,9 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
   }, 2000)
 
   const editor = useEditor({
-    extensions: [StarterKit, TextStyle, Color, Highlight.configure({ multicolor: true })],
+    extensions: [StarterKit, TextStyle, Color, Highlight.configure({ multicolor: true }),
+      TextAlign.configure({ types: ["heading", "paragraph"]})
+    ],
     content: conteudoInicial,
     onUpdate: ({ editor }) => {
       setSalvando(true)
@@ -74,6 +77,31 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
+
+        <Button
+          type="button"
+          variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+        >
+          <AlignLeft className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+        >
+          <AlignCenter className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+        >
+          <AlignRight className="size-4" />
+        </Button>
 
         <Button
           type="button"
