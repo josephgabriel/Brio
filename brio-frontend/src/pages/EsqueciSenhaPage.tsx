@@ -1,4 +1,4 @@
-import { type SubmitEvent, useState } from "react"
+import { type FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,19 +9,23 @@ export function EsqueciSenhaPage() {
   const [email, setEmail] = useState("")
   const [enviado, setEnviado] = useState(false)
 
-  async function handleSubmit(evento: SubmitEvent<HTMLFormElement>) {
+  // Ajustado o tipo do evento para FormEvent do React
+  async function handleSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     await solicitarRedefinicaoSenha(email)
     setEnviado(true)
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    /* Adicionado 'dark', fundo escuro 'bg-background' e texto claro 'text-foreground' */
+    <div className="dark flex min-h-screen items-center justify-center bg-background text-foreground">
       <form
         onSubmit={handleSubmit}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-card p-8"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-card p-8 shadow-lg"
       >
-        <h1 className="text-xl font-semibold">Esqueci minha senha</h1>
+        <h1 className="text-xl font-semibold text-card-foreground">
+          Esqueci minha senha
+        </h1>
 
         {enviado ? (
           <p className="text-sm text-muted-foreground">
@@ -39,7 +43,9 @@ export function EsqueciSenhaPage() {
                 required
               />
             </div>
-            <Button type="submit">Enviar link</Button>
+            <Button type="submit" className="w-full">
+              Enviar link
+            </Button>
           </>
         )}
       </form>
