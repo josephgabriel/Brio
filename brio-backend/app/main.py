@@ -26,7 +26,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://SUBSTITUA-PELA-URL-DA-VERCEL.vercel.app",
+        "https://brio-rho.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
