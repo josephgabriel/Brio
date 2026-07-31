@@ -27,6 +27,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "https://brio-rho.vercel.app",
+        
     ],
     allow_credentials=True,
     allow_methods=["*"],
