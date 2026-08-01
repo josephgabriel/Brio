@@ -1,5 +1,5 @@
 from app.application.interfaces.usuario_repository import UsuarioRepository
-from app.domain.exceptions import CredenciaisInvalidasError
+from app.domain.exceptions import CredenciaisInvalidasError, EmailNaoVerificadoError
 from app.infrastructure.db.models.usuario import UsuarioModel
 from app.infrastructure.security.hashing import verificar_senha
 
@@ -12,5 +12,8 @@ class AutenticarUsuario:
 
         if usuario is None or not verificar_senha(senha, usuario.senha_hash):
             raise CredenciaisInvalidasError("Email ou senha incorretos")
+        
+        if not usuario.email_verificado:
+            raise EmailNaoVerificadoError()
         
         return usuario

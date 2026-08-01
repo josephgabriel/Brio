@@ -55,6 +55,12 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     except CredenciaisInvalidasError as erro:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(erro))
 
+    if not usuario.email_verificado:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Confirme seu email antes de fazer login.",
+        )
+    
     token = criar_access_token(email=usuario.email)
     RegistradorEventos(db).registrar("login", usuario.id)
     return TokenSchema(access_token=token)

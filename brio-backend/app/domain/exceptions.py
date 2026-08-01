@@ -80,3 +80,6 @@ class TokenInvalidoError(Exception):
 
 class ProvaNaoDisponivelError(Exception):
     pass
+
+class EmailNaoVerificadoError(Exception):
+    pass
