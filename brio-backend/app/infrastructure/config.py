@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     email_verificacao_expira_horas: int = 24
     redefinicao_senha_expira_minutos: int = 15
-
+    resend_api_key: str = ""
+    email_remetente: str = "Brio <onboarding@resend.dev>"
 settings = Settings()
 
 """

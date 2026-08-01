@@ -23,7 +23,7 @@ from app.application.use_cases.redefinir_senha import RedefinirSenha
 from app.application.use_cases.solicitar_redefinicao_senha import SolicitarRedefinicaoSenha
 from app.application.use_cases.verificar_email import VerificarEmail
 from app.domain.exceptions import TokenInvalidoError
-from app.infrastructure.email.email_sender import ConsoleEmailSender
+from app.infrastructure.email.email_sender import obter_email_sender
 from app.infrastructure.metricas.registrador_eventos import RegistradorEventos
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -39,7 +39,7 @@ def registrar(dados: UsuarioCreateSchema, db: Session = Depends(get_db)):
     except EmailJaCadastradoError as erro:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(erro))
 
-    EnviarVerificacaoEmail(ConsoleEmailSender()).executar(usuario)
+    EnviarVerificacaoEmail(obter_email_sender()).executar(usuario)
     RegistradorEventos(db).registrar("usuario_registrado", usuario.id)
 
     return usuario
@@ -78,7 +78,7 @@ def verificar_email(dados: VerificarEmailSchema, db: Session = Depends(get_db)):
 @router.post("/esqueci-senha", status_code=status.HTTP_204_NO_CONTENT)
 def esqueci_senha(dados: SolicitarRedefinicaoSchema, db: Session = Depends(get_db)):
     repository = SQLAlchemyUsuarioRepository(db)
-    use_case = SolicitarRedefinicaoSenha(repository, ConsoleEmailSender())
+    use_case = SolicitarRedefinicaoSenha(repository, obter_email_sender())
     use_case.executar(dados.email)
     # Sempre 204, exista ou não o email -- mesma lógica de segurança
     # de não revelar quais emails estão cadastrados.
