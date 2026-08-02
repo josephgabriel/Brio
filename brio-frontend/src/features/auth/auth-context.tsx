@@ -3,14 +3,17 @@ import { getToken, setToken as salvarToken, clearToken } from "@/lib/api-client"
 
 interface AuthContextType {
   isAuthenticated: boolean
+  emailVerificado: boolean
   login: (token: string) => void
   logout: () => void
+  atualizarEmailVerificado: (valor: boolean) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(() => getToken())
+  const [emailVerificado, setEmailVerificado] = useState(true)
 
   function login(novoToken: string) {
     salvarToken(novoToken)
@@ -23,7 +26,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: token !== null, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated: token !== null,
+        emailVerificado,
+        login,
+        logout,
+        atualizarEmailVerificado: setEmailVerificado,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

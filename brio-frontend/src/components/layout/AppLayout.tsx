@@ -12,6 +12,11 @@ import {
   Sun,
   Timer,
 } from "lucide-react"
+import { apiFetch } from "@/lib/api-client"
+
+import { useEffect } from "react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { reenviarVerificacao } from "@/features/auth/auth-api"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/auth-context"
@@ -27,13 +32,30 @@ const links = [
 ]
 
 export function AppLayout() {
-  const { logout } = useAuth()
+  const { logout, emailVerificado, atualizarEmailVerificado } = useAuth()
   const { tema, alternarTema } = useTheme()
   const { sessaoAtiva, pomodoro } = useSessaoAtiva()
   const location = useLocation()
 
   const [sidebarRecolhida, setSidebarRecolhida] = useState(false)
 
+  const { data: usuario } = useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: async () => {
+      const response = await apiFetch("/api/v1/auth/me")
+      if (!response.ok) throw new Error("Não foi possível carregar o usuário")
+      return response.json() as Promise<{ email_verificado: boolean }>
+    },
+  })
+
+  useEffect(() => {
+    if (usuario) atualizarEmailVerificado(usuario.email_verificado)
+  }, [usuario, atualizarEmailVerificado])
+
+  const reenviar = useMutation({
+    mutationFn: reenviarVerificacao,
+  })
+  
   return (
     <div className="flex min-h-screen">
       <aside
@@ -146,6 +168,20 @@ export function AppLayout() {
       </aside>
 
       <main className="min-w-0 flex-1 p-8">
+        {!emailVerificado && (
+          <div className="mb-4 flex items-center justify-between rounded-md border border-status-atencao/40 bg-status-atencao/10 px-4 py-2 text-sm">
+            <span>Confirme seu email para aproveitar todos os recursos.</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => reenviar.mutate()}
+              disabled={reenviar.isPending}
+            >
+              {reenviar.isPending ? "Enviando..." : "Reenviar email"}
+            </Button>
+          </div>
+        )}
+        
         {sessaoAtiva && location.pathname !== "/sessoes" && (
           <Link
             to="/sessoes"

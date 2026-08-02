@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL as string
+import { apiFetch } from "@/lib/api-client"  
 
 export async function verificarEmail(token: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/v1/auth/verificar-email`, {
@@ -27,4 +28,12 @@ export async function redefinirSenha(token: string, novaSenha: string): Promise<
     body: JSON.stringify({ token, nova_senha: novaSenha }),
   })
   if (!response.ok) throw new Error("Link de redefinição inválido ou expirado")
+}
+
+export async function reenviarVerificacao(): Promise<void> {
+  const response = await apiFetch("/api/v1/auth/reenviar-verificacao", { method: "POST" })
+  if (!response.ok) {
+    const erro = await response.json().catch(() => null)
+    throw new Error(erro?.detail ?? "Não foi possível reenviar o email")
+  }
 }

@@ -83,3 +83,6 @@ class ProvaNaoDisponivelError(Exception):
 
 class EmailNaoVerificadoError(Exception):
     pass
+
+class ReenvioMuitoRecenteError(Exception):
+    pass

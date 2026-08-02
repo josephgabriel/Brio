@@ -25,6 +25,7 @@ from app.application.use_cases.verificar_email import VerificarEmail
 from app.domain.exceptions import TokenInvalidoError
 from app.infrastructure.email.email_sender import obter_email_sender
 from app.infrastructure.metricas.registrador_eventos import RegistradorEventos
+from app.domain.exceptions import ReenvioMuitoRecenteError
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -85,7 +86,10 @@ def verificar_email(dados: VerificarEmailSchema, db: Session = Depends(get_db)):
 def esqueci_senha(dados: SolicitarRedefinicaoSchema, db: Session = Depends(get_db)):
     repository = SQLAlchemyUsuarioRepository(db)
     use_case = SolicitarRedefinicaoSenha(repository, obter_email_sender())
-    use_case.executar(dados.email)
+    try:
+        use_case.executar(dados.email)
+    except ReenvioMuitoRecenteError as erro:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(erro))
     # Sempre 204, exista ou não o email -- mesma lógica de segurança
     # de não revelar quais emails estão cadastrados.
 
@@ -99,3 +103,13 @@ def redefinir_senha(dados: RedefinirSenhaSchema, db: Session = Depends(get_db)):
         use_case.executar(dados.token, dados.nova_senha)
     except TokenInvalidoError as erro:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(erro))
+    
+@router.post("/reenviar-verificacao", status_code=status.HTTP_204_NO_CONTENT)
+def reenviar_verificacao(
+    usuario: UsuarioModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        EnviarVerificacaoEmail(obter_email_sender()).executar(usuario)
+    except ReenvioMuitoRecenteError as erro:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(erro))

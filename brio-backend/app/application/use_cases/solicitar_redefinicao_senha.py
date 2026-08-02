@@ -2,7 +2,8 @@ from app.application.interfaces.usuario_repository import UsuarioRepository
 from app.infrastructure.config import settings
 from app.infrastructure.email.email_sender import EmailSender
 from app.infrastructure.security.tokens_acao import criar_token_acao
-
+from app.domain.exceptions import ReenvioMuitoRecenteError
+from app.infrastructure.email.limitador_reenvio import pode_reenviar, registrar_envio
 
 class SolicitarRedefinicaoSenha:
     def __init__(self, repository: UsuarioRepository, email_sender: EmailSender) -> None:
@@ -13,6 +14,10 @@ class SolicitarRedefinicaoSenha:
         usuario = self.repository.buscar_por_email(email)
         if usuario is None:
             return
+        
+        chave = f"redefinicao: {email}"
+        if not pode_reenviar(chave):
+            raise ReenvioMuitoRecenteError("Aguarde um momentos antes de solicitar outro email")
 
         token = criar_token_acao(
             usuario.email,
@@ -31,3 +36,4 @@ class SolicitarRedefinicaoSenha:
                 f"Se você não solicitou isso, ignore este email."
             ),
         )
+        registrar_envio(chave)
