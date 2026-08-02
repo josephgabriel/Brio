@@ -8,7 +8,7 @@ import logo2 from "@/assets/logo2.png"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Check, X } from "lucide-react"
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -27,13 +27,27 @@ async function registrarUsuario(nome: string, email: string, senha: string): Pro
 
 export function RegisterPage() {
   useForceDarkMode()
-  
+
   const [nome, setNome] = useState("")
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
+  const [confirmarSenha, setConfirmarSenha] = useState("")
+
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false)
+  const [erroFormulario, setErroFormulario] = useState<string | null>(null)
 
   const navigate = useNavigate()
+
+  // Regras de validação de senha
+  const temMinimo = senha.length >= 8
+  const temMaiuscula = /[A-Z]/.test(senha)
+  const temMinuscula = /[a-z]/.test(senha)
+  const temNumero = /[0-9]/.test(senha)
+  const temEspecial = /[^A-Za-z0-9]/.test(senha)
+
+  const senhaEhValida = temMinimo && temMaiuscula && temMinuscula && temNumero && temEspecial
+  const senhasCoincidem = senha === confirmarSenha && confirmarSenha.length > 0
 
   const mutation = useMutation({
     mutationFn: () => registrarUsuario(nome, email, senha),
@@ -42,6 +56,18 @@ export function RegisterPage() {
 
   function handleSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
+    setErroFormulario(null)
+
+    if (!senhaEhValida) {
+      setErroFormulario("A senha não atende a todos os requisitos de segurança.")
+      return
+    }
+
+    if (senha !== confirmarSenha) {
+      setErroFormulario("As senhas não coincidem.")
+      return
+    }
+
     mutation.mutate()
   }
 
@@ -71,7 +97,7 @@ export function RegisterPage() {
       </section>
 
       {/* Lado direito (Card de Cadastro) */}
-      <section className="flex w-full items-center justify-center px-8 lg:w-1/2">
+      <section className="flex w-full items-center justify-center px-8 lg:w-1/2 py-10">
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-md rounded-2xl border border-border bg-card p-10 shadow-xl"
@@ -112,15 +138,15 @@ export function RegisterPage() {
             </div>
 
             <div>
-              <Label htmlFor="senha">Senha</Label>
+              <Label htmlFor="senha">Criar senha</Label>
               <div className="relative mt-2">
                 <Input
                   id="senha"
                   type={mostrarSenha ? "text" : "password"}
-                  minLength={8}
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   className="h-11 pr-10"
+                  placeholder="••••••••"
                   required
                 />
 
@@ -137,19 +163,79 @@ export function RegisterPage() {
                   )}
                 </button>
               </div>
+
+              {/* Checklist de Validação da Senha */}
+              <div className="mt-3 space-y-1.5 text-xs">
+                <p className="font-medium text-muted-foreground">A senha deve conter:</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <span className={`flex items-center gap-1.5 ${temMinimo ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
+                    {temMinimo ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                    Pelo menos 8 caracteres
+                  </span>
+                  <span className={`flex items-center gap-1.5 ${temMaiuscula ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
+                    {temMaiuscula ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                    Letra maiúscula
+                  </span>
+                  <span className={`flex items-center gap-1.5 ${temMinuscula ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
+                    {temMinuscula ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                    Letra minúscula
+                  </span>
+                  <span className={`flex items-center gap-1.5 ${temNumero ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
+                    {temNumero ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                    Número
+                  </span>
+                  <span className={`flex items-center gap-1.5 col-span-2 ${temEspecial ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
+                    {temEspecial ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                    Caractere especial (!@#$%^&*)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="confirmarSenha">Confirmar senha</Label>
+              <div className="relative mt-2">
+                <Input
+                  id="confirmarSenha"
+                  type={mostrarConfirmarSenha ? "text" : "password"}
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  className="h-11 pr-10"
+                  placeholder="••••••••"
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setMostrarConfirmarSenha((v) => !v)}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                  aria-label={mostrarConfirmarSenha ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                >
+                  {mostrarConfirmarSenha ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {confirmarSenha.length > 0 && !senhasCoincidem && (
+                <p className="mt-1.5 text-xs text-destructive">
+                  As senhas não coincidem.
+                </p>
+              )}
             </div>
           </div>
 
-          {mutation.isError && (
+          {(erroFormulario || mutation.isError) && (
             <p className="mt-4 text-sm text-destructive">
-              {mutation.error.message}
+              {erroFormulario ?? mutation.error?.message}
             </p>
           )}
 
           <Button
             type="submit"
             className="mt-8 h-11 w-full"
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || !senhaEhValida || !senhasCoincidem}
           >
             {mutation.isPending ? "Criando conta..." : "Criar conta"}
           </Button>
