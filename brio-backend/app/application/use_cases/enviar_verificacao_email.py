@@ -5,24 +5,19 @@ from app.infrastructure.email.limitador_reenvio import pode_reenviar, registrar_
 from app.infrastructure.security.tokens_acao import criar_token_acao
 from app.infrastructure.db.models.usuario import UsuarioModel
 
+
 class EnviarVerificacaoEmail:
     def __init__(self, email_sender: EmailSender) -> None:
         self.email_sender = email_sender
 
     def executar(self, usuario: UsuarioModel, ignorar_cooldown: bool = False) -> None:
-       chave = f"verificação:{usuario.email}"
+        chave = f"verificacao:{usuario.email}"
+        if not ignorar_cooldown and not pode_reenviar(chave):
+            raise ReenvioMuitoRecenteError("Aguarde um momento antes de solicitar outro email")
 
-       if not ignorar_cooldown and not pode_reenviar(chave):
-        raise ReenvioMuitoRecenteError(
-           "Aguarde um momento antes de solicitar outro email"
-        )
-       
         token = criar_token_acao(
-            usuario.email,
-            "verificar_email",
-            settings.email_verificacao_expira_horas * 60,
+            usuario.email, "verificar_email", settings.email_verificacao_expira_horas * 60
         )
-
         link = f"{settings.frontend_url}/verificar-email?token={token}"
 
         self.email_sender.enviar(
@@ -34,5 +29,4 @@ class EnviarVerificacaoEmail:
                 f"Esse link expira em {settings.email_verificacao_expira_horas} horas."
             ),
         )
-
         registrar_envio(chave)

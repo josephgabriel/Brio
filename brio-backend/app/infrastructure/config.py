@@ -3,21 +3,22 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str
     secret_key: str
-    environment: str = "development"
+    environment: str = "production"
 
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-    )
 
     frontend_url: str = "https://brio-rho.vercel.app"
     email_verificacao_expira_horas: int = 24
     redefinicao_senha_expira_minutos: int = 15
     resend_api_key: str = ""
     email_remetente: str = "Brio <onboarding@resend.dev>"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
+
 settings = Settings()
 
 """
