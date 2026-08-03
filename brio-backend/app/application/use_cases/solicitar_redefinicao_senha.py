@@ -36,4 +36,5 @@ class SolicitarRedefinicaoSenha:
                 f"Se você não solicitou isso, ignore este email."
             ),
         )
+        
         registrar_envio(chave)
