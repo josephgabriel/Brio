@@ -1,4 +1,4 @@
-import { type SubmitEvent, useState } from "react"
+import { useState, type FormEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import { useForceDarkMode } from "@/hooks/useForceDarkMode"
@@ -9,10 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/features/auth/auth-context"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, AlertCircle } from "lucide-react"
 
 const API_URL = import.meta.env.VITE_API_URL as string
-
 
 interface TokenResponse {
   access_token: string
@@ -37,10 +36,25 @@ async function fazerLogin(
   })
 
   if (!response.ok) {
-    throw new Error("Email ou senha incorretos")
+    const erro = await response.json().catch(() => null)
+    // Lança a mensagem detalhada do backend ou um fallback genérico
+    throw new Error(erro?.detail ?? "Email ou senha incorretos")
   }
 
   return response.json()
+}
+
+async function reenviarEmailVerificacao(email: string): Promise<void> {
+  const response = await fetch(`${API_URL}/api/v1/auth/resend-verification`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  })
+
+  if (!response.ok) {
+    const erro = await response.json().catch(() => null)
+    throw new Error(erro?.detail ?? "Não foi possível reenviar o e-mail")
+  }
 }
 
 export function LoginPage() {
@@ -49,21 +63,45 @@ export function LoginPage() {
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  
+  // Estado para controlar a exibição do alerta de email não verificado e reenvio
+  const [emailNaoVerificado, setEmailNaoVerificado] = useState(false)
+  const [mensagemSucessoReenvio, setMensagemSucessoReenvio] = useState<string | null>(null)
 
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const mutation = useMutation({
     mutationFn: () => fazerLogin(email, senha),
-
     onSuccess: (dados) => {
       login(dados.access_token)
       navigate("/")
     },
+    onError: (error: Error) => {
+      // Verifica se a mensagem de erro retornada pela API diz respeito à verificação
+      if (
+        error.message.includes("EMAIL_NOT_VERIFIED") ||
+        error.message.toLowerCase().includes("não verificado") ||
+        error.message.toLowerCase().includes("verifique seu email")
+      ) {
+        setEmailNaoVerificado(true)
+      } else {
+        setEmailNaoVerificado(false)
+      }
+    },
   })
 
-  function handleSubmit(evento: SubmitEvent<HTMLFormElement>) {
+  const mutationResend = useMutation({
+    mutationFn: () => reenviarEmailVerificacao(email),
+    onSuccess: () => {
+      setMensagemSucessoReenvio("Novo e-mail de verificação enviado! Confira sua caixa de entrada.")
+    },
+  })
+
+  function handleSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
+    setEmailNaoVerificado(false)
+    setMensagemSucessoReenvio(null)
     mutation.mutate()
   }
 
@@ -75,16 +113,15 @@ export function LoginPage() {
 
         <div className="relative max-w-lg animate-[slideIn_1s_ease] px-12">
           <div className="flex items-center gap-5">
-           <img
-             src={logo3}
-             alt="Brio"
-             className="h-25 w-30"
-           />
-         
-           <h1 className="text-7xl font-black tracking-tight text-primary">
-             Brio
-           </h1>
-         </div>
+            <img
+              src={logo3}
+              alt="Brio"
+              className="h-25 w-30"
+            />
+            <h1 className="text-7xl font-black tracking-tight text-primary">
+              Brio
+            </h1>
+          </div>
 
           <p className="mt-6 text-2xl font-medium">
             Plataforma completa de estudos para Concursos, ENEM e Vestibulares.
@@ -122,20 +159,19 @@ export function LoginPage() {
           <div className="space-y-5">
             <div>
               <Label htmlFor="email">Email</Label>
-
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-2 h-11"
+                placeholder="seu@email.com"
                 required
               />
             </div>
 
             <div>
               <Label htmlFor="senha">Senha</Label>
-
               <div className="relative mt-2">
                 <Input
                   id="senha"
@@ -162,10 +198,47 @@ export function LoginPage() {
             </div>
           </div>
 
-          {mutation.isError && (
-            <p className="mt-4 text-sm text-destructive">
+          {/* Banner de Erro Geral */}
+          {mutation.isError && !emailNaoVerificado && (
+            <p className="mt-4 text-sm text-destructive font-medium">
               {mutation.error.message}
             </p>
+          )}
+
+          {/* Banner Específico: Email não verificado */}
+          {emailNaoVerificado && (
+            <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-500">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-semibold">E-mail não verificado ainda</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Você precisa confirmar seu endereço de e-mail antes de acessar a plataforma.
+                  </p>
+                  
+                  {mensagemSucessoReenvio ? (
+                    <p className="mt-3 text-xs font-medium text-emerald-500">
+                      {mensagemSucessoReenvio}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => mutationResend.mutate()}
+                      disabled={mutationResend.isPending}
+                      className="mt-3 text-xs font-semibold text-primary underline hover:text-primary/80 disabled:opacity-50"
+                    >
+                      {mutationResend.isPending ? "Reenviando..." : "Reenviar e-mail de verificação"}
+                    </button>
+                  )}
+
+                  {mutationResend.isError && (
+                    <p className="mt-1 text-xs text-destructive">
+                      {mutationResend.error.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
 
           <Button
@@ -176,20 +249,22 @@ export function LoginPage() {
             {mutation.isPending ? "Entrando..." : "Entrar"}
           </Button>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Não possui uma conta?{" "}
-            <Link
-              to="/registro"
-              className="font-medium text-primary hover:underline"
-            >
-              Cadastre-se
-            </Link>
-          </p>
-           <p className="text-center text-sm">
-          <Link to="/esqueci-senha" className="text-muted-foreground hover:underline">
-            Esqueci minha senha
-          </Link>
-        </p>
+          <div className="mt-6 space-y-2 text-center text-sm">
+            <p className="text-muted-foreground">
+              Não possui uma conta?{" "}
+              <Link
+                to="/registro"
+                className="font-medium text-primary hover:underline"
+              >
+                Cadastre-se
+              </Link>
+            </p>
+            <p>
+              <Link to="/esqueci-senha" className="text-muted-foreground hover:underline">
+                Esqueci minha senha
+              </Link>
+            </p>
+          </div>
         </form>
       </section>
 

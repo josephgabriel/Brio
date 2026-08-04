@@ -132,7 +132,7 @@ export function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-2 h-11"
-                placeholder="seu@email.com"
+                placeholder="Seu email"
                 required
               />
             </div>
@@ -146,7 +146,6 @@ export function RegisterPage() {
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   className="h-11 pr-10"
-                  placeholder="••••••••"
                   required
                 />
 
@@ -201,7 +200,6 @@ export function RegisterPage() {
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}
                   className="h-11 pr-10"
-                  placeholder="••••••••"
                   required
                 />
 

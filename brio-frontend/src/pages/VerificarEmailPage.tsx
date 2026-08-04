@@ -2,8 +2,10 @@ import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 
 import { verificarEmail } from "@/features/auth/auth-api"
+import { useForceDarkMode } from "@/hooks/useForceDarkMode"
 
 export function VerificarEmailPage() {
+  useForceDarkMode()
   const [searchParams] = useSearchParams()
   const [estado, setEstado] = useState<"carregando" | "sucesso" | "erro">("carregando")
 
