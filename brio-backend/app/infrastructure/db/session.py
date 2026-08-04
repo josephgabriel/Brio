@@ -6,6 +6,9 @@ from app.infrastructure.config import settings
 engine = create_engine(
     settings.database_url,
     echo=(settings.environment == "development"),
+    pool_pre_ping=True,  # Testa a conexão antes de executar queries (descarta conexões mortas)
+    pool_recycle=1800,   # Recicla as conexões a cada 30 minutos
+    pool_timeout=30,     # Tempo limite para obter uma conexão do pool
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
