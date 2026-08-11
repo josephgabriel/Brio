@@ -71,7 +71,7 @@ export function LoginPage() {
   const [senha, setSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
 
-  const [mensagemRegistro, setMensagemRegistro] = useState<string | null>(
+  const [mensagemRegistro] = useState<string | null>(
     stateCadastro?.registradoComSucesso
       ? "Conta criada com sucesso! Verifique a caixa de entrada do seu email para finalizar seu cadastro antes de entrar."
       : null
