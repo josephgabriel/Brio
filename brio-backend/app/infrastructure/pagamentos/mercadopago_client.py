@@ -11,14 +11,6 @@ class MercadoPagoClient:
     """
 
     def __init__(self) -> None:
-        token = settings.mercadopago_access_token
-
-        print("========== MP CONFIG ==========")
-        print("TOKEN EXISTE:", bool(token))
-        print("TOKEN TAMANHO:", len(token))
-        print("TOKEN INÍCIO:", token[:10])
-        print("TOKEN FIM:", token[-6:])
-        print("===============================")
         self._sdk = mercadopago.SDK(settings.mercadopago_access_token)
 
     def criar_preapproval(
@@ -44,12 +36,6 @@ class MercadoPagoClient:
             "status": "pending",
         }
         resposta = self._sdk.preapproval().create(corpo)
-
-        print("========== MERCADO PAGO ==========")
-        print("STATUS:", resposta.get("status"))
-        print("RESPOSTA:", resposta)
-        print("==================================")
-
         return resposta["response"]
 
     def obter_preapproval(self, preapproval_id: str) -> dict:
