@@ -11,6 +11,8 @@ class MercadoPagoClient:
     """
 
     def __init__(self) -> None:
+        token = settings.mercadopago_access_token
+
         print("========== MP CONFIG ==========")
         print("TOKEN EXISTE:", bool(token))
         print("TOKEN TAMANHO:", len(token))
