@@ -36,6 +36,12 @@ class MercadoPagoClient:
             "status": "pending",
         }
         resposta = self._sdk.preapproval().create(corpo)
+
+        print("========== MERCADO PAGO ==========")
+        print("STATUS:", resposta.get("status"))
+        print("RESPOSTA:", resposta)
+        print("==================================")
+
         return resposta["response"]
 
     def obter_preapproval(self, preapproval_id: str) -> dict:
