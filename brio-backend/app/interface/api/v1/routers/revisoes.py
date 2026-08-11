@@ -12,7 +12,7 @@ from app.infrastructure.db.repositories.revisao_repository import (
     SQLAlchemyRevisaoRepository,
 )
 from app.infrastructure.db.session import get_db
-from app.interface.api.v1.dependencies import get_current_user
+from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.revisao import RevisaoResponseSchema
 
 router = APIRouter(prefix="/api/v1/revisoes", tags=["revisoes"])
@@ -24,7 +24,7 @@ def listar(
     apenas_pendentes: bool = False,
     data_inicio: date | None = None,
     data_fim: date | None = None,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyRevisaoRepository(db)
@@ -41,7 +41,7 @@ def listar(
 
 @router.get("/hoje", response_model=list[RevisaoResponseSchema])
 def listar_de_hoje(
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyRevisaoRepository(db)
@@ -53,7 +53,7 @@ def listar_de_hoje(
 @router.get("/{revisao_id}", response_model=RevisaoResponseSchema)
 def obter(
     revisao_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyRevisaoRepository(db)
@@ -70,7 +70,7 @@ def obter(
 @router.patch("/{revisao_id}/concluir", response_model=RevisaoResponseSchema)
 def concluir(
     revisao_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyRevisaoRepository(db)

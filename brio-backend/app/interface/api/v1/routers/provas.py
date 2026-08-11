@@ -10,7 +10,7 @@ from app.domain.exceptions import ProvaNaoEncontradaError
 from app.infrastructure.db.models.usuario import UsuarioModel
 from app.infrastructure.db.repositories.prova_repository import SQLAlchemyProvaRepository
 from app.infrastructure.db.session import get_db
-from app.interface.api.v1.dependencies import get_current_user
+from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.prova import (
     ProvaCreateSchema,
     ProvaResponseSchema,
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/v1/provas", tags=["provas"])
 @router.post("", response_model=ProvaResponseSchema, status_code=status.HTTP_201_CREATED)
 def criar(
     dados: ProvaCreateSchema,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyProvaRepository(db)
@@ -37,7 +37,7 @@ def criar(
 
 @router.get("", response_model=list[ProvaResponseSchema])
 def listar(
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyProvaRepository(db)
@@ -49,7 +49,7 @@ def listar(
 @router.get("/{prova_id}", response_model=ProvaResponseSchema)
 def obter(
     prova_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyProvaRepository(db)
@@ -67,7 +67,7 @@ def obter(
 def atualizar(
     prova_id: int,
     dados: ProvaUpdateSchema,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyProvaRepository(db)
@@ -86,7 +86,7 @@ def atualizar(
 router.delete("/{prova_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar(
     prova_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyProvaRepository(db)

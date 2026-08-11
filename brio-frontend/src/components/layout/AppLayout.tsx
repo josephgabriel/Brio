@@ -24,7 +24,7 @@ import { useTheme } from "@/hooks/useTheme"
 import { useSessaoAtiva } from "@/features/sessoes/sessao-ativa-context"
 
 const links = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/provas", label: "Provas", icon: GraduationCap },
   { to: "/sessoes", label: "Sessão de Estudos", icon: Timer },
   { to: "/revisoes", label: "Revisões", icon: RotateCcw },
@@ -92,7 +92,7 @@ export function AppLayout() {
             <NavLink
               key={to}
               to={to}
-              end={to === "/"}
+              end
               title={sidebarRecolhida ? label : undefined}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${

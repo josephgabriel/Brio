@@ -32,7 +32,7 @@ export function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold">Olá</h1>
+        <h1 className="text-2xl font-semibold">Seja bem vindo!</h1>
         {data.sequencia_dias > 0 && (
           <p className="text-muted-foreground">
              Sequência atual: {data.sequencia_dias}{" "}

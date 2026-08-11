@@ -15,3 +15,5 @@ from app.infrastructure.db.models.disciplina import DisciplinaModel
 from app.infrastructure.db.models.topico import TopicoModel
 from app.infrastructure.db.models.anotacao import AnotacaoModel
 from app.infrastructure.db.models.evento_metrica import EventoMetricaModel
+from app.infrastructure.db.models.assinatura import AssinaturaModel
+from app.infrastructure.db.models.pagamento import PagamentoModel

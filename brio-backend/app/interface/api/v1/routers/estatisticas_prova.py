@@ -15,7 +15,7 @@ from app.infrastructure.db.repositories.sessao_estudo_repository import (
     SQLAlchemySessaoEstudoRepository,
 )
 from app.infrastructure.db.session import get_db
-from app.interface.api.v1.dependencies import get_current_user
+from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.estatisticas_prova import EstatisticasProvaResponseSchema
 
 router = APIRouter(tags=["estatisticas"])
@@ -26,7 +26,7 @@ router = APIRouter(tags=["estatisticas"])
 )
 def obter(
     prova_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     prova_repository = SQLAlchemyProvaRepository(db)

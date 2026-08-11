@@ -75,7 +75,7 @@ export function LoginPage() {
     mutationFn: () => fazerLogin(email, senha),
     onSuccess: (dados) => {
       login(dados.access_token)
-      navigate("/")
+      navigate("/dashboard")
     },
     onError: (error: Error) => {
       // Verifica se a mensagem de erro retornada pela API diz respeito à verificação
@@ -165,7 +165,7 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-2 h-11"
-                placeholder="seu@email.com"
+                placeholder="Digite seu Email"
                 required
               />
             </div>

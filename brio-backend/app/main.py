@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.infrastructure.config import settings
 from app.interface.api.v1.routers import (
     anotacoes,
+    assinaturas,
     auth,
     dashboard,
     disciplinas,
@@ -14,6 +15,7 @@ from app.interface.api.v1.routers import (
     sessoes,
     topicos,
     metricas,
+    webhooks,
 )
 
 app = FastAPI(
@@ -45,6 +47,8 @@ app.include_router(topicos.router)
 app.include_router(estatisticas_prova.router)
 app.include_router(anotacoes.router)
 app.include_router(metricas.router)
+app.include_router(assinaturas.router)
+app.include_router(webhooks.router)
 
 
 @app.get("/health")

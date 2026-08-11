@@ -10,7 +10,7 @@ from app.infrastructure.db.repositories.anotacao_repository import (
 )
 from app.infrastructure.db.repositories.topico_repository import SQLAlchemyTopicoRepository
 from app.infrastructure.db.session import get_db
-from app.interface.api.v1.dependencies import get_current_user
+from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.anotacao import AnotacaoResponseSchema, AnotacaoSalvarSchema
 
 router = APIRouter(tags=["anotacoes"])
@@ -19,7 +19,7 @@ router = APIRouter(tags=["anotacoes"])
 @router.get("/api/v1/topicos/{topico_id}/anotacao", response_model=AnotacaoResponseSchema)
 def obter(
     topico_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     anotacao_repository = SQLAlchemyAnotacaoRepository(db)
@@ -38,7 +38,7 @@ def obter(
 def salvar(
     topico_id: int,
     dados: AnotacaoSalvarSchema,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     anotacao_repository = SQLAlchemyAnotacaoRepository(db)

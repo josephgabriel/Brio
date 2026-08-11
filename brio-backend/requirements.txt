@@ -39,3 +39,4 @@ uvloop==0.22.1
 watchfiles==1.2.0
 websockets==16.1
 resend==2.5.1
+mercadopago==3.4.0

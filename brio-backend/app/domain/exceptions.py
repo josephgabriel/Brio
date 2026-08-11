@@ -86,3 +86,12 @@ class EmailNaoVerificadoError(Exception):
 
 class ReenvioMuitoRecenteError(Exception):
     pass
+
+class AssinaturaJaExisteError(Exception):
+    pass
+
+class AssinaturaNaoEncontradaError(Exception):
+    pass
+
+class ForaDoPrazoReembolsoError(Exception):
+    pass

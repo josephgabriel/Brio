@@ -1,23 +1,28 @@
 import { createBrowserRouter } from "react-router-dom"
 
 import { AppLayout } from "@/components/layout/AppLayout"
+import { AssinaturaRoute } from "@/features/assinatura/AssinaturaRoute"
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute"
+import { AssinaturaRetornoPage } from "@/pages/AssinaturaRetornoPage"
 import { DashboardPage } from "@/pages/DashboardPage"
+import { EsqueciSenhaPage } from "@/pages/EsqueciSenhaPage"
 import { EstatisticasPage } from "@/pages/EstatisticasPage"
+import { LandingPage } from "@/pages/LandingPage"
 import { LoginPage } from "@/pages/LoginPage"
+import { PlanosPage } from "@/pages/PlanosPage"
 import { ProvaDetalhePage } from "@/pages/ProvaDetalhePage"
+import { ProvaEstatisticasPage } from "@/pages/ProvaEstatisticasPage"
 import { ProvaFormPage } from "@/pages/ProvaFormPage"
 import { ProvasPage } from "@/pages/ProvaPage"
+import { RedefinirSenhaPage } from "@/pages/RedefinirSenhaPage"
 import { RegisterPage } from "@/pages/RegisterPage"
 import { RevisoesPage } from "@/pages/RevisoesPage"
 import { SessaoPage } from "@/pages/SessaoPage"
-import { ProvaEstatisticasPage } from "@/pages/ProvaEstatisticasPage"
 import { TopicoAnotacaoPage } from "@/pages/TopicoAnotacaoPage"
-import { EsqueciSenhaPage } from "@/pages/EsqueciSenhaPage"
-import { RedefinirSenhaPage } from "@/pages/RedefinirSenhaPage"
 import { VerificarEmailPage } from "@/pages/VerificarEmailPage"
 
 export const router = createBrowserRouter([
+  { path: "/", element: <LandingPage /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/registro", element: <RegisterPage /> },
   { path: "/verificar-email", element: <VerificarEmailPage /> },
@@ -26,19 +31,26 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      { path: "/planos", element: <PlanosPage /> },
+      { path: "/assinatura/retorno", element: <AssinaturaRetornoPage /> },
       {
-        element: <AppLayout />,
+        element: <AssinaturaRoute />,
         children: [
-          { path: "/", element: <DashboardPage /> },
-          { path: "/provas", element: <ProvasPage /> },
-          { path: "/provas/nova", element: <ProvaFormPage /> },
-          { path: "/provas/:id", element: <ProvaDetalhePage /> },
-          { path: "/provas/:id/editar", element: <ProvaFormPage /> },
-          { path: "/sessoes", element: <SessaoPage /> },
-          { path: "/revisoes", element: <RevisoesPage /> },
-          { path: "/estatisticas", element: <EstatisticasPage /> },
-          { path: "/provas/:id/estatisticas", element: <ProvaEstatisticasPage /> },
-          { path: "/topicos/:id/anotacao", element: <TopicoAnotacaoPage /> },
+          {
+            element: <AppLayout />,
+            children: [
+              { path: "/dashboard", element: <DashboardPage /> },
+              { path: "/provas", element: <ProvasPage /> },
+              { path: "/provas/nova", element: <ProvaFormPage /> },
+              { path: "/provas/:id", element: <ProvaDetalhePage /> },
+              { path: "/provas/:id/editar", element: <ProvaFormPage /> },
+              { path: "/provas/:id/estatisticas", element: <ProvaEstatisticasPage /> },
+              { path: "/sessoes", element: <SessaoPage /> },
+              { path: "/revisoes", element: <RevisoesPage /> },
+              { path: "/estatisticas", element: <EstatisticasPage /> },
+              { path: "/topicos/:id/anotacao", element: <TopicoAnotacaoPage /> },
+            ],
+          },
         ],
       },
     ],

@@ -12,7 +12,7 @@ from app.infrastructure.db.repositories.disciplina_repository import (
 )
 from app.infrastructure.db.repositories.topico_repository import SQLAlchemyTopicoRepository
 from app.infrastructure.db.session import get_db
-from app.interface.api.v1.dependencies import get_current_user
+from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.topico import TopicoCreateSchema, TopicoResponseSchema
 
 router = APIRouter(tags=["topicos"])
@@ -26,7 +26,7 @@ router = APIRouter(tags=["topicos"])
 def criar(
     disciplina_id: int,
     dados: TopicoCreateSchema,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     topico_repository = SQLAlchemyTopicoRepository(db)
@@ -48,7 +48,7 @@ def criar(
 )
 def listar(
     disciplina_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyTopicoRepository(db)
@@ -59,7 +59,7 @@ def listar(
 @router.delete("/api/v1/topicos/{topico_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar(
     topico_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemyTopicoRepository(db)

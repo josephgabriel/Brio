@@ -4,11 +4,13 @@ class Settings(BaseSettings):
     database_url: str
     secret_key: str
     environment: str = "production"
+    mercadopago_access_token: str = ""
 
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
     frontend_url: str = "https://brio-rho.vercel.app"
+    backend_url: str
     email_verificacao_expira_horas: int = 24
     redefinicao_senha_expira_minutos: int = 15
     resend_api_key: str = ""

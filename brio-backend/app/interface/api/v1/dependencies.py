@@ -44,3 +44,32 @@ def get_usuario_admin(
             detail="Acesso restrito a administradores",
         )
     return usuario
+
+def get_usuario_assinante(
+    usuario: UsuarioModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UsuarioModel:
+    """
+    Dependency que exige, além de estar autenticado, ter uma
+    assinatura ativa e dentro da validade. Essa é a barreira real
+    de acesso pago -- nunca decide isso com base em nada vindo do
+    frontend, só consultando o banco (que só é atualizado por
+    webhook do Mercado Pago).
+    """
+    from app.domain.regras.assinatura import assinatura_esta_valida
+    from app.infrastructure.db.repositories.assinatura_repository import (
+        SQLAlchemyAssinaturaRepository,
+    )
+
+    repository = SQLAlchemyAssinaturaRepository(db)
+    assinatura = repository.buscar_por_usuario(usuario.id)
+
+    valida = assinatura is not None and assinatura_esta_valida(
+        assinatura.status, assinatura.data_expiracao
+    )
+    if not valida:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Assinatura inativa ou expirada. Contrate um plano para continuar.",
+        )
+    return usuario

@@ -22,7 +22,7 @@ from app.infrastructure.db.repositories.sessao_estudo_repository import (
     SQLAlchemySessaoEstudoRepository,
 )
 from app.infrastructure.db.session import get_db
-from app.interface.api.v1.dependencies import get_current_user
+from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.sessao_estudo import (
     SessaoFinalizarSchema,
     SessaoIniciarSchema,
@@ -42,7 +42,7 @@ router = APIRouter(prefix="/api/v1/sessoes", tags=["sessoes"])
 @router.post("", response_model=SessaoResponseSchema, status_code=status.HTTP_201_CREATED)
 def iniciar(
     dados: SessaoIniciarSchema,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     sessao_repository = SQLAlchemySessaoEstudoRepository(db)
@@ -71,7 +71,7 @@ def iniciar(
 def finalizar(
     sessao_id: int,
     dados: SessaoFinalizarSchema,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     sessao_repository = SQLAlchemySessaoEstudoRepository(db)
@@ -95,7 +95,7 @@ def finalizar(
 @router.get("", response_model=list[SessaoResponseSchema])
 def listar(
     prova_id: int | None = None,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemySessaoEstudoRepository(db)
@@ -107,7 +107,7 @@ def listar(
 @router.get("/{sessao_id}", response_model=SessaoResponseSchema)
 def obter(
     sessao_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemySessaoEstudoRepository(db)
@@ -123,7 +123,7 @@ def obter(
 @router.delete("/{sessao_id}", status_code=status.HTTP_204_NO_CONTENT)
 def cancelar(
     sessao_id: int,
-    usuario: UsuarioModel = Depends(get_current_user),
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     repository = SQLAlchemySessaoEstudoRepository(db)
