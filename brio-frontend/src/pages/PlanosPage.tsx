@@ -102,11 +102,11 @@ export function PlanosPage() {
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center bg-background px-4 py-12 text-foreground overflow-hidden">
-      {/* Fundo gradiente alinhado com a página de Login */}
+     
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background pointer-events-none" />
 
       <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center justify-center gap-8 text-center">
-        {/* Cabeçalho com animação vindo de cima */}
+        
         <div className="animate-[slideDown_0.6s_ease-out_both]">
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
             Escolha seu plano
@@ -129,7 +129,7 @@ export function PlanosPage() {
               }`}
             >
               {plano.destaque && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow flex items-center gap-1">
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> Mais vantajoso
                 </div>
               )}
@@ -186,7 +186,7 @@ export function PlanosPage() {
         )}
 
         <p className="text-xs text-muted-foreground animate-[slideDown_0.6s_ease-out_both_600ms]">
-          Garantia incondicional de reembolso total em até 7 dias após a contratação.
+          Garantia de reembolso total em até 7 dias.
         </p>
       </div>
 
