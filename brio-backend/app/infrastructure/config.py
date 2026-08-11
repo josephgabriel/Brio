@@ -4,7 +4,7 @@ class Settings(BaseSettings):
     database_url: str
     secret_key: str
     environment: str = "production"
-    mercadopago_access_token: str = ""
+    mercadopago_access_token: str
 
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
