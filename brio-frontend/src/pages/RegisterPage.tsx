@@ -50,9 +50,16 @@ export function RegisterPage() {
   const senhasCoincidem = senha === confirmarSenha && confirmarSenha.length > 0
 
   const mutation = useMutation({
-    mutationFn: () => registrarUsuario(nome, email, senha),
-    onSuccess: () => navigate("/login"),
-  })
+  mutationFn: () => registrarUsuario(nome, email, senha),
+  onSuccess: () => {
+    navigate("/login", {
+      state: {
+        registradoComSucesso: true,
+        emailCadastrado: email,
+      },
+    })
+  },
+})
 
   function handleSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()

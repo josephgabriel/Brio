@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useState, useEffect, type FormEvent } from "react"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import { useForceDarkMode } from "@/hooks/useForceDarkMode"
 import logo3 from "@/assets/logo3.png"
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/features/auth/auth-context"
-import { Eye, EyeOff, AlertCircle } from "lucide-react"
+import { Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react"
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
@@ -37,7 +37,6 @@ async function fazerLogin(
 
   if (!response.ok) {
     const erro = await response.json().catch(() => null)
-    // Lança a mensagem detalhada do backend ou um fallback genérico
     throw new Error(erro?.detail ?? "Email ou senha incorretos")
   }
 
@@ -60,16 +59,36 @@ async function reenviarEmailVerificacao(email: string): Promise<void> {
 export function LoginPage() {
   useForceDarkMode()
 
-  const [email, setEmail] = useState("")
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const stateCadastro = location.state as {
+    registradoComSucesso?: boolean
+    emailCadastrado?: string
+  } | null
+
+  const [email, setEmail] = useState(stateCadastro?.emailCadastrado ?? "")
   const [senha, setSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
-  
+
+  const [mensagemRegistro, setMensagemRegistro] = useState<string | null>(
+    stateCadastro?.registradoComSucesso
+      ? "Conta criada com sucesso! Verifique a caixa de entrada do seu email para finalizar seu cadastro antes de entrar."
+      : null
+  )
+
+  // Limpa o state do react-router para a mensagem não reaparecer no F5
+  useEffect(() => {
+    if (stateCadastro?.registradoComSucesso) {
+      window.history.replaceState({}, document.title)
+    }
+  }, [stateCadastro])
+
   // Estado para controlar a exibição do alerta de email não verificado e reenvio
   const [emailNaoVerificado, setEmailNaoVerificado] = useState(false)
   const [mensagemSucessoReenvio, setMensagemSucessoReenvio] = useState<string | null>(null)
 
   const { login } = useAuth()
-  const navigate = useNavigate()
 
   const mutation = useMutation({
     mutationFn: () => fazerLogin(email, senha),
@@ -78,7 +97,6 @@ export function LoginPage() {
       navigate("/dashboard")
     },
     onError: (error: Error) => {
-      // Verifica se a mensagem de erro retornada pela API diz respeito à verificação
       if (
         error.message.includes("EMAIL_NOT_VERIFIED") ||
         error.message.toLowerCase().includes("não verificado") ||
@@ -113,11 +131,7 @@ export function LoginPage() {
 
         <div className="relative max-w-lg animate-[slideIn_1s_ease] px-12">
           <div className="flex items-center gap-5">
-            <img
-              src={logo3}
-              alt="Brio"
-              className="h-25 w-30"
-            />
+            <img src={logo3} alt="Brio" className="h-25 w-30" />
             <h1 className="text-7xl font-black tracking-tight text-primary">
               Brio
             </h1>
@@ -128,8 +142,8 @@ export function LoginPage() {
           </p>
 
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-            Organize provas, matérias, sessões de estudo,
-            revisões e anotações em uma única plataforma.
+            Organize provas, matérias, sessões de estudo, revisões e anotações em
+            uma única plataforma.
           </p>
         </div>
       </section>
@@ -141,20 +155,27 @@ export function LoginPage() {
           className="w-full max-w-md rounded-2xl border border-border bg-card p-10 shadow-xl"
         >
           <div className="mb-8 flex flex-col items-center">
-            <img
-              src={logo2}
-              alt="Brio"
-              className="mb-4 h-14 w-20"
-            />
-          
-            <h2 className="text-3xl font-bold">
-              Entrar
-            </h2>
-          
+            <img src={logo2} alt="Brio" className="mb-4 h-14 w-20" />
+
+            <h2 className="text-3xl font-bold">Entrar</h2>
+
             <p className="mt-2 text-muted-foreground">
               Faça login para continuar.
             </p>
           </div>
+
+          {/* Banner: Alerta de Cadastro Realizado com Sucesso */}
+          {mensagemRegistro && (
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-500">
+              <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold">Cadastro realizado!</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {mensagemRegistro}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-5">
             <div>
@@ -180,7 +201,7 @@ export function LoginPage() {
                   onChange={(e) => setSenha(e.target.value)}
                   className="h-11 pr-10"
                   required
-                />              
+                />
 
                 <button
                   type="button"
@@ -215,7 +236,7 @@ export function LoginPage() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     Você precisa confirmar seu endereço de e-mail antes de acessar a plataforma.
                   </p>
-                  
+
                   {mensagemSucessoReenvio ? (
                     <p className="mt-3 text-xs font-medium text-emerald-500">
                       {mensagemSucessoReenvio}
@@ -227,7 +248,9 @@ export function LoginPage() {
                       disabled={mutationResend.isPending}
                       className="mt-3 text-xs font-semibold text-primary underline hover:text-primary/80 disabled:opacity-50"
                     >
-                      {mutationResend.isPending ? "Reenviando..." : "Reenviar e-mail de verificação"}
+                      {mutationResend.isPending
+                        ? "Reenviando..."
+                        : "Reenviar e-mail de verificação"}
                     </button>
                   )}
 
@@ -260,7 +283,10 @@ export function LoginPage() {
               </Link>
             </p>
             <p>
-              <Link to="/esqueci-senha" className="text-muted-foreground hover:underline">
+              <Link
+                to="/esqueci-senha"
+                className="text-muted-foreground hover:underline"
+              >
                 Esqueci minha senha
               </Link>
             </p>

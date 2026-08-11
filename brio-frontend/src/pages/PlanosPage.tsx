@@ -13,7 +13,7 @@ import type { Plano } from "@/features/assinatura/types"
 
 const PLANOS: { valor: Plano; nome: string; preco: string; detalhe: string }[] = [
   { valor: "mensal", nome: "Mensal", preco: "R$ 9,90", detalhe: "por mês" },
-  { valor: "anual", nome: "Anual", preco: "R$ 99,00", detalhe: "por ano (economize 2 meses)" },
+  { valor: "anual", nome: "Anual", preco: "R$ 99,00", detalhe: "anual (economize 2 meses!)" },
 ]
 
 export function PlanosPage() {
