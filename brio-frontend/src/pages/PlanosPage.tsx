@@ -39,84 +39,101 @@ export function PlanosPage() {
   })
 
   if (isLoading) {
-    return <p className="p-8 text-muted-foreground">Carregando...</p>
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-zinc-400">
+        <p>Carregando...</p>
+      </div>
+    )
   }
 
   if (assinaturaEstaValida(assinatura) && assinatura) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 text-center">
-        <h1 className="text-2xl font-semibold">Sua assinatura está ativa</h1>
-        <p className="text-muted-foreground">
-          Plano {assinatura.plano === "mensal" ? "Mensal" : "Anual"}, válido até{" "}
-          {assinatura.data_expiracao &&
-            new Date(`${assinatura.data_expiracao}T00:00:00`).toLocaleDateString("pt-BR")}
-          .
-        </p>
+      <div className="flex min-h-screen w-full items-center justify-center bg-black px-4 text-zinc-100">
+        <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-4 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">Sua assinatura está ativa</h1>
+          <p className="text-zinc-400">
+            Plano {assinatura.plano === "mensal" ? "Mensal" : "Anual"}, válido até{" "}
+            {assinatura.data_expiracao &&
+              new Date(`${assinatura.data_expiracao}T00:00:00`).toLocaleDateString("pt-BR")}
+            .
+          </p>
 
-        <Button
-          variant="outline"
-          onClick={() => reembolsar.mutate()}
-          disabled={reembolsar.isPending}
-        >
-          {reembolsar.isPending ? "Processando..." : "Solicitar reembolso (garantia de 7 dias)"}
-        </Button>
-        {reembolsar.isError && (
-          <p className="text-sm text-destructive">{reembolsar.error.message}</p>
-        )}
+          <Button
+            variant="outline"
+            onClick={() => reembolsar.mutate()}
+            disabled={reembolsar.isPending}
+            className="border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800 hover:text-white"
+          >
+            {reembolsar.isPending ? "Processando..." : "Solicitar reembolso (garantia de 7 dias)"}
+          </Button>
+          {reembolsar.isError && (
+            <p className="text-sm text-red-400">{reembolsar.error.message}</p>
+          )}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-8 text-center">
-      <div>
-        <h1 className="text-2xl font-semibold">Escolha seu plano</h1>
-        <p className="text-muted-foreground">
-          {assinatura?.status === "cancelada" || assinatura?.status === "expirada"
-            ? "Sua assinatura não está mais ativa. Renove para continuar usando o Brio."
-            : "Assine para começar a usar o Brio."}
+    /* ALTERAÇÃO 1: Fundo principal bem escuro (bg-black ou bg-zinc-950) */
+    <div className="flex min-h-screen w-full items-center justify-center bg-black px-4 py-12 text-zinc-100">
+      <div className="mx-auto flex max-w-3xl flex-col items-center justify-center gap-8 text-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Escolha seu plano</h1>
+          <p className="mt-2 text-zinc-400">
+            {assinatura?.status === "cancelada" || assinatura?.status === "expirada"
+              ? "Sua assinatura não está mais ativa. Renove para continuar usando o Brio."
+              : "Assine para começar a usar o Brio."}
+          </p>
+        </div>
+
+        <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
+          {PLANOS.map((plano) => (
+            /* ALTERAÇÃO 2: Cor mantida do Card (bg-zinc-900 e borda border-zinc-800) */
+            <Card 
+              key={plano.valor} 
+              className="border-zinc-800 bg-zinc-900 text-zinc-100 shadow-xl"
+            >
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-white">{plano.nome}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <div>
+                  <span className="text-4xl font-extrabold text-white">{plano.preco}</span>
+                  <span className="text-sm text-zinc-400"> {plano.detalhe}</span>
+                </div>
+                <ul className="flex flex-col gap-2.5 text-left text-sm text-zinc-300">
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 shrink-0 text-emerald-400" /> Provas, matérias e conteúdos ilimitados
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 shrink-0 text-emerald-400" /> Sessões com Pomodoro e anotações
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 shrink-0 text-emerald-400" /> Revisão espaçada automática
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 shrink-0 text-emerald-400" /> Dashboard e estatísticas completas
+                  </li>
+                </ul>
+                <Button 
+                  onClick={() => assinar.mutate(plano.valor)} 
+                  disabled={assinar.isPending}
+                  className="w-full bg-white font-semibold text-zinc-950 hover:bg-zinc-200 transition-colors"
+                >
+                  {assinar.isPending ? "Redirecionando..." : `Assinar ${plano.nome}`}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {assinar.isError && <p className="text-sm text-red-400">{assinar.error.message}</p>}
+
+        <p className="text-xs text-zinc-500">
+          Garantia de reembolso total em até 7 dias após a contratação.
         </p>
       </div>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {PLANOS.map((plano) => (
-          <Card key={plano.valor}>
-            <CardHeader>
-              <CardTitle>{plano.nome}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div>
-                <span className="text-3xl font-semibold">{plano.preco}</span>
-                <span className="text-muted-foreground"> {plano.detalhe}</span>
-              </div>
-              <ul className="flex flex-col gap-1 text-left text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <Check className="size-4 text-primary" /> Provas, matérias e conteúdos
-                  ilimitados
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="size-4 text-primary" /> Sessões com Pomodoro e anotações
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="size-4 text-primary" /> Revisão espaçada automática
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="size-4 text-primary" /> Dashboard e estatísticas completas
-                </li>
-              </ul>
-              <Button onClick={() => assinar.mutate(plano.valor)} disabled={assinar.isPending}>
-                {assinar.isPending ? "Redirecionando..." : `Assinar ${plano.nome}`}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {assinar.isError && <p className="text-sm text-destructive">{assinar.error.message}</p>}
-
-      <p className="text-xs text-muted-foreground">
-        Garantia de reembolso total em até 7 dias após a contratação.
-      </p>
     </div>
   )
 }
