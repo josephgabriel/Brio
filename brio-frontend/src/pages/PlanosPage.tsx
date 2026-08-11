@@ -129,7 +129,7 @@ export function PlanosPage() {
               }`}
             >
               {plano.destaque && (
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow flex items-center gap-1">
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> Mais vantajoso
                 </div>
               )}
