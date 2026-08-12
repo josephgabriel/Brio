@@ -17,7 +17,12 @@ export function clearToken(): void {
 export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const token = getToken()
   const headers = new Headers(options.headers)
-  headers.set("Content-Type", "application/json")
+
+  const corpoEhFormData = options.body instanceof FormData
+  if (!corpoEhFormData) {
+    headers.set("Content-Type", "application/json")
+  }
+
   if (token) {
     headers.set("Authorization", `Bearer ${token}`)
   }

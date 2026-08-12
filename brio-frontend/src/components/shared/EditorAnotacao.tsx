@@ -7,7 +7,13 @@ import Highlight from "@tiptap/extension-highlight"
 import Image from "@tiptap/extension-image"
 import Link from "@tiptap/extension-link"
 import Underline from "@tiptap/extension-underline"
+import TextAlign from "@tiptap/extension-text-align"
+import Dropcursor from "@tiptap/extension-dropcursor"
+
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   Ban,
   Bold,
   ImagePlus,
@@ -38,7 +44,9 @@ const TAMANHOS_IMAGEM = [
 const CLASSES_CONTEUDO =
   "min-h-[300px] rounded-b-lg border border-border bg-background p-4 text-sm " +
   "focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 " +
-  "[&_img]:rounded-md [&_img]:my-2 [&_a]:text-primary [&_a]:underline"
+  "[&_p]:my-1 [&_a]:text-primary [&_a]:underline " +
+  "[&_img]:rounded-md [&_img]:my-2 [&_img]:transition-shadow " +
+  "[&_img.ProseMirror-selectednode]:ring-2 [&_img.ProseMirror-selectednode]:ring-primary [&_img.ProseMirror-selectednode]:ring-offset-2"
 
 export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProps) {
   const [salvando, setSalvando] = useState(false)
@@ -50,10 +58,19 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        dropcursor: false,
+      }),
+      Dropcursor.configure({
+        color: "var(--primary)",
+        width: 2,
+      }),
       TextStyle,
       Color,
       Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph", "image"],
+      }),
       Highlight.configure({ multicolor: true }),
       Image.extend({
         addAttributes() {
@@ -62,8 +79,22 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
             width: { default: "400px" },
           }
         },
+        addProseMirrorPlugins() {
+          return [
+            ...(this.parent?.() || []),
+          ]
+        },
+      }).configure({
+        allowBase64: true,
       }),
-      Link.configure({ openOnClick: false }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        HTMLAttributes: {
+          rel: "noopener noreferrer",
+          target: "_blank",
+        },
+      }),
     ],
     content: conteudoInicial,
     onUpdate: ({ editor }) => {
@@ -74,6 +105,8 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
       attributes: { class: CLASSES_CONTEUDO },
     },
   })
+
+  // ... (resto do seu código: useEffect, callbacks de imagem/drag/paste/link permanecem iguais)
 
   useEffect(() => {
     if (editor && conteudoInicial !== editor.getHTML()) {
@@ -136,10 +169,30 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
   }
 
   function inserirLink() {
-    const url = window.prompt("URL do link:")
-    if (url) {
-      editor?.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+    if (!editor) return
+
+    const linkAnterior = editor.getAttributes("link").href
+    const { from, to } = editor.state.selection
+    const temTextoSelecionado = from !== to
+
+    if (temTextoSelecionado) {
+      const urlPrompt = window.prompt("URL do link:", linkAnterior || "https://")
+      if (urlPrompt === null) return
+      if (urlPrompt.trim() === "") {
+        editor.chain().focus().extendMarkRange("link").unsetLink().run()
+        return
+      }
+      const urlFormatada = /^https?:\/\//i.test(urlPrompt) ? urlPrompt : `https://${urlPrompt}`
+      editor.chain().focus().extendMarkRange("link").setLink({ href: urlFormatada }).run()
+      return
     }
+
+    const textoExibicao = window.prompt("Titulo da URL:")
+    if (!textoExibicao || textoExibicao.trim() === "") return
+    const urlPrompt = window.prompt("URL:", "https://")
+    if (!urlPrompt || urlPrompt.trim() === "") return
+    const urlFormatada = /^https?:\/\//i.test(urlPrompt) ? urlPrompt : `https://${urlPrompt}`
+    editor.chain().focus().insertContent(`<a href="${urlFormatada}">${textoExibicao}</a>`).run()
   }
 
   if (!editor) {
@@ -172,6 +225,34 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
           onClick={() => editor.chain().focus().toggleUnderline().run()}
         >
           <UnderlineIcon className="size-4" />
+        </Button>
+
+        <div className="mx-1 h-5 w-px bg-border" />
+
+        {/* Alinhamento de Texto */}
+        <Button
+          type="button"
+          variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+        >
+          <AlignLeft className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+        >
+          <AlignCenter className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+        >
+          <AlignRight className="size-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
@@ -215,6 +296,7 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
           </span>
         </label>
 
+        {/* Exibe TAMANHOS apenas se uma imagem estiver selecionada */}
         {editor.isActive("image") &&
           TAMANHOS_IMAGEM.map((tamanho) => (
             <button

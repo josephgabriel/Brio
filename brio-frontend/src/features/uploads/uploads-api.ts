@@ -6,7 +6,6 @@ export async function enviarImagem(arquivo: File): Promise<string> {
 
   const response = await apiFetch("/api/v1/uploads/imagem", {
     method: "POST",
-    headers: {},
     body: formData,
   })
 
