@@ -21,6 +21,10 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
+    cloudinary_cloud_name: str = ""
+    cloudinary_api_key: str = ""
+    cloudinary_api_secret: str = ""
+
 settings = Settings()
 
 """

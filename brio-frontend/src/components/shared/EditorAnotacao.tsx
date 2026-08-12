@@ -1,13 +1,25 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { TextStyle } from "@tiptap/extension-text-style"
 import Color from "@tiptap/extension-color"
 import Highlight from "@tiptap/extension-highlight"
-import { AlignCenter, AlignLeft, AlignRight, Ban, Bold, Italic, List, ListOrdered } from "lucide-react"
-import TextAlign from "@tiptap/extension-text-align"
+import Image from "@tiptap/extension-image"
+import Link from "@tiptap/extension-link"
+import Underline from "@tiptap/extension-underline"
+import {
+  Ban,
+  Bold,
+  ImagePlus,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Underline as UnderlineIcon,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { enviarImagem } from "@/features/uploads/uploads-api"
 import { useDebounce } from "@/hooks/useDebounce"
 
 interface EditorAnotacaoProps {
@@ -17,21 +29,41 @@ interface EditorAnotacaoProps {
 
 const CORES_DESTAQUE = ["#FEF08A", "#BBF7D0", "#BFDBFE", "#FBCFE8"]
 const CORES_TEXTO = ["#17181B", "#DC2626", "#16A34A", "#4F46E5", "#FFFFFF"]
+const TAMANHOS_IMAGEM = [
+  { label: "P", largura: "240px" },
+  { label: "M", largura: "400px" },
+  { label: "G", largura: "100%" },
+]
 
 const CLASSES_CONTEUDO =
   "min-h-[300px] rounded-b-lg border border-border bg-background p-4 text-sm " +
-  "focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1"
+  "focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 " +
+  "[&_img]:rounded-md [&_img]:my-2 [&_a]:text-primary [&_a]:underline"
 
 export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProps) {
   const [salvando, setSalvando] = useState(false)
+  const [enviandoImagem, setEnviandoImagem] = useState(false)
   const salvarComDebounce = useDebounce((html: string) => {
     onSalvar(html)
     setSalvando(false)
   }, 2000)
 
   const editor = useEditor({
-    extensions: [StarterKit, TextStyle, Color, Highlight.configure({ multicolor: true }),
-      TextAlign.configure({ types: ["heading", "paragraph"]})
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+      Underline,
+      Highlight.configure({ multicolor: true }),
+      Image.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            width: { default: "400px" },
+          }
+        },
+      }),
+      Link.configure({ openOnClick: false }),
     ],
     content: conteudoInicial,
     onUpdate: ({ editor }) => {
@@ -43,14 +75,72 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
     },
   })
 
-  // Se o tópico visualizado muda (troca no drawer, ou navegação entre
-  // anotações) SEM o componente desmontar, o editor precisa ser
-  // "realimentado" manualmente com o novo conteúdo.
   useEffect(() => {
     if (editor && conteudoInicial !== editor.getHTML()) {
       editor.commands.setContent(conteudoInicial)
     }
   }, [conteudoInicial, editor])
+
+  const inserirImagem = useCallback(
+    async (arquivo: File) => {
+      if (!editor) return
+      setEnviandoImagem(true)
+      try {
+        const url = await enviarImagem(arquivo)
+        editor.chain().focus().setImage({ src: url }).run()
+      } catch (erro) {
+        console.error(erro)
+      } finally {
+        setEnviandoImagem(false)
+      }
+    },
+    [editor],
+  )
+
+  const handleSelecionarArquivo = useCallback(
+    (evento: React.ChangeEvent<HTMLInputElement>) => {
+      const arquivo = evento.target.files?.[0]
+      if (arquivo) inserirImagem(arquivo)
+      evento.target.value = ""
+    },
+    [inserirImagem],
+  )
+
+  const handleDrop = useCallback(
+    (evento: React.DragEvent<HTMLDivElement>) => {
+      const arquivo = evento.dataTransfer.files?.[0]
+      if (arquivo?.type.startsWith("image/")) {
+        evento.preventDefault()
+        inserirImagem(arquivo)
+      }
+    },
+    [inserirImagem],
+  )
+
+  const handlePaste = useCallback(
+    (evento: React.ClipboardEvent<HTMLDivElement>) => {
+      const item = Array.from(evento.clipboardData.items).find((i) =>
+        i.type.startsWith("image/"),
+      )
+      const arquivo = item?.getAsFile()
+      if (arquivo) {
+        evento.preventDefault()
+        inserirImagem(arquivo)
+      }
+    },
+    [inserirImagem],
+  )
+
+  function alterarTamanhoImagemSelecionada(largura: string) {
+    editor?.chain().focus().updateAttributes("image", { width: largura }).run()
+  }
+
+  function inserirLink() {
+    const url = window.prompt("URL do link:")
+    if (url) {
+      editor?.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+    }
+  }
 
   if (!editor) {
     return null
@@ -75,33 +165,16 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
         >
           <Italic className="size-4" />
         </Button>
+        <Button
+          type="button"
+          variant={editor.isActive("underline") ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+        >
+          <UnderlineIcon className="size-4" />
+        </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
-
-        <Button
-          type="button"
-          variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        >
-          <AlignLeft className="size-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        >
-          <AlignCenter className="size-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        >
-          <AlignRight className="size-4" />
-        </Button>
 
         <Button
           type="button"
@@ -119,6 +192,40 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
         >
           <ListOrdered className="size-4" />
         </Button>
+        <Button
+          type="button"
+          variant={editor.isActive("link") ? "secondary" : "ghost"}
+          size="sm"
+          onClick={inserirLink}
+        >
+          <LinkIcon className="size-4" />
+        </Button>
+
+        <div className="mx-1 h-5 w-px bg-border" />
+
+        <label className="cursor-pointer">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="hidden"
+            onChange={handleSelecionarArquivo}
+          />
+          <span className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">
+            <ImagePlus className="size-4" />
+          </span>
+        </label>
+
+        {editor.isActive("image") &&
+          TAMANHOS_IMAGEM.map((tamanho) => (
+            <button
+              key={tamanho.label}
+              type="button"
+              onClick={() => alterarTamanhoImagemSelecionada(tamanho.largura)}
+              className="flex size-7 items-center justify-center rounded-md text-xs text-muted-foreground hover:bg-accent"
+            >
+              {tamanho.label}
+            </button>
+          ))}
 
         <div className="mx-1 h-5 w-px bg-border" />
 
@@ -155,11 +262,13 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
         ))}
 
         <span className="ml-auto text-xs text-muted-foreground">
-          {salvando ? "Salvando..." : "Salvo"}
+          {enviandoImagem ? "Enviando imagem..." : salvando ? "Salvando..." : "Salvo"}
         </span>
       </div>
 
-      <EditorContent editor={editor} />
+      <div onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} onPaste={handlePaste}>
+        <EditorContent editor={editor} />
+      </div>
     </div>
   )
 }

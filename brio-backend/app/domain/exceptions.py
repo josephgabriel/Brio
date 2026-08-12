@@ -95,3 +95,6 @@ class AssinaturaNaoEncontradaError(Exception):
 
 class ForaDoPrazoReembolsoError(Exception):
     pass
+
+class ArquivoInvalidoError(Exception):
+    pass
