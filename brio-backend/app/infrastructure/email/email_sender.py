@@ -21,18 +21,24 @@ class ConsoleEmailSender(EmailSender):
 
 
 class ResendEmailSender(EmailSender):
-    def __init__(self) -> None:
-        resend.api_key = settings.resend_api_key
+    def enviar(
+        self,
+        destinatario: str,
+        assunto: str,
+        corpo_texto: str,
+        corpo_html: str | None = None,
+    ) -> None:
+        params = {
+            "from": settings.email_remetente,
+            "to": [destinatario],
+            "subject": assunto,
+            "text": corpo_texto,
+        }
 
-    def enviar(self, destinatario: str, assunto: str, corpo_texto: str) -> None:
-        resend.Emails.send(
-            {
-                "from": settings.email_remetente,
-                "to": [destinatario],
-                "subject": assunto,
-                "text": corpo_texto,
-            }
-        )
+        if corpo_html:
+            params["html"] = corpo_html
+
+        resend.Emails.send(params)
 
 
 def obter_email_sender() -> EmailSender:
