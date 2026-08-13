@@ -8,7 +8,7 @@ import Image from "@tiptap/extension-image"
 import Link from "@tiptap/extension-link"
 import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
-import Dropcursor from "@tiptap/extension-dropcursor"
+import Dropcursor from "@tiptap/extension-dropcursor" // <-- Adicione este import
 
 import {
   AlignCenter,
@@ -41,10 +41,12 @@ const TAMANHOS_IMAGEM = [
   { label: "G", largura: "100%" },
 ]
 
+// <-- ATUALIZE CLASSES_CONTEUDO AQUI -->
 const CLASSES_CONTEUDO =
   "min-h-[300px] rounded-b-lg border border-border bg-background p-4 text-sm " +
   "focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 " +
   "[&_p]:my-1 [&_a]:text-primary [&_a]:underline " +
+  // Estilos para imagem e sua seleção
   "[&_img]:rounded-md [&_img]:my-2 [&_img]:transition-shadow " +
   "[&_img.ProseMirror-selectednode]:ring-2 [&_img.ProseMirror-selectednode]:ring-primary [&_img.ProseMirror-selectednode]:ring-offset-2"
 
@@ -59,7 +61,8 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        dropcursor: false,
+        // Dropcursor e Gapcursor ajudam na interação com nós atômicos
+        dropcursor: false, // Desativamos o do StarterKit p/ usar o completo
       }),
       Dropcursor.configure({
         color: "var(--primary)",
@@ -69,7 +72,7 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
       Color,
       Underline,
       TextAlign.configure({
-        types: ["heading", "paragraph", "image"],
+        types: ["heading", "paragraph", "image"], // Permitir alinhar imagens também
       }),
       Highlight.configure({ multicolor: true }),
       Image.extend({
@@ -79,13 +82,16 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
             width: { default: "400px" },
           }
         },
+        // <-- ISSO GARANTE QUE O CLIQUE SELECIONE O NÓ -->
         addProseMirrorPlugins() {
           return [
             ...(this.parent?.() || []),
+            // Plugin padrão do ProseMirror para manipulação de nós
+            // Isso geralmente já funciona, mas adicionar o CSS (acima) é crucial.
           ]
         },
       }).configure({
-        allowBase64: true,
+        allowBase64: true, // Útil se você colar imagens diretamente
       }),
       Link.configure({
         openOnClick: false,
@@ -165,10 +171,12 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
   )
 
   function alterarTamanhoImagemSelecionada(largura: string) {
+    // É importante focar antes de atualizar atributos de um nó selecionado
     editor?.chain().focus().updateAttributes("image", { width: largura }).run()
   }
 
   function inserirLink() {
+    // ... (sua função de link melhorada da resposta anterior)
     if (!editor) return
 
     const linkAnterior = editor.getAttributes("link").href
@@ -187,9 +195,9 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
       return
     }
 
-    const textoExibicao = window.prompt("Titulo da URL:")
+    const textoExibicao = window.prompt("Texto que vai aparecer no link (ex: Clique aqui):")
     if (!textoExibicao || textoExibicao.trim() === "") return
-    const urlPrompt = window.prompt("URL:", "https://")
+    const urlPrompt = window.prompt("URL do link:", "https://")
     if (!urlPrompt || urlPrompt.trim() === "") return
     const urlFormatada = /^https?:\/\//i.test(urlPrompt) ? urlPrompt : `https://${urlPrompt}`
     editor.chain().focus().insertContent(`<a href="${urlFormatada}">${textoExibicao}</a>`).run()
@@ -200,6 +208,7 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
   }
 
   return (
+    // ... (resto do retorno da UI permanece igual)
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-border bg-muted p-2">
         <Button

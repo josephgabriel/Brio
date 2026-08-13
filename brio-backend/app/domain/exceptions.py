@@ -98,3 +98,6 @@ class ForaDoPrazoReembolsoError(Exception):
 
 class ArquivoInvalidoError(Exception):
     pass
+
+class EventoNaoEncontradoError(Exception):
+    pass

@@ -17,6 +17,8 @@ from app.interface.api.v1.routers import (
     metricas,
     webhooks,
     uploads,
+    calendario,
+    eventos,
 )
 
 app = FastAPI(
@@ -51,6 +53,8 @@ app.include_router(metricas.router)
 app.include_router(assinaturas.router)
 app.include_router(webhooks.router)
 app.include_router(uploads.router)
+app.include_router(eventos.router)
+app.include_router(calendario.router)
 
 
 @app.get("/health")

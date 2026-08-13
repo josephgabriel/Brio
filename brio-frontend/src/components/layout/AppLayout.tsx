@@ -2,6 +2,7 @@ import { useState } from "react"
 import { NavLink, Outlet, Link, useLocation } from "react-router-dom"
 import {
   BarChart3,
+  Calendar,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -25,6 +26,7 @@ import { useSessaoAtiva } from "@/features/sessoes/sessao-ativa-context"
 
 const links = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/calendario", label: "Calendário", icon: Calendar },
   { to: "/provas", label: "Provas", icon: GraduationCap },
   { to: "/sessoes", label: "Sessão de Estudos", icon: Timer },
   { to: "/revisoes", label: "Revisões", icon: RotateCcw },

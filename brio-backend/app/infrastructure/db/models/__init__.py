@@ -17,3 +17,4 @@ from app.infrastructure.db.models.anotacao import AnotacaoModel
 from app.infrastructure.db.models.evento_metrica import EventoMetricaModel
 from app.infrastructure.db.models.assinatura import AssinaturaModel
 from app.infrastructure.db.models.pagamento import PagamentoModel
+from app.infrastructure.db.models.evento_calendario import EventoCalendarioModel  # noqa: F401
