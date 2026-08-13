@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react"
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
+import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react"
 
 export function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps) {
   const [resizing, setResizing] = useState(false)
