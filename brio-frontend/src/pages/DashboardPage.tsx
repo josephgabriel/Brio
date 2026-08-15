@@ -52,6 +52,24 @@ export function DashboardPage() {
         />
       </div>
 
+      {data.disciplinas_hoje.length > 0 && (
+      <div className="rounded-xl border border-border bg-card p-4">
+          <p className="mb-2 text-sm font-medium text-muted-foreground">
+          MÁTERIAS PARA ESTUDAR HOJE:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {data.disciplinas_hoje.map((nome) => (
+              <span
+                key={nome}
+                className="rounded-full bg-primary/10 px-3 py-1 text-sm text-primary"
+              >
+                {nome}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-3">
         <Button asChild>
           <Link to="/sessoes">Iniciar sessão de estudos</Link>

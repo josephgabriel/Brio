@@ -240,15 +240,6 @@ export function CalendarioPage() {
                 <option value="tarefa">Tarefa</option>
               </select>
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="descricao">Descrição (opcional)</Label>
-              <Input
-                id="descricao"
-                value={descricaoForm}
-                onChange={(e) => setDescricaoForm(e.target.value)}
-              />
-            </div>
           </div>
 
           <DialogFooter>

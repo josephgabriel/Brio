@@ -101,3 +101,6 @@ class ArquivoInvalidoError(Exception):
 
 class EventoNaoEncontradoError(Exception):
     pass
+
+class ItemCronogramaNaoEncontradoError(Exception):
+    pass

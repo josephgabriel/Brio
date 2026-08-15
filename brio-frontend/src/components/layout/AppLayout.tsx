@@ -1,10 +1,12 @@
-import { useState } from "react"
-import { NavLink, Outlet, Link, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import {
   BarChart3,
   Calendar,
   GraduationCap,
   LayoutDashboard,
+  ListTodo,
   LogOut,
   Moon,
   PanelLeftClose,
@@ -13,20 +15,18 @@ import {
   Sun,
   Timer,
 } from "lucide-react"
-import { apiFetch } from "@/lib/api-client"
-
-import { useEffect } from "react"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { reenviarVerificacao } from "@/features/auth/auth-api"
 
 import { Button } from "@/components/ui/button"
+import { reenviarVerificacao } from "@/features/auth/auth-api"
 import { useAuth } from "@/features/auth/auth-context"
-import { useTheme } from "@/hooks/useTheme"
 import { useSessaoAtiva } from "@/features/sessoes/sessao-ativa-context"
+import { useTheme } from "@/hooks/useTheme"
+import { apiFetch } from "@/lib/api-client"
 
 const links = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/calendario", label: "Calendário", icon: Calendar },
+  { to: "/cronograma", label: "Cronograma", icon: ListTodo },
   { to: "/provas", label: "Provas", icon: GraduationCap },
   { to: "/sessoes", label: "Sessão de Estudos", icon: Timer },
   { to: "/revisoes", label: "Revisões", icon: RotateCcw },
@@ -57,28 +57,25 @@ export function AppLayout() {
   const reenviar = useMutation({
     mutationFn: reenviarVerificacao,
   })
-  
+
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Sidebar Fixa */}
       <aside
-  className={`flex flex-col border-r border-border/80 bg-card p-4 shadow-sm transition-all duration-300 ${
-    sidebarRecolhida ? "w-20" : "w-56"
-  }`}
->
+        className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-border/80 bg-card p-4 shadow-sm transition-all duration-300 ${
+          sidebarRecolhida ? "w-20" : "w-56"
+        }`}
+      >
         {/* Cabeçalho */}
-       <div className="mb-8 flex items-center justify-between px-3">
-  {!sidebarRecolhida && (
-    <span className="text-xl font-bold tracking-tight">
-      BRIO
-    </span>
-  )}
+        <div className="mb-8 flex items-center justify-between px-3">
+          {!sidebarRecolhida && (
+            <span className="text-xl font-bold tracking-tight">BRIO</span>
+          )}
 
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              setSidebarRecolhida((valor) => !valor)
-            }
+            onClick={() => setSidebarRecolhida((valor) => !valor)}
           >
             {sidebarRecolhida ? (
               <PanelLeftOpen className="size-4" />
@@ -89,7 +86,7 @@ export function AppLayout() {
         </div>
 
         {/* Links */}
-        <nav className="flex flex-1 flex-col gap-2.5">
+        <nav className="flex flex-1 flex-col gap-2.5 overflow-y-auto">
           {links.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -98,9 +95,7 @@ export function AppLayout() {
               title={sidebarRecolhida ? label : undefined}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                  sidebarRecolhida
-                    ? "justify-center"
-                    : "gap-2"
+                  sidebarRecolhida ? "justify-center" : "gap-2"
                 } ${
                   isActive
                     ? "bg-primary text-primary-foreground"
@@ -110,9 +105,7 @@ export function AppLayout() {
             >
               <Icon className="size-4 shrink-0" />
 
-              {!sidebarRecolhida && (
-                <span>{label}</span>
-              )}
+              {!sidebarRecolhida && <span>{label}</span>}
             </NavLink>
           ))}
         </nav>
@@ -129,9 +122,7 @@ export function AppLayout() {
                 : undefined
             }
             className={`gap-2 ${
-              sidebarRecolhida
-                ? "justify-center"
-                : "justify-start"
+              sidebarRecolhida ? "justify-center" : "justify-start"
             }`}
             onClick={alternarTema}
           >
@@ -142,11 +133,7 @@ export function AppLayout() {
             )}
 
             {!sidebarRecolhida && (
-              <span>
-                {tema === "dark"
-                  ? "Modo claro"
-                  : "Modo escuro"}
-              </span>
+              <span>{tema === "dark" ? "Modo claro" : "Modo escuro"}</span>
             )}
           </Button>
 
@@ -154,22 +141,19 @@ export function AppLayout() {
             variant="ghost"
             title={sidebarRecolhida ? "Sair" : undefined}
             className={`gap-2 ${
-              sidebarRecolhida
-                ? "justify-center"
-                : "justify-start"
+              sidebarRecolhida ? "justify-center" : "justify-start"
             }`}
             onClick={logout}
           >
             <LogOut className="size-4" />
 
-            {!sidebarRecolhida && (
-              <span>Sair</span>
-            )}
+            {!sidebarRecolhida && <span>Sair</span>}
           </Button>
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 p-8">
+      {/* Conteúdo Principal Rolável */}
+      <main className="h-full min-w-0 flex-1 overflow-y-auto p-8">
         {!emailVerificado && (
           <div className="mb-4 flex items-center justify-between rounded-md border border-status-atencao/40 bg-status-atencao/10 px-4 py-2 text-sm">
             <span>Confirme seu email para aproveitar todos os recursos.</span>
@@ -183,7 +167,7 @@ export function AppLayout() {
             </Button>
           </div>
         )}
-        
+
         {sessaoAtiva && location.pathname !== "/sessoes" && (
           <Link
             to="/sessoes"
@@ -193,9 +177,7 @@ export function AppLayout() {
               {pomodoro.tempoFormatado}
             </span>
 
-            <span>
-              Sessão em andamento — voltar
-            </span>
+            <span>Sessão em andamento — voltar</span>
           </Link>
         )}
 

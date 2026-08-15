@@ -21,6 +21,8 @@ import { SessaoPage } from "@/pages/SessaoPage"
 import { TopicoAnotacaoPage } from "@/pages/TopicoAnotacaoPage"
 import { VerificarEmailPage } from "@/pages/VerificarEmailPage"
 import { CalendarioPage } from "@/pages/CalendarioPage"
+import { CronogramaPage } from "@/pages/CronogramaPage"
+
 
 export const router = createBrowserRouter([
   { path: "/", element: <LandingPage /> },
@@ -51,6 +53,7 @@ export const router = createBrowserRouter([
               { path: "/estatisticas", element: <EstatisticasPage /> },
               { path: "/topicos/:id/anotacao", element: <TopicoAnotacaoPage /> },
               { path: "/calendario", element: <CalendarioPage /> },
+              { path: "/cronograma", element: <CronogramaPage /> },
             ],
           },
         ],

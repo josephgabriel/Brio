@@ -3,7 +3,9 @@ from datetime import date, timedelta
 
 from app.application.interfaces.prova_repository import ProvaRepository
 from app.application.interfaces.revisao_repository import RevisaoRepository
+from app.application.interfaces.cronograma_repository import CronogramaRepository
 from app.application.interfaces.sessao_estudo_repository import SessaoEstudoRepository
+from app.application.interfaces.disciplina_repository import DisciplinaRepository
 from app.domain.regras.dashboard import(
     calcular_horas_estudadas,
     calcular_sequencia_dias_estudando,
@@ -19,6 +21,7 @@ class DashboardData:
     revisoes_pendentes_hoje: int
     provas_ativas: int
     provas: list[ProvaModel]
+    disciplinas_hoje: list[str]
 
 class ObterDashboard:
     def __init__(
@@ -26,10 +29,15 @@ class ObterDashboard:
             prova_repository: ProvaRepository,
             sessao_repository: SessaoEstudoRepository,
             revisao_repository: RevisaoRepository,
+            cronograma_repository: CronogramaRepository,
+            disciplina_repository: DisciplinaRepository,
+
     ) -> None:
         self.prova_repository = prova_repository
         self.sessao_repository = sessao_repository
         self.revisao_repository = revisao_repository
+        self.cronograma_repository = cronograma_repository
+        self.disciplina_repository = disciplina_repository
 
     def executar(self, usuario_id: int) -> DashboardData:
         hoje = date.today()
@@ -62,6 +70,16 @@ class ObterDashboard:
         provas = self.prova_repository.listar_por_usuario(usuario_id)
         provas_ativas = [p for p in provas if p.status == StatusProva.ATIVA]
 
+        itens_cronograma = self.cronograma_repository.listar_por_usuario(usuario_id)
+        dia_semana_hoje = hoje.weekday()
+        disciplinas_hoje: list[str] = []
+        for item in itens_cronograma:
+            if item.dia_semana != dia_semana_hoje:
+                continue
+            disciplina = self.disciplina_repository.buscar_por_id(item.disciplina_id)
+            if disciplina is not None:
+                disciplinas_hoje.append(disciplina.nome)
+
         return DashboardData(
             horas_hoje=calcular_horas_estudadas(duracoes_hoje),
             horas_semana=calcular_horas_estudadas(duracoes_semana),
@@ -70,4 +88,6 @@ class ObterDashboard:
             revisoes_pendentes_hoje=len(revisoes_hoje),
             provas_ativas=len(provas_ativas),
             provas=provas_ativas,
+            disciplinas_hoje=disciplinas_hoje,
+
         )

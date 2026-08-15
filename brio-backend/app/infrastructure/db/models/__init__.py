@@ -18,3 +18,4 @@ from app.infrastructure.db.models.evento_metrica import EventoMetricaModel
 from app.infrastructure.db.models.assinatura import AssinaturaModel
 from app.infrastructure.db.models.pagamento import PagamentoModel
 from app.infrastructure.db.models.evento_calendario import EventoCalendarioModel  # noqa: F401
+from app.infrastructure.db.models.cronograma import CronogramaModel  # noqa: F401

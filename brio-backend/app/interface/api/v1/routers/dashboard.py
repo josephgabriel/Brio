@@ -13,6 +13,12 @@ from app.infrastructure.db.repositories.sessao_estudo_repository import (
 from app.infrastructure.db.session import get_db
 from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.dashboard import DashboardResponseSchema
+from app.infrastructure.db.repositories.cronograma_repository import (
+    SQLAlchemyCronogramaRepository,
+)
+from app.infrastructure.db.repositories.disciplina_repository import (
+    SQLAlchemyDisciplinaRepository,
+)
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
@@ -25,8 +31,10 @@ def obter(
     prova_repository = SQLAlchemyProvaRepository(db)
     sessao_repository = SQLAlchemySessaoEstudoRepository(db)
     revisao_repository = SQLAlchemyRevisaoRepository(db)
+    cronograma_repository = SQLAlchemyCronogramaRepository(db)
+    disciplina_repository = SQLAlchemyDisciplinaRepository(db)
 
-    use_case = ObterDashboard(prova_repository, sessao_repository, revisao_repository)
+    use_case = ObterDashboard(prova_repository, sessao_repository, revisao_repository,cronograma_repository,disciplina_repository,)
     dados = use_case.executar(usuario_id=usuario.id)
 
     return DashboardResponseSchema.from_dashboard_data(dados)

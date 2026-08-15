@@ -10,6 +10,8 @@ class DashboardResponseSchema(BaseModel):
     revisoes_pendentes_hoje: int
     provas_ativas: int
     provas: list[ProvaResponseSchema]
+    disciplinas_hoje: list[str]
+
 
     @classmethod
     def from_dashboard_data(cls, dados: DashboardData) -> "DashboardResponseSchema":
@@ -21,4 +23,5 @@ class DashboardResponseSchema(BaseModel):
             revisoes_pendentes_hoje = dados.revisoes_pendentes_hoje,
             provas_ativas = dados.provas_ativas,
             provas = [ProvaResponseSchema.from_model(prova) for prova in dados.provas],
+            disciplinas_hoje=dados.disciplinas_hoje,
         )

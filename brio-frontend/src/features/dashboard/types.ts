@@ -8,4 +8,5 @@ export interface DashboardData {
   revisoes_pendentes_hoje: number
   provas_ativas: number
   provas: Prova[]
+  disciplinas_hoje: string[]
 }
