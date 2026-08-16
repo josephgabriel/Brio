@@ -271,16 +271,16 @@ export function LandingPage() {
             <h2 className="text-2xl font-semibold sm:text-3xl">Perguntas frequentes</h2>
           </div>
 
-          <Accordion type="single" collapsible className="w-full">
-            {FAQ.map((item) => (
-              <AccordionItem key={item.pergunta} value={item.pergunta}>
-                <AccordionTrigger>{item.pergunta}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {item.resposta}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        <Accordion className="w-full">
+  {FAQ.map((item) => (
+    <AccordionItem key={item.pergunta} value={item.pergunta}>
+      <AccordionTrigger>{item.pergunta}</AccordionTrigger>
+      <AccordionContent className="text-muted-foreground">
+        {item.resposta}
+      </AccordionContent>
+    </AccordionItem>
+  ))}
+</Accordion>
         </section>
 
         <section className="border-t border-border/60">
