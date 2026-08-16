@@ -161,7 +161,13 @@ export function PlanosPage() {
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-emerald-500 font-bold" /> Revisão espaçada automática
                   </li>
+                    <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-emerald-500 font-bold" /> Calendário personalizado
+                  </li>
                   <li className="flex items-center gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 text-emerald-500 font-bold" /> Cronograma de estudos
+                  </li>
+                    <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-emerald-500 font-bold" /> Dashboard e estatísticas completas
                   </li>
                 </ul>
