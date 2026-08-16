@@ -97,7 +97,7 @@ export function LandingPage() {
           <div className="flex gap-2">
             {isAuthenticated ? (
               <Button asChild>
-                <Link to="/dashboard">Ir para o app</Link>
+                <Link to="/login">Ir para o app</Link>
               </Button>
             ) : (
               <>
