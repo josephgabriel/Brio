@@ -5,7 +5,6 @@ import {
   Brain,
   Calendar,
   Check,
-  ListChecks,
   Timer,
 } from "lucide-react"
 
