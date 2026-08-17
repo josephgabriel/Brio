@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Menu, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
+import { Download, Menu, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
 import { AnimatePresence, motion, type Variants } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { EditorAnotacao } from "@/components/shared/EditorAnotacao"
 import { GerenciadorMaterias } from "@/components/shared/GerenciadorMaterias"
 import { LiquidTimer } from "@/components/shared/LiquidTimer"
-import { obterAnotacao, salvarAnotacao } from "@/features/anotacoes/api/anotacoes-api"
+import { exportarAnotacaoPdf, obterAnotacao, salvarAnotacao } from "@/features/anotacoes/api/anotacoes-api"
 import { listarDisciplinas } from "@/features/disciplinas/api/disciplinas-api"
 import { listarProvas } from "@/features/provas/api/provas-api"
 import {
@@ -86,6 +86,8 @@ export function SessaoPage() {
   const [concentracao, setConcentracao] = useState("3")
   const [dificuldade, setDificuldade] = useState("3")
   const [aprendizado, setAprendizado] = useState("70")
+
+  const [exportando, setExportando] = useState(false)
 
   const [menuAberto, setMenuAberto] = useState(false)
   const [topicoVisualizado, setTopicoVisualizado] = useState<{
@@ -216,6 +218,16 @@ export function SessaoPage() {
     setMenuAberto(false)
   }
 
+  async function handleExportarPdf() {
+    if (!topicoAtual) return
+    setExportando(true)
+    try {
+      await exportarAnotacaoPdf(topicoAtual.id, `anotacao-topico-${topicoAtual.id}`)
+    } finally {
+      setExportando(false)
+    }
+  }
+
   if (sessaoAtiva) {
     const mostrarPaineisLaterais = !animandoEntrada || etapaAnimacao === "layout"
 
@@ -256,9 +268,22 @@ export function SessaoPage() {
                 animate="visible"
                 className="text-left"
               >
-                <p className="mb-2 text-sm font-medium text-muted-foreground">
-                  Anotações — {topicoAtual?.nome}
-                </p>
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Anotações — {topicoAtual?.nome}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportarPdf}
+                    disabled={exportando || !anotacao}
+                  >
+                    <Download className="size-4" />
+                    {exportando ? "Exportando..." : "Exportar PDF"}
+                  </Button>
+                </div>
+
                 {anotacao && (
                   <EditorAnotacao
                     conteudoInicial={anotacao.conteudo_html}
