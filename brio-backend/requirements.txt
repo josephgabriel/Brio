@@ -41,4 +41,4 @@ websockets==16.1
 resend==2.5.1
 mercadopago==3.4.0
 cloudinary==1.45.0
-weasyprint==62.0
+weasyprint==69.0
