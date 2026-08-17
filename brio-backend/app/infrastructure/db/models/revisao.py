@@ -1,9 +1,13 @@
 from datetime import date, datetime
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.db.session import Base
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.infrastructure.db.models.topico import TopicoModel
 
 
 class RevisaoModel(Base):
@@ -11,13 +15,13 @@ class RevisaoModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     usuario_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=False, index=True
+        Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True
     )
     prova_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("provas.id"), nullable=False, index=True
+        Integer, ForeignKey("provas.id", ondelete="CASCADE"), nullable=False, index=True
     )
     sessao_estudo_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("sessoes_estudo.id"), nullable=False, index=True
+        Integer, ForeignKey("sessoes_estudo.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     topico_id: Mapped[int| None] = mapped_column(
@@ -34,3 +38,5 @@ class RevisaoModel(Base):
     criada_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+    topico: Mapped["TopicoModel"] = relationship(back_populates="revisoes")
