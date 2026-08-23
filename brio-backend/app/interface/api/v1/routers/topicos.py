@@ -14,6 +14,9 @@ from app.infrastructure.db.repositories.topico_repository import SQLAlchemyTopic
 from app.infrastructure.db.session import get_db
 from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.topico import TopicoCreateSchema, TopicoResponseSchema
+from app.infrastructure.db.repositories.sessao_estudo_repository import (
+    SQLAlchemySessaoEstudoRepository,
+)
 
 router = APIRouter(tags=["topicos"])
 
@@ -62,8 +65,11 @@ def deletar(
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
-    repository = SQLAlchemyTopicoRepository(db)
-    use_case = DeletarTopico(repository)
+    topico_repository = SQLAlchemyTopicoRepository(db)
+    disciplina_repository = SQLAlchemyDisciplinaRepository(db)
+    sessao_repository = SQLAlchemySessaoEstudoRepository(db)
+    use_case = DeletarTopico(topico_repository, disciplina_repository, sessao_repository)
+
     try:
         use_case.executar(topico_id=topico_id, usuario_id=usuario.id)
     except TopicoNaoEncontradoError as erro:

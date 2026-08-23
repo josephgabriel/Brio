@@ -134,6 +134,7 @@ function DisciplinaItem({
     mutationFn: deletarTopico,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplina.id] })
+      queryClient.invalidateQueries({ queryKey: ["disciplinas", disciplina.prova_id] })
     },
   })
 
@@ -186,7 +187,15 @@ function DisciplinaItem({
                   size="sm"
                   onClick={() => deletarTopicoMutation.mutate(topico.id)}
                 >
-                  <Trash2 className="size-3.5" />
+                <Trash2
+                className="size-3.5 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm(`Excluir "${topico.nome}"? As sessões de estudo já registradas continuam no seu histórico, sem vínculo com este tópico.`)) {
+                    deletarTopicoMutation.mutate(topico.id)
+                  }
+                }}
+              />
                 </Button>
               </div>
             ),
