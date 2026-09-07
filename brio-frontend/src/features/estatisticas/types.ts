@@ -24,6 +24,7 @@ export interface EstatisticasProva extends Estatisticas {
   indice_preparacao: number | null
   classificacao_indice: "excelente" | "atencao" | "risco" | "critico" | null
   motivos: string[]
+  nivel_medio_conhecimento: number | null
 }
 
 export interface ResumoComparacaoProva {
