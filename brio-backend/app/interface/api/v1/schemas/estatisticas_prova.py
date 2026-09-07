@@ -9,6 +9,10 @@ class PontoEvolucaoSemanalSchema(BaseModel):
     semana_inicio: date
     horas: float
 
+class PontoEvolucaoMensalSchema(BaseModel):
+    mes: date
+    horas: float
+
 
 class EstatisticasProvaResponseSchema(BaseModel):
     total_horas_estudadas: float
@@ -23,6 +27,7 @@ class EstatisticasProvaResponseSchema(BaseModel):
     indice_preparacao: int | None
     classificacao_indice: str | None
     motivos: list[str]
+    evolucao_mensal: list[PontoEvolucaoMensalSchema]
 
     @classmethod
     def from_data(cls, dados: EstatisticasProvaData) -> "EstatisticasProvaResponseSchema":
@@ -42,4 +47,8 @@ class EstatisticasProvaResponseSchema(BaseModel):
             indice_preparacao=dados.indice_preparacao,
             classificacao_indice=dados.classificacao_indice,
             motivos=dados.motivos,
+            evolucao_mensal=[
+                PontoEvolucaoMensalSchema(mes=p.mes, horas=p.horas)
+                for p in dados.evolucao_mensal
+            ],
         )

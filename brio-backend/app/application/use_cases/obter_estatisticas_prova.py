@@ -12,6 +12,7 @@ from app.domain.regras.estatisticas import (
     calcular_media,
     calcular_taxa_conclusao,
     gerar_semanas_recentes,
+    gerar_meses_recentes,
 )
 from app.domain.regras.indice_preparacao import calcular_indice_preparacao, classificar_indice
 
@@ -21,6 +22,11 @@ class PontoEvolucaoSemanal:
     semana_inicio: date
     horas: float
 
+@dataclass
+class PontoEvolucaoMensal:
+    mes: date
+    horas: float
+
 
 @dataclass
 class EstatisticasProvaData:
@@ -28,6 +34,7 @@ class EstatisticasProvaData:
     total_sessoes: int
     horas_por_disciplina: dict[str, float]
     evolucao_semanal: list[PontoEvolucaoSemanal]
+    evolucao_mensal: list[PontoEvolucaoMensal]
     taxa_conclusao_revisoes: float
     media_concentracao: float
     media_dificuldade: float
@@ -36,6 +43,7 @@ class EstatisticasProvaData:
     indice_preparacao: int | None
     classificacao_indice: str | None
     motivos: list[str] = field(default_factory=list)
+    
 
 
 class ObterEstatisticasProva:
@@ -81,6 +89,22 @@ class ObterEstatisticasProva:
                 horas=calcular_horas_estudadas(minutos_por_semana.get(semana, [])),
             )
             for semana in semanas
+        ]
+
+                # Evolução mensal (últimos 6 meses)
+        meses = gerar_meses_recentes(quantidade=6)
+        minutos_por_mes: dict[date, list[int]] = defaultdict(list)
+        for sessao in finalizadas:
+            data_sessao = sessao.finalizada_em.date()
+            inicio_do_mes = data_sessao.replace(day=1)
+            minutos_por_mes[inicio_do_mes].append(sessao.duracao_minutos)
+
+        evolucao_mensal = [
+            PontoEvolucaoMensal(
+                mes=mes,
+                horas=calcular_horas_estudadas(minutos_por_mes.get(mes, [])),
+            )
+            for mes in meses
         ]
 
         revisoes = self.revisao_repository.listar_por_usuario(usuario_id, prova_id)
@@ -147,4 +171,5 @@ class ObterEstatisticasProva:
             indice_preparacao=indice,
             classificacao_indice=classificacao,
             motivos=motivos,
+            evolucao_mensal=evolucao_mensal,
         )

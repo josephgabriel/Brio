@@ -9,12 +9,18 @@ from app.domain.regras.estatisticas import (
     calcular_media,
     calcular_taxa_conclusao,
     gerar_semanas_recentes,
+    gerar_meses_recentes,
 )
 
 
 @dataclass
 class PontoEvolucaoSemanal:
     semana_inicio: date
+    horas: float
+
+@dataclass
+class PontoEvolucaoMensal:
+    mes: date
     horas: float
 
 
@@ -27,6 +33,7 @@ class EstatisticasData:
     media_concentracao: float
     media_dificuldade: float
     media_aprendizado: float
+    evolucao_mensal: list[PontoEvolucaoMensal]
 
 
 class ObterEstatisticas:
@@ -61,6 +68,22 @@ class ObterEstatisticas:
             for semana in semanas
         ]
 
+                # Evolução mensal (últimos 6 meses)
+        meses = gerar_meses_recentes(quantidade=6)
+        minutos_por_mes: dict[date, list[int]] = defaultdict(list)
+        for sessao in finalizadas:
+            data_sessao = sessao.finalizada_em.date()
+            inicio_do_mes = data_sessao.replace(day=1)
+            minutos_por_mes[inicio_do_mes].append(sessao.duracao_minutos)
+
+        evolucao_mensal = [
+            PontoEvolucaoMensal(
+                mes=mes,
+                horas=calcular_horas_estudadas(minutos_por_mes.get(mes, [])),
+            )
+            for mes in meses
+        ]
+
         # Revisões: taxa de conclusão
         revisoes = self.revisao_repository.listar_por_usuario(usuario_id, prova_id)
         total_revisoes = len(revisoes)
@@ -88,4 +111,5 @@ class ObterEstatisticas:
             media_concentracao=media_concentracao,
             media_dificuldade=media_dificuldade,
             media_aprendizado=media_aprendizado,
+            evolucao_mensal=evolucao_mensal,
         )

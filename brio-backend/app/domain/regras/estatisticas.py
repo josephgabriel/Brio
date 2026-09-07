@@ -40,3 +40,23 @@ def gerar_semanas_recentes(quantidade: int = 8, hoje: date | None = None) -> lis
     return [
         inicio_semana_atual - timedelta(weeks=i) for i in range(quantidade - 1, -1, -1)
     ]
+
+def gerar_meses_recentes(quantidade: int = 6, hoje: date | None = None) -> list[date]:
+    """
+    Gera uma lista com o primeiro dia de cada um dos últimos
+    `quantidade` meses, terminando no mês atual. Ordem: mais antigo
+    primeiro. Mesmo espírito de "esqueleto" do gráfico que já usamos
+    em gerar_semanas_recentes -- todo mês aparece, mesmo com 0 horas.
+    """
+    hoje = hoje or date.today()
+    ano, mes = hoje.year, hoje.month
+
+    meses: list[date] = []
+    for i in range(quantidade - 1, -1, -1):
+        m = mes - i
+        a = ano
+        while m <= 0:
+            m += 12
+            a -= 1
+        meses.append(date(a, m, 1))
+    return meses

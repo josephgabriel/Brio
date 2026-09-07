@@ -12,7 +12,9 @@ from app.infrastructure.db.repositories.sessao_estudo_repository import (
 from app.infrastructure.db.session import get_db
 from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.estatisticas import EstatisticasResponseSchema
-
+from app.application.use_cases.obter_comparacao_provas import ObterComparacaoProvas
+from app.infrastructure.db.repositories.prova_repository import SQLAlchemyProvaRepository
+from app.interface.api.v1.schemas.comparacao_provas import ResumoComparacaoProvaSchema
 
 router = APIRouter(
     prefix="/api/v1/estatisticas",
@@ -41,3 +43,16 @@ def obter(
     )
 
     return EstatisticasResponseSchema.from_estatisticas_data(dados)
+
+@router.get("/comparacao", response_model=list[ResumoComparacaoProvaSchema])
+def comparacao(
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
+    db: Session = Depends(get_db),
+):
+    sessao_repository = SQLAlchemySessaoEstudoRepository(db)
+    revisao_repository = SQLAlchemyRevisaoRepository(db)
+    prova_repository = SQLAlchemyProvaRepository(db)
+
+    use_case = ObterComparacaoProvas(prova_repository, sessao_repository, revisao_repository)
+    resumos = use_case.executar(usuario_id=usuario.id)
+    return [ResumoComparacaoProvaSchema.from_resumo(r) for r in resumos]

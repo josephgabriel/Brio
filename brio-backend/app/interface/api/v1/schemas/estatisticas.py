@@ -9,6 +9,10 @@ class PontoEvolucaoSemanalSchema(BaseModel):
     semana_inicio: date
     horas: float
 
+class PontoEvolucaoMensalSchema(BaseModel):
+    mes: date
+    horas: float
+
 
 class EstatisticasResponseSchema(BaseModel):
     total_horas_estudadas: float
@@ -18,6 +22,7 @@ class EstatisticasResponseSchema(BaseModel):
     media_concentracao: float
     media_dificuldade: float
     media_aprendizado: float
+    evolucao_mensal: list[PontoEvolucaoMensalSchema]
 
     @classmethod
     def from_estatisticas_data(
@@ -34,4 +39,8 @@ class EstatisticasResponseSchema(BaseModel):
             media_concentracao=dados.media_concentracao,
             media_dificuldade=dados.media_dificuldade,
             media_aprendizado=dados.media_aprendizado,
+            evolucao_mensal=[
+                PontoEvolucaoMensalSchema(mes=p.mes, horas=p.horas)
+                for p in dados.evolucao_mensal
+            ],
         )
