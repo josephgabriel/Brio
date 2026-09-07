@@ -48,7 +48,7 @@ export function ProvaEstatisticasPage() {
     enabled: !isNaN(provaId) && provaId > 0,
   })
 
-  // 1. As verificações acontecem PRIMEIRO
+  // 1. Verificações de carregamento e erro
   if (isLoadingEstatisticas) {
     return <p className="text-muted-foreground">Carregando...</p>
   }
@@ -61,31 +61,38 @@ export function ProvaEstatisticasPage() {
     )
   }
 
-  // 2. A declaração das variáveis com acesso ao `data` acontece DEPOIS que garantimos que `data` existe
-  const disciplinas = Object.keys(data.horas_por_disciplina || {})
-  const horasPorDisciplina = Object.values(data.horas_por_disciplina || {})
+  // Cast seguro para acessar propriedades dinâmicas sem erro de TypeScript
+  const dadosApi = data as Record<string, any>
+
+  // 2. Extração de dados com proteções completas contra null/undefined
+  const horasPorDisciplina = dadosApi.horas_por_disciplina || {}
+  const disciplinas = Object.keys(horasPorDisciplina)
+  const valoresHoras = Object.values(horasPorDisciplina)
 
   const dadosBarra = {
     labels: disciplinas,
     datasets: [
       {
         label: "Horas estudadas",
-        data: horasPorDisciplina,
+        data: valoresHoras,
         backgroundColor: COR_PADRAO,
         borderRadius: 6,
       },
     ],
   }
 
-  const evolucaoSemanal = data.evolucao_semanal || []
+  const evolucaoSemanal = Array.isArray(dadosApi.evolucao_semanal)
+    ? dadosApi.evolucao_semanal
+    : []
+
   const dadosLinhaSemanal = {
-    labels: evolucaoSemanal.map((ponto) =>
+    labels: evolucaoSemanal.map((ponto: { semana_inicio: string }) =>
       formatarSemana(ponto.semana_inicio),
     ),
     datasets: [
       {
         label: "Horas por semana",
-        data: evolucaoSemanal.map((ponto) => ponto.horas),
+        data: evolucaoSemanal.map((ponto: { horas: number }) => ponto.horas),
         borderColor: COR_PADRAO,
         backgroundColor: COR_PADRAO,
         tension: 0.3,
@@ -93,50 +100,60 @@ export function ProvaEstatisticasPage() {
     ],
   }
 
-  // Proteção extra caso a API de provas não retorne a evolução mensal
-  const evolucaoMensal = data.evolucao_mensal || []
+  const evolucaoMensal = Array.isArray(dadosApi.evolucao_mensal)
+    ? dadosApi.evolucao_mensal
+    : []
+
   const dadosLinhaMensal = {
-    labels: evolucaoMensal.map((ponto) => formatarMes(ponto.mes)),
+    labels: evolucaoMensal.map((ponto: { mes: string }) =>
+      formatarMes(ponto.mes),
+    ),
     datasets: [
       {
         label: "Horas por mês",
-        data: evolucaoMensal.map((ponto) => ponto.horas),
+        data: evolucaoMensal.map((ponto: { horas: number }) => ponto.horas),
         borderColor: COR_PADRAO,
         backgroundColor: COR_PADRAO,
         tension: 0.3,
       },
     ],
   }
+
+  // Garantia de que motivos é um array
+  const motivosLista = Array.isArray(dadosApi.motivos) ? dadosApi.motivos : []
+
+  // Leitura segura do nível médio de conhecimento
+  const nivelMedio = dadosApi.nivel_medio_conhecimento
 
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-semibold">Estatísticas da Prova</h1>
 
       <IndicePreparacaoCard
-        indice={data.indice_preparacao}
-        classificacao={data.classificacao_indice}
-        motivos={data.motivos}
+        indice={dadosApi.indice_preparacao}
+        classificacao={dadosApi.classificacao_indice}
+        motivos={motivosLista}
       />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <CardMetrica
           label="Total de horas"
-          valor={`${data.total_horas_estudadas}h`}
+          valor={`${dadosApi.total_horas_estudadas ?? 0}h`}
         />
         <CardMetrica
           label="Total de sessões"
-          valor={String(data.total_sessoes)}
+          valor={String(dadosApi.total_sessoes ?? 0)}
         />
         <CardMetrica
           label="Revisões concluídas"
-          valor={`${data.taxa_conclusao_revisoes}%`}
+          valor={`${dadosApi.taxa_conclusao_revisoes ?? 0}%`}
         />
         <CardMetrica
           label="Nível médio"
           valor={
-            data.nivel_medio_conhecimento === null
+            nivelMedio === null || nivelMedio === undefined
               ? "—"
-              : `${Math.round(data.nivel_medio_conhecimento)}%`
+              : `${Math.round(Number(nivelMedio))}%`
           }
         />
       </div>
@@ -153,7 +170,11 @@ export function ProvaEstatisticasPage() {
 
         <div className="rounded-xl border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold">Evolução semanal</h2>
-          <Line data={dadosLinhaSemanal} options={OPCOES_COMUNS} />
+          {evolucaoSemanal.length === 0 ? (
+            <p className="text-muted-foreground">Sem dados ainda.</p>
+          ) : (
+            <Line data={dadosLinhaSemanal} options={OPCOES_COMUNS} />
+          )}
         </div>
 
         {evolucaoMensal.length > 0 && (
