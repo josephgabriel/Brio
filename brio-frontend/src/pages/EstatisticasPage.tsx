@@ -67,7 +67,7 @@ export function EstatisticasPage() {
     queryFn: obterEstatisticas,
   })
 
-  const { data: comparacao } = useQuery({
+  const { data: comparacaoData } = useQuery({
     queryKey: ["comparacao-provas"],
     queryFn: obterComparacaoProvas,
   })
@@ -84,15 +84,30 @@ export function EstatisticasPage() {
     )
   }
 
+  // Cast seguro para prevenir falhas de propriedades inexistentes
+  const dadosApi = data as Record<string, any>
+
+  // Proteção contra undefined nos arrays dos gráficos
+  const evolucaoSemanal = Array.isArray(dadosApi.evolucao_semanal)
+    ? dadosApi.evolucao_semanal
+    : []
+
+  const evolucaoMensal = Array.isArray(dadosApi.evolucao_mensal)
+    ? dadosApi.evolucao_mensal
+    : []
+
+  // Proteção contra undefined na lista de comparação
+  const comparacao = Array.isArray(comparacaoData) ? comparacaoData : []
+
   // Gráfico de Área (Linha com gradiente preenchido) para frequência semanal
   const dadosEvolucaoSemanal = {
-    labels: data.evolucao_semanal.map((ponto) =>
+    labels: evolucaoSemanal.map((ponto: { semana_inicio: string }) =>
       formatarSemana(ponto.semana_inicio),
     ),
     datasets: [
       {
         label: "Horas por semana",
-        data: data.evolucao_semanal.map((ponto) => ponto.horas),
+        data: evolucaoSemanal.map((ponto: { horas: number }) => ponto.horas),
         borderColor: COR_CIANO,
         backgroundColor: COR_CIANO_ALPHA,
         fill: true,
@@ -105,11 +120,13 @@ export function EstatisticasPage() {
 
   // Gráfico de Barras para volumes acumulados mensais
   const dadosEvolucaoMensal = {
-    labels: data.evolucao_mensal.map((ponto) => formatarMes(ponto.mes)),
+    labels: evolucaoMensal.map((ponto: { mes: string }) =>
+      formatarMes(ponto.mes),
+    ),
     datasets: [
       {
         label: "Horas por mês",
-        data: data.evolucao_mensal.map((ponto) => ponto.horas),
+        data: evolucaoMensal.map((ponto: { horas: number }) => ponto.horas),
         backgroundColor: COR_INDIGO,
         borderRadius: 6,
         borderSkipped: false,
@@ -131,23 +148,27 @@ export function EstatisticasPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <CardMetrica
           label="Total de horas"
-          valor={`${data.total_horas_estudadas}h`}
+          valor={`${dadosApi.total_horas_estudadas ?? 0}h`}
         />
         <CardMetrica
           label="Total de sessões"
-          valor={String(data.total_sessoes)}
+          valor={String(dadosApi.total_sessoes ?? 0)}
         />
         <CardMetrica
           label="Revisões concluídas"
-          valor={`${data.taxa_conclusao_revisoes}%`}
+          valor={`${dadosApi.taxa_conclusao_revisoes ?? 0}%`}
         />
         <CardMetrica
           label="Aprendizado médio"
-          valor={`${data.media_aprendizado}%`}
+          valor={
+            dadosApi.media_aprendizado != null
+              ? `${dadosApi.media_aprendizado}%`
+              : "—"
+          }
         />
       </div>
 
-      {/* Visualização de Gráficos em Lado a Lado */}
+      {/* Visualização de Gráficos Lado a Lado */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-6">
           <div className="mb-4">
@@ -157,7 +178,13 @@ export function EstatisticasPage() {
             </p>
           </div>
           <div className="h-64">
-            <Line data={dadosEvolucaoSemanal} options={OPCOES_GRAFICOS} />
+            {evolucaoSemanal.length === 0 ? (
+              <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Sem dados de evolução semanal ainda.
+              </p>
+            ) : (
+              <Line data={dadosEvolucaoSemanal} options={OPCOES_GRAFICOS} />
+            )}
           </div>
         </div>
 
@@ -169,7 +196,13 @@ export function EstatisticasPage() {
             </p>
           </div>
           <div className="h-64">
-            <Bar data={dadosEvolucaoMensal} options={OPCOES_GRAFICOS} />
+            {evolucaoMensal.length === 0 ? (
+              <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Sem dados de evolução mensal ainda.
+              </p>
+            ) : (
+              <Bar data={dadosEvolucaoMensal} options={OPCOES_GRAFICOS} />
+            )}
           </div>
         </div>
       </div>
@@ -178,16 +211,24 @@ export function EstatisticasPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
         <CardMetrica
           label="Concentração média"
-          valor={`${data.media_concentracao}/5`}
+          valor={
+            dadosApi.media_concentracao != null
+              ? `${dadosApi.media_concentracao}/5`
+              : "—"
+          }
         />
         <CardMetrica
           label="Dificuldade média"
-          valor={`${data.media_dificuldade}/5`}
+          valor={
+            dadosApi.media_dificuldade != null
+              ? `${dadosApi.media_dificuldade}/5`
+              : "—"
+          }
         />
       </div>
 
       {/* Tabela de Comparação */}
-      {comparacao && comparacao.length > 0 && (
+      {comparacao.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold">Comparação entre provas</h2>
           <div className="overflow-x-auto">
@@ -202,26 +243,27 @@ export function EstatisticasPage() {
                 </tr>
               </thead>
               <tbody>
-                {comparacao.map((prova) => (
+                {comparacao.map((prova: any) => (
                   <tr
                     key={prova.prova_id}
                     className="border-b border-border last:border-0"
                   >
                     <td className="py-2 pr-4 font-medium">{prova.nome}</td>
                     <td className="py-2 pr-4">
-                      {prova.total_horas_estudadas}h
+                      {prova.total_horas_estudadas ?? 0}h
                     </td>
-                    <td className="py-2 pr-4">{prova.total_sessoes}</td>
+                    <td className="py-2 pr-4">{prova.total_sessoes ?? 0}</td>
                     <td className="py-2 pr-4">
-                      {prova.taxa_conclusao_revisoes}%
+                      {prova.taxa_conclusao_revisoes ?? 0}%
                     </td>
                     <td className="py-2">
                       <Badge
                         className={
-                          CORES_CLASSIFICACAO[prova.classificacao_indice]
+                          CORES_CLASSIFICACAO[prova.classificacao_indice] ||
+                          "bg-muted text-muted-foreground"
                         }
                       >
-                        {prova.indice_preparacao}
+                        {prova.indice_preparacao ?? "—"}
                       </Badge>
                     </td>
                   </tr>
