@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Sun,
   Timer,
+  Brain,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -31,6 +32,7 @@ const links = [
   { to: "/sessoes", label: "Sessão de Estudos", icon: Timer },
   { to: "/revisoes", label: "Revisões", icon: RotateCcw },
   { to: "/estatisticas", label: "Estatísticas", icon: BarChart3 },
+  { to: "/questoes", label: "Gerador de Questões", icon: Brain },
 ]
 
 export function AppLayout() {

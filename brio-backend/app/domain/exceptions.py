@@ -104,3 +104,14 @@ class EventoNaoEncontradoError(Exception):
 
 class ItemCronogramaNaoEncontradoError(Exception):
     pass
+
+class CotaIAExcedidaError(Exception):
+    pass
+
+
+class QuestaoNaoEncontradaError(Exception):
+    pass
+
+
+class MaterialNaoEncontradoError(Exception):
+    pass

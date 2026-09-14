@@ -20,6 +20,7 @@ from app.interface.api.v1.routers import (
     calendario,
     eventos,
     cronograma,
+    ia,
 )
 
 app = FastAPI(
@@ -59,6 +60,7 @@ app.include_router(uploads.router)
 app.include_router(eventos.router)
 app.include_router(calendario.router)
 app.include_router(cronograma.router)
+app.include_router(ia.router)
 
 
 @app.get("/health")

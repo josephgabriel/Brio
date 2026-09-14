@@ -22,6 +22,7 @@ import { TopicoAnotacaoPage } from "@/pages/TopicoAnotacaoPage"
 import { VerificarEmailPage } from "@/pages/VerificarEmailPage"
 import { CalendarioPage } from "@/pages/CalendarioPage"
 import { CronogramaPage } from "@/pages/CronogramaPage"
+import { QuestoesPage } from "@/pages/QuestoesPage"
 
 
 export const router = createBrowserRouter([
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
               { path: "/topicos/:id/anotacao", element: <TopicoAnotacaoPage /> },
               { path: "/calendario", element: <CalendarioPage /> },
               { path: "/cronograma", element: <CronogramaPage /> },
+              { path: "/questoes", element: <QuestoesPage /> },
             ],
           },
         ],

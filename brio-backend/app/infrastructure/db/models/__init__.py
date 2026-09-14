@@ -19,5 +19,9 @@ from app.infrastructure.db.models.assinatura import AssinaturaModel
 from app.infrastructure.db.models.pagamento import PagamentoModel
 from app.infrastructure.db.models.evento_calendario import EventoCalendarioModel  # noqa: F401
 from app.infrastructure.db.models.cronograma import CronogramaModel  # noqa: F401
+from app.infrastructure.db.models.avaliacao_desempenho import AvaliacaoDesempenhoModel  # noqa: F401
+from app.infrastructure.db.models.historico_resposta import HistoricoRespostaModel  # noqa: F401
+from app.infrastructure.db.models.material_estudo import MaterialEstudoModel  # noqa: F401
+from app.infrastructure.db.models.questao import QuestaoModel  # noqa: F401
 
 __all__ = ["TopicoModel", "RevisaoModel", "AnotacaoModel"]
