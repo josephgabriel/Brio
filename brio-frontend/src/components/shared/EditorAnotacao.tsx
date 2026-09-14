@@ -10,14 +10,9 @@ import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
 import CharacterCount from "@tiptap/extension-character-count"
 import {
-  AlignCenter,
-  AlignJustify,
-  AlignLeft,
-  AlignRight,
   Ban,
   Bold,
   Check,
-  CheckSquare,
   Heading1,
   Heading2,
   Heading3,
@@ -28,7 +23,6 @@ import {
   List,
   ListOrdered,
   Loader2,
-  Minus,
   Palette,
   Pilcrow,
   Quote,
@@ -118,7 +112,7 @@ interface BotaoFerramentaProps {
 function BotaoFerramenta({ ativo, rotulo, onClick, disabled, children }: BotaoFerramentaProps) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
+      <TooltipTrigger>
         <Button
           type="button"
           variant={ativo ? "secondary" : "ghost"}
@@ -250,13 +244,12 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
   }
 
   return (
-    <TooltipProvider delayDuration={200}>
+    <TooltipProvider>
       <div className="flex flex-col">
         {/* TOOLBAR UNIFICADA */}
         <div className="sticky top-2 z-10 mx-auto flex w-full max-w-[760px] items-center justify-between gap-1.5 rounded-t-xl border border-border bg-background/95 p-1.5 backdrop-blur-md shadow-xs">
           <div className="flex flex-wrap items-center gap-0.5 overflow-x-auto no-scrollbar">
             
-            {/* Agrupamento: Desfazer / Refazer */}
             <BotaoFerramenta
               rotulo="Desfazer"
               onClick={() => editor.chain().focus().undo().run()}
@@ -274,7 +267,6 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
 
             <DivisorToolbar />
 
-            {/* Selector Tipo de Bloco */}
             <Select value={rotuloBlocoAtual(editor)} onValueChange={aplicarBloco}>
               <SelectTrigger className="h-8 w-[130px] border-none bg-transparent hover:bg-accent text-xs font-medium focus:ring-0">
                 <SelectValue placeholder="Estilo" />
@@ -341,7 +333,6 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
 
             <DivisorToolbar />
 
-            {/* Listas e Estrutura */}
             <BotaoFerramenta
               rotulo="Lista com marcadores"
               ativo={editor.isActive("bulletList")}
@@ -366,9 +357,8 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
 
             <DivisorToolbar />
 
-            {/* Cores & Highlights */}
             <Popover>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                   <Highlighter className="size-4" />
                 </Button>
@@ -399,7 +389,7 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
             </Popover>
 
             <Popover>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                   <Palette className="size-4" />
                 </Button>
@@ -431,7 +421,6 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
 
             <DivisorToolbar />
 
-            {/* Mídia e Mídia Externa */}
             <BotaoFerramenta
               rotulo="Inserir link"
               ativo={editor.isActive("link")}
@@ -441,7 +430,7 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
             </BotaoFerramenta>
 
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                   <input
                     type="file"
@@ -458,7 +447,6 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
             </Tooltip>
           </div>
 
-          {/* Status Discreto */}
           <div className="flex items-center pl-2 border-l border-border/40 shrink-0">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted/50">
               {enviandoImagem ? (
@@ -481,12 +469,10 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
           </div>
         </div>
 
-        {/* ÁREA DO EDITOR */}
         <div onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} onPaste={handlePaste}>
           <EditorContent editor={editor} />
         </div>
 
-        {/* CONTADOR DE PALAVRAS / RODAPÉ */}
         <div className="mx-auto flex w-full max-w-[760px] justify-end pt-2 px-2 text-xs text-muted-foreground/80 font-mono">
           {editor.storage.characterCount.words()} palavras ·{" "}
           {editor.storage.characterCount.characters()} caracteres
