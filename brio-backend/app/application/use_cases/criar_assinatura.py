@@ -46,4 +46,6 @@ class CriarAssinatura:
             existente.mercadopago_preapproval_id = preapproval["id"]
             self.repository.atualizar(existente)
 
-        return preapproval["init_point"]
+        init_point = preapproval["init_point"]
+        init_point_corrigido = init_point.split("&activation=true")[0]
+        return init_point_corrigido
