@@ -21,12 +21,14 @@ class MercadoPagoClient:
         motivo: str,
         referencia_externa: str,
         back_url: str,
+        notification_url: str,
     ) -> dict:
         corpo = {
             "reason": motivo,
             "external_reference": referencia_externa,
             "payer_email": email_pagador,
             "back_url": back_url,
+            "notification_url": notification_url,
             "auto_recurring": {
                 "frequency": frequencia_meses,
                 "frequency_type": "months",

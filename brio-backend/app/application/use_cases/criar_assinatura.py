@@ -29,6 +29,7 @@ class CriarAssinatura:
             motivo=f"Brio - Plano {plano.value.capitalize()}",
             referencia_externa=str(usuario.id),
             back_url=f"{settings.frontend_url}/assinatura/retorno",
+            notification_url=f"{settings.backend_url}/api/v1/webhooks/mercadopago",
         )
 
         if existente is None:

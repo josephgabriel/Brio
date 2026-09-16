@@ -29,3 +29,11 @@ class SQLAlchemyPagamentoRepository(PagamentoRepository):
             .order_by(PagamentoModel.criado_em.asc())
             .first()
         )
+    
+    def listar_por_assinatura(self, assinatura_id: int) -> list[PagamentoModel]:
+        return (
+            self.db.query(PagamentoModel)
+            .filter(PagamentoModel.assinatura_id == assinatura_id)
+            .order_by(PagamentoModel.criado_em.desc())
+            .all()
+        )

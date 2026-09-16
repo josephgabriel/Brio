@@ -15,6 +15,7 @@ import {
   Sun,
   Timer,
   Brain,
+  CreditCard,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -152,6 +153,15 @@ export function AppLayout() {
             {!sidebarRecolhida && <span>Sair</span>}
           </Button>
         </div>
+
+      <Button variant="ghost" size="sm" className="justify-start gap-2" asChild>
+        <Link to="/conta">
+          <CreditCard className="size-4" />
+          Minha assinatura
+        </Link>
+        
+      </Button>
+
       </aside>
 
       {/* Conteúdo Principal Rolável */}

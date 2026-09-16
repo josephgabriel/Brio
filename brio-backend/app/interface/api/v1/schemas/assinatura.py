@@ -17,8 +17,16 @@ class CriarAssinaturaResponseSchema(BaseModel):
 class AssinaturaResponseSchema(BaseModel):
     plano: Plano
     status: StatusAssinatura
+    renovacao_automatica: bool
     data_inicio: date | None
     data_expiracao: date | None
     criada_em: datetime
+
+    model_config = {"from_attributes": True}
+
+class PagamentoResponseSchema(BaseModel):
+    valor: float
+    status: str
+    criado_em: datetime
 
     model_config = {"from_attributes": True}

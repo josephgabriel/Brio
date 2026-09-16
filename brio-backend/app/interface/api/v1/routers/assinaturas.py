@@ -25,6 +25,12 @@ from app.interface.api.v1.schemas.assinatura import (
     CriarAssinaturaSchema,
 )
 
+from app.application.use_cases.cancelar_assinatura import CancelarAssinatura
+from app.infrastructure.db.repositories.pagamento_repository import (
+    SQLAlchemyPagamentoRepository,
+)
+from app.interface.api.v1.schemas.assinatura import PagamentoResponseSchema
+
 router = APIRouter(prefix="/api/v1/assinatura", tags=["assinatura"])
 
 
@@ -71,3 +77,31 @@ def reembolso(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
     except ForaDoPrazoReembolsoError as erro:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(erro))
+    
+@router.post("/cancelar", response_model=AssinaturaResponseSchema)
+def cancelar(
+    usuario: UsuarioModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    repository = SQLAlchemyAssinaturaRepository(db)
+    use_case = CancelarAssinatura(repository, MercadoPagoClient())
+
+    try:
+        return use_case.executar(usuario_id=usuario.id)
+    except AssinaturaNaoEncontradaError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
+
+
+@router.get("/pagamentos", response_model=list[PagamentoResponseSchema])
+def pagamentos(
+    usuario: UsuarioModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    assinatura_repository = SQLAlchemyAssinaturaRepository(db)
+    pagamento_repository = SQLAlchemyPagamentoRepository(db)
+
+    assinatura = assinatura_repository.buscar_por_usuario(usuario.id)
+    if assinatura is None:
+        return []
+
+    return pagamento_repository.listar_por_assinatura(assinatura.id)

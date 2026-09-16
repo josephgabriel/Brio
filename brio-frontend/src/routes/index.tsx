@@ -23,6 +23,8 @@ import { VerificarEmailPage } from "@/pages/VerificarEmailPage"
 import { CalendarioPage } from "@/pages/CalendarioPage"
 import { CronogramaPage } from "@/pages/CronogramaPage"
 import { QuestoesPage } from "@/pages/QuestoesPage"
+import { MinhaAssinaturaPage } from "@/pages/MinhaAssinaturaPage"
+
 
 
 export const router = createBrowserRouter([
@@ -56,6 +58,7 @@ export const router = createBrowserRouter([
               { path: "/calendario", element: <CalendarioPage /> },
               { path: "/cronograma", element: <CronogramaPage /> },
               { path: "/questoes", element: <QuestoesPage /> },
+              { path: "/conta", element: <MinhaAssinaturaPage /> },
             ],
           },
         ],

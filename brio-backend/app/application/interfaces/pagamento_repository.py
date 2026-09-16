@@ -13,3 +13,6 @@ class PagamentoRepository(ABC):
 
     @abstractmethod
     def primeiro_pagamento_da_assinatura(self, assinatura_id: int) -> PagamentoModel | None: ...
+
+    @abstractmethod
+    def listar_por_assinatura(self, assinatura_id: int) -> list[PagamentoModel]: ...
