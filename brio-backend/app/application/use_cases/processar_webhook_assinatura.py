@@ -27,7 +27,13 @@ class ProcessarWebhookAssinatura:
             if assinatura.data_inicio is None:
                 assinatura.data_inicio = date.today()
                 assinatura.data_expiracao = calcular_data_expiracao(assinatura.plano)
-        elif status_mp in ("cancelled", "paused"):
-            assinatura.status = StatusAssinatura.CANCELADA
+            self.repository.atualizar(assinatura)
 
-        self.repository.atualizar(assinatura)
+        # "cancelled"/"paused" vindos do Mercado Pago NÃO são tratados aqui
+        # de propósito. Cancelamento (CancelarAssinatura) e reembolso
+        # (SolicitarReembolso) já decidem, de forma síncrona, exatamente
+        # o que fazer com o status -- o webhook rebaixando status de novo
+        # aqui cortaria o acesso antes da hora, mesmo quando a intenção era
+        # só "não renovar", com acesso mantido até data_expiracao. O fim do
+        # acesso, nesse caso, já acontece sozinho quando data_expiracao
+        # passa (assinatura_esta_valida checa a data, não só o status).
