@@ -10,6 +10,10 @@ import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
 import CharacterCount from "@tiptap/extension-character-count"
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   Ban,
   Bold,
   Check,
@@ -52,7 +56,6 @@ interface EditorAnotacaoProps {
   onSalvar: (html: string) => void
 }
 
-// Paleta Curada e Suave (Ideal para Leitura e Estudo)
 const CORES_DESTAQUE = [
   { nome: "Amarelo Soft", hex: "#FEF08A" },
   { nome: "Menta Soft", hex: "#BBF7D0" },
@@ -182,7 +185,7 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
         const url = await enviarImagem(arquivo)
         editor.chain().focus().setImage({ src: url }).run()
       } catch (erro) {
-        console.error(erro)
+        console.error("Erro ao enviar imagem:", erro)
       } finally {
         setEnviandoImagem(false)
       }
@@ -224,20 +227,24 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
     [inserirImagem],
   )
 
-  function inserirLink() {
+  const inserirLink = useCallback(() => {
+    if (!editor) return
     const url = window.prompt("Digite a URL do link:")
     if (url) {
-      editor?.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
     }
-  }
+  }, [editor])
 
-  function aplicarBloco(valor: string) {
-    if (!editor) return
-    if (valor === "paragrafo") editor.chain().focus().setParagraph().run()
-    if (valor === "titulo1") editor.chain().focus().toggleHeading({ level: 1 }).run()
-    if (valor === "titulo2") editor.chain().focus().toggleHeading({ level: 2 }).run()
-    if (valor === "titulo3") editor.chain().focus().toggleHeading({ level: 3 }).run()
-  }
+  const aplicarBloco = useCallback(
+    (valor: string) => {
+      if (!editor) return
+      if (valor === "paragrafo") editor.chain().focus().setParagraph().run()
+      if (valor === "titulo1") editor.chain().focus().toggleHeading({ level: 1 }).run()
+      if (valor === "titulo2") editor.chain().focus().toggleHeading({ level: 2 }).run()
+      if (valor === "titulo3") editor.chain().focus().toggleHeading({ level: 3 }).run()
+    },
+    [editor],
+  )
 
   if (!editor) {
     return null
@@ -323,6 +330,36 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
             >
               <UnderlineIcon className="size-4" />
             </BotaoFerramenta>
+
+            <BotaoFerramenta
+              rotulo="Alinhar à esquerda"
+              ativo={editor.isActive({ textAlign: "left" })}
+              onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            >
+              <AlignLeft className="size-4" />
+            </BotaoFerramenta>
+            <BotaoFerramenta
+              rotulo="Centralizar"
+              ativo={editor.isActive({ textAlign: "center" })}
+              onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            >
+              <AlignCenter className="size-4" />
+            </BotaoFerramenta>
+            <BotaoFerramenta
+              rotulo="Alinhar à direita"
+              ativo={editor.isActive({ textAlign: "right" })}
+              onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            >
+              <AlignRight className="size-4" />
+            </BotaoFerramenta>
+            <BotaoFerramenta
+              rotulo="Justificar"
+              ativo={editor.isActive({ textAlign: "justify" })}
+              onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+            >
+              <AlignJustify className="size-4" />
+            </BotaoFerramenta>
+            
             <BotaoFerramenta
               rotulo="Tachado"
               ativo={editor.isActive("strike")}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 
 export type FasePomodoro = "foco" | "pausa_curta" | "pausa_longa"
 
@@ -37,37 +37,51 @@ function proximoEstado(estado: EstadoPomodoro, config: ConfigPomodoro): EstadoPo
 }
 
 function tocarAlarme() {
-  const contexto = new AudioContext()
-  const oscilador = contexto.createOscillator()
-  const ganho = contexto.createGain()
+  try {
+    const contexto = new AudioContext()
+    const oscilador = contexto.createOscillator()
+    const ganho = contexto.createGain()
 
-  oscilador.frequency.value = 880
-  oscilador.connect(ganho)
-  ganho.connect(contexto.destination)
+    oscilador.frequency.value = 880
+    oscilador.connect(ganho)
+    ganho.connect(contexto.destination)
 
-  ganho.gain.setValueAtTime(0.2, contexto.currentTime)
-  ganho.gain.exponentialRampToValueAtTime(0.001, contexto.currentTime + 0.8)
+    ganho.gain.setValueAtTime(0.2, contexto.currentTime)
+    ganho.gain.exponentialRampToValueAtTime(0.001, contexto.currentTime + 0.8)
 
-  oscilador.start()
-  oscilador.stop(contexto.currentTime + 0.8)
+    oscilador.start()
+    oscilador.stop(contexto.currentTime + 0.8)
+  } catch (e) {
+    // Evita crash caso o navegador bloqueie o AudioContext sem interação prévia do usuário
+    console.warn("Não foi possível reproduzir o som do alarme:", e)
+  }
 }
 
 export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
+  // 1. TODOS os Hooks devem vir no topo, sem NENHUMA condicional antes deles.
   const chave = idSessao ? `brio_pomodoro_estado_${idSessao}` : undefined
 
   const [estado, setEstado] = useState<EstadoPomodoro>(() => {
     if (chave) {
       const salvo = localStorage.getItem(chave)
-      if (salvo) return JSON.parse(salvo)
+      if (salvo) {
+        try {
+          return JSON.parse(salvo)
+        } catch {
+          // Fallback caso o JSON esteja corrompido
+        }
+      }
     }
     return { fase: "foco", cicloAtual: 1, segundosRestantes: duracaoDaFase("foco", config) }
   })
+  
   const [pausado, setPausado] = useState(false)
   const idAnterior = useRef(idSessao)
   const primeiraRenderizacao = useRef(true)
 
+  // 2. Efeitos colaterais seguros que lidam internamente com idSessao nulo
   useEffect(() => {
-    if (pausado) return
+    if (pausado || idSessao === null) return
 
     const intervalo = setInterval(() => {
       setEstado((atual) =>
@@ -78,7 +92,7 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
     }, 1000)
 
     return () => clearInterval(intervalo)
-  }, [pausado, config])
+  }, [pausado, config, idSessao])
 
   useEffect(() => {
     if (chave) {
@@ -91,8 +105,9 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
       primeiraRenderizacao.current = false
       return
     }
+    if (idSessao === null) return
     tocarAlarme()
-  }, [estado.fase])
+  }, [estado.fase, idSessao])
 
   useEffect(() => {
     if (idSessao !== idAnterior.current) {
@@ -102,14 +117,14 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
     }
   }, [idSessao, config])
 
-  function pularFase() {
+  const pularFase = useCallback(() => {
     setEstado((atual) => proximoEstado(atual, config))
-  }
+  }, [config])
 
-  function reiniciar() {
+  const reiniciar = useCallback(() => {
     setEstado({ fase: "foco", cicloAtual: 1, segundosRestantes: duracaoDaFase("foco", config) })
     setPausado(false)
-  }
+  }, [config])
 
   const duracaoTotal = duracaoDaFase(estado.fase, config)
   const progresso = 1 - estado.segundosRestantes / duracaoTotal

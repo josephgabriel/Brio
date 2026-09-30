@@ -15,3 +15,6 @@ class TopicoRepository(ABC):
 
     @abstractmethod
     def deletar(self, topico: TopicoModel) -> None: ...
+
+    @abstractmethod
+    def atualizar(self, topico: TopicoModel) -> TopicoModel: ...

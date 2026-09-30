@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Download, ArrowLeft } from "lucide-react"
+import { Download, ArrowLeft, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { exportarAnotacaoPdf, obterAnotacao, salvarAnotacao } from "@/features/anotacoes/api/anotacoes-api"
 import { useNavigate, useParams } from "react-router-dom"
@@ -58,6 +58,11 @@ export function TopicoAnotacaoPage() {
           </button>
           <h1 className="text-xl font-semibold">Anotações</h1>
         </div>
+
+        <Button variant="outline" size="sm" onClick={() => navigate(`/sessoes?topico_id=${topicoId}`)}>
+         <Play className="size-4" />
+         Iniciar sessão
+         </Button>
 
         <Button variant="outline" size="sm" onClick={handleExportar} disabled={exportando}>
           <Download className="size-4" />

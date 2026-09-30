@@ -5,18 +5,19 @@ import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
+  atualizarDisciplina,
   criarDisciplina,
   deletarDisciplina,
   listarDisciplinas,
 } from "@/features/disciplinas/api/disciplinas-api"
 import type { Disciplina } from "@/features/disciplinas/types"
 import {
+  atualizarTopico,
   criarTopico,
   deletarTopico,
   listarTopicos,
 } from "@/features/topicos/api/topicos-api"
 import type { Topico } from "@/features/topicos/types"
-import { obterProva } from "@/features/provas/api/provas-api"
 
 interface GerenciadorMateriasProps {
   provaId: number
@@ -32,13 +33,6 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
     queryKey: ["disciplinas", provaId],
     queryFn: () => listarDisciplinas(provaId),
   })
-
-  const { data: prova } = useQuery({
-    queryKey: ["provas", provaId],
-    queryFn: () => obterProva(provaId),
-  })
-
-  const podeSelecionarTopico = prova?.status === "ativa"
 
   const criarDisciplinaMutation = useMutation({
     mutationFn: () => criarDisciplina(provaId, novaDisciplina),
@@ -56,7 +50,7 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
   })
 
   return (
-    <div className="flex flex-col gap-3 p-6">
+    <div className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">Matérias e Conteúdos</h2>
 
       <div className="flex gap-2">
@@ -91,7 +85,7 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
               )
             }
             onExcluir={() => deletarDisciplinaMutation.mutate(disciplina.id)}
-            onSelecionarTopico={podeSelecionarTopico ? onSelecionarTopico : undefined}
+            onSelecionarTopico={onSelecionarTopico}
           />
         ))}
       </div>
@@ -111,9 +105,12 @@ function DisciplinaItem({
   disciplina,
   expandida,
   onToggle,
+  onExcluir,
   onSelecionarTopico,
 }: DisciplinaItemProps) {
   const [novoTopico, setNovoTopico] = useState("")
+  const [editandoDisciplina, setEditandoDisciplina] = useState(false)
+  const [nomeDisciplinaEditado, setNomeDisciplinaEditado] = useState(disciplina.nome)
   const queryClient = useQueryClient()
 
   const { data: topicos } = useQuery({
@@ -130,13 +127,22 @@ function DisciplinaItem({
     },
   })
 
-  const deletarTopicoMutation = useMutation({
-    mutationFn: deletarTopico,
+  const atualizarDisciplinaMutation = useMutation({
+    mutationFn: () => atualizarDisciplina(disciplina.id, nomeDisciplinaEditado),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["topicos", disciplina.id] })
-      queryClient.invalidateQueries({ queryKey: ["disciplinas", disciplina.prova_id] })
+      queryClient.invalidateQueries({ queryKey: ["disciplinas"] })
+      setEditandoDisciplina(false)
     },
   })
+
+  function handleSalvarDisciplina() {
+    if (!nomeDisciplinaEditado.trim() || nomeDisciplinaEditado === disciplina.nome) {
+      setEditandoDisciplina(false)
+      setNomeDisciplinaEditado(disciplina.nome)
+      return
+    }
+    atualizarDisciplinaMutation.mutate()
+  }
 
   return (
     <div className="rounded-lg border border-border">
@@ -147,57 +153,46 @@ function DisciplinaItem({
           className="flex flex-1 items-center gap-2 text-left"
         >
           {expandida ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-          <span className="font-medium">{disciplina.nome}</span>
+          {editandoDisciplina ? (
+            <Input
+              autoFocus
+              value={nomeDisciplinaEditado}
+              onChange={(e) => setNomeDisciplinaEditado(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onBlur={handleSalvarDisciplina}
+              onKeyDown={(e) => e.key === "Enter" && handleSalvarDisciplina()}
+              className="h-7"
+            />
+          ) : (
+            <span
+              className="font-medium"
+              onClick={(e) => {
+                e.stopPropagation()
+                setEditandoDisciplina(true)
+              }}
+            >
+              {disciplina.nome}
+            </span>
+          )}
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${disciplina.nivel_conhecimento}%` }}
-              />
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {disciplina.nivel_conhecimento}%
-            </span>
-          </div>
-         
-        </div>
+        <Button type="button" variant="ghost" size="sm" onClick={onExcluir}>
+          <Trash2 className="size-4" />
+        </Button>
       </div>
 
       {expandida && (
         <div className="flex flex-col gap-2 border-t border-border p-3">
           {topicos?.map((topico) =>
             onSelecionarTopico ? (
-              <button
+              <TopicoLinha
                 key={topico.id}
-                type="button"
-                onClick={() => onSelecionarTopico(topico)}
-                className="flex items-center justify-between rounded-md p-1.5 text-left text-sm hover:bg-accent"
-              >
-                <span>{topico.nome}</span>
-              </button>
-            ) : (
-              <div key={topico.id} className="flex items-center justify-between text-sm">
-                <span>{topico.nome}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deletarTopicoMutation.mutate(topico.id)}
-                >
-                <Trash2
-                className="size-3.5 text-muted-foreground hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (window.confirm(`Excluir "${topico.nome}"? As sessões de estudo já registradas continuam no seu histórico, sem vínculo com este tópico.`)) {
-                    deletarTopicoMutation.mutate(topico.id)
-                  }
-                }}
+                topico={topico}
+                disciplinaId={disciplina.id}
+                onSelecionar={() => onSelecionarTopico(topico)}
               />
-                </Button>
-              </div>
+            ) : (
+              <TopicoLinha key={topico.id} topico={topico} disciplinaId={disciplina.id} />
             ),
           )}
 
@@ -218,6 +213,99 @@ function DisciplinaItem({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+interface TopicoLinhaProps {
+  topico: Topico
+  disciplinaId: number
+  onSelecionar?: () => void
+}
+
+function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
+  const [editando, setEditando] = useState(false)
+  const [nomeEditado, setNomeEditado] = useState(topico.nome)
+  const queryClient = useQueryClient()
+
+  const atualizarTopicoMutation = useMutation({
+    mutationFn: () => atualizarTopico(topico.id, nomeEditado),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaId] })
+      setEditando(false)
+    },
+  })
+
+  const deletarTopicoMutation = useMutation({
+    mutationFn: deletarTopico,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaId] })
+    },
+  })
+
+  function handleSalvar() {
+    if (!nomeEditado.trim() || nomeEditado === topico.nome) {
+      setEditando(false)
+      setNomeEditado(topico.nome)
+      return
+    }
+    atualizarTopicoMutation.mutate()
+  }
+
+  if (editando) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <Input
+          autoFocus
+          value={nomeEditado}
+          onChange={(e) => setNomeEditado(e.target.value)}
+          onBlur={handleSalvar}
+          onKeyDown={(e) => e.key === "Enter" && handleSalvar()}
+          className="h-7"
+        />
+      </div>
+    )
+  }
+
+  if (onSelecionar) {
+    return (
+      <button
+        type="button"
+        onClick={onSelecionar}
+        className="flex items-center justify-between rounded-md p-1.5 text-left text-sm hover:bg-accent"
+      >
+        <span
+          onClick={(e) => {
+            e.stopPropagation()
+            setEditando(true)
+          }}
+        >
+          {topico.nome}
+        </span>
+        <Trash2
+          className="size-3.5 text-muted-foreground hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation()
+            deletarTopicoMutation.mutate(topico.id)
+          }}
+        />
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span onClick={() => setEditando(true)} className="cursor-pointer">
+        {topico.nome}
+      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => deletarTopicoMutation.mutate(topico.id)}
+      >
+        <Trash2 className="size-3.5" />
+      </Button>
     </div>
   )
 }

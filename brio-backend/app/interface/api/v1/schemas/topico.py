@@ -15,3 +15,11 @@ class TopicoResponseSchema(BaseModel):
     criada_em: datetime
 
     model_config = {"from_attributes": True}
+
+class TopicoContextoSchema(BaseModel):
+    topico_id: int
+    topico_nome: str
+    disciplina_id: int
+    disciplina_nome: str
+    prova_id: int
+    prova_nome: str

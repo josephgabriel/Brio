@@ -62,3 +62,19 @@ def deletar(
         use_case.executar(disciplina_id=disciplina_id, usuario_id=usuario.id)
     except DisciplinaNaoEncontradaError as erro:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
+    
+from app.application.use_cases.atualizar_disciplina import AtualizarDisciplina
+
+@router.put("/api/v1/disciplinas/{disciplina_id}", response_model=DisciplinaResponseSchema)
+def atualizar(
+    disciplina_id: int,
+    dados: DisciplinaCreateSchema,
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
+    db: Session = Depends(get_db),
+):
+    repository = SQLAlchemyDisciplinaRepository(db)
+    use_case = AtualizarDisciplina(repository)
+    try:
+        return use_case.executar(disciplina_id=disciplina_id, usuario_id=usuario.id, nome=dados.nome)
+    except DisciplinaNaoEncontradaError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))

@@ -20,3 +20,12 @@ export async function deletarDisciplina(id: number): Promise<void> {
   const response = await apiFetch(`/api/v1/disciplinas/${id}`, { method: "DELETE" })
   if (!response.ok) throw new Error("Não foi possível excluir a matéria")
 }
+
+export async function atualizarDisciplina(id: number, nome: string): Promise<Disciplina> {
+  const response = await apiFetch(`/api/v1/disciplinas/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ nome }),
+  })
+  if (!response.ok) throw new Error("Não foi possível renomear a matéria")
+  return response.json()
+}

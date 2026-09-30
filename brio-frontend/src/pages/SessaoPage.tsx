@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Download, Menu, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
 
@@ -25,7 +26,7 @@ import {
   iniciarSessao,
 } from "@/features/sessoes/api/sessoes-api"
 import { useSessaoAtiva } from "@/features/sessoes/sessao-ativa-context"
-import { listarTopicos } from "@/features/topicos/api/topicos-api"
+import { listarTopicos, obterContextoTopico } from "@/features/topicos/api/topicos-api"
 import type { Topico } from "@/features/topicos/types"
 import { type ConfigPomodoro } from "@/hooks/usePomodoro"
 import { Link } from "react-router-dom"
@@ -37,7 +38,13 @@ const ROTULO_FASE: Record<string, string> = {
 }
 
 export function SessaoPage() {
+  // ==========================================
+  // 1. TODOS OS HOOKS DECLARADOS NO TOPO ABSOLUTO
+  // ==========================================
   const { sessaoAtiva, pomodoro, iniciarSessaoAtiva, encerrarSessaoAtiva } = useSessaoAtiva()
+
+  const [searchParams] = useSearchParams()
+  const topicoIdPreSelecionado = searchParams.get("topico_id")
 
   const [provaId, setProvaId] = useState("")
   const [disciplinaId, setDisciplinaId] = useState("")
@@ -64,6 +71,15 @@ export function SessaoPage() {
   useEffect(() => {
     setTopicoVisualizado(null)
   }, [sessaoAtiva?.id])
+
+  useEffect(() => {
+    if (!topicoIdPreSelecionado) return
+    obterContextoTopico(Number(topicoIdPreSelecionado)).then((contexto) => {
+      setProvaId(String(contexto.prova_id))
+      setDisciplinaId(String(contexto.disciplina_id))
+      setTopicoId(String(contexto.topico_id))
+    })
+  }, [topicoIdPreSelecionado])
 
   const { data: provas } = useQuery({ queryKey: ["provas"], queryFn: listarProvas })
   const provasAtivas = provas?.filter((prova) => prova.status === "ativa")
@@ -152,6 +168,9 @@ export function SessaoPage() {
     },
   })
 
+  // ==========================================
+  // FUNÇÕES AUXILIARES
+  // ==========================================
   function handleIniciar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     iniciar.mutate()
@@ -177,6 +196,9 @@ export function SessaoPage() {
     }
   }
 
+  // ==========================================
+  // 2. RETORNOS CONDICIONAIS (APÓS TODOS OS HOOKS)
+  // ==========================================
   if (sessaoAtiva) {
     return (
       <div className="relative">

@@ -28,3 +28,8 @@ class SQLAlchemyTopicoRepository(TopicoRepository):
     def deletar(self, topico: TopicoModel) -> None:
         self.db.delete(topico)
         self.db.commit()
+
+    def atualizar(self, topico: TopicoModel) -> TopicoModel:
+        self.db.commit()
+        self.db.refresh(topico)
+        return topico
