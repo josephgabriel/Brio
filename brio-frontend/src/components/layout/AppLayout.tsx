@@ -65,12 +65,12 @@ export function AppLayout() {
     <div className="flex h-screen w-full overflow-hidden">
       {/* Sidebar Fixa */}
       <aside
-        className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-border/80 bg-card p-4 shadow-sm transition-all duration-300 ${
+        className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-border/80 bg-card p-4 shadow-sm transition-all duration-300 overflow-hidden ${
           sidebarRecolhida ? "w-20" : "w-56"
         }`}
       >
         {/* Cabeçalho */}
-        <div className="mb-8 flex items-center justify-between px-3">
+        <div className="mb-6 flex items-center justify-between px-3 shrink-0">
           {!sidebarRecolhida && (
             <span className="text-xl font-bold tracking-tight">BRIO</span>
           )}
@@ -88,8 +88,8 @@ export function AppLayout() {
           </Button>
         </div>
 
-        {/* Links */}
-        <nav className="flex flex-1 flex-col gap-2.5 overflow-y-auto">
+        {/* Links (Com rolagem invisível caso precise) */}
+        <nav className="flex flex-1 flex-col gap-2 overflow-y-auto no-scrollbar">
           {links.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -97,7 +97,7 @@ export function AppLayout() {
               end
               title={sidebarRecolhida ? label : undefined}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                   sidebarRecolhida ? "justify-center" : "gap-2"
                 } ${
                   isActive
@@ -114,7 +114,7 @@ export function AppLayout() {
         </nav>
 
         {/* Ações inferiores */}
-        <div className="flex flex-col gap-1 border-t border-border pt-4">
+        <div className="flex flex-col gap-1 border-t border-border pt-3 shrink-0">
           <Button
             variant="ghost"
             title={
@@ -130,9 +130,9 @@ export function AppLayout() {
             onClick={alternarTema}
           >
             {tema === "dark" ? (
-              <Sun className="size-4" />
+              <Sun className="size-4 shrink-0" />
             ) : (
-              <Moon className="size-4" />
+              <Moon className="size-4 shrink-0" />
             )}
 
             {!sidebarRecolhida && (
@@ -146,8 +146,9 @@ export function AppLayout() {
             className={`gap-2 ${
               sidebarRecolhida ? "justify-center" : "justify-start"
             }`}
+            asChild
           >
-            <Link to="/conta">
+            <Link to="/conta" className="flex items-center gap-2">
               <CreditCard className="size-4 shrink-0" />
               {!sidebarRecolhida && <span>Minha assinatura</span>}
             </Link>
