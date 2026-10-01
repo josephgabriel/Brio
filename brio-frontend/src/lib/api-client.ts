@@ -19,13 +19,14 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
   const headers = new Headers(options.headers)
 
   const corpoEhFormData = options.body instanceof FormData
-  if (!corpoEhFormData) {
-    headers.set("Content-Type", "application/json")
+  if (!corpoEhFormData) headers.set("Content-Type", "application/json")
+  if (token) headers.set("Authorization", `Bearer ${token}`)
+
+  const response = await fetch(`${API_URL}${path}`, { ...options, headers })
+
+  if (response.status === 401) {
+    window.dispatchEvent(new CustomEvent("brio:sessao-expirada"))
   }
 
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`)
-  }
-
-  return fetch(`${API_URL}${path}`, { ...options, headers })
+  return response
 }

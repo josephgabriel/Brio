@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     mercadopago_access_token: str
 
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60
+    access_token_expire_minutes: int = 480
 
     frontend_url: str = "https://brio-rho.vercel.app"
     backend_url: str

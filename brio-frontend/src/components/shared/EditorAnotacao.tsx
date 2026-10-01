@@ -53,7 +53,8 @@ import { useDebounce } from "@/hooks/useDebounce"
 
 interface EditorAnotacaoProps {
   conteudoInicial: string
-  onSalvar: (html: string) => void
+  chaveRascunho: string
+  onSalvar: (html: string) => Promise<any>
 }
 
 const CORES_DESTAQUE = [
@@ -140,14 +141,23 @@ function DivisorToolbar() {
   return <div className="mx-0.5 h-4 w-px bg-border/60 shrink-0" />
 }
 
-export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProps) {
+export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: EditorAnotacaoProps) {
   const [salvando, setSalvando] = useState(false)
   const [enviandoImagem, setEnviandoImagem] = useState(false)
-  
-  const salvarComDebounce = useDebounce((html: string) => {
-    onSalvar(html)
-    setSalvando(false)
-  }, 1500)
+  const [erroSalvar, setErroSalvar] = useState(false)
+  const chaveStorage = `brio_rascunho_${chaveRascunho}`
+
+  const salvarComDebounce = useDebounce(async (html: string) => {
+    try {
+      await onSalvar(html)
+      localStorage.removeItem(chaveStorage)
+      setErroSalvar(false)
+    } catch {
+      setErroSalvar(true)
+    } finally {
+      setSalvando(false)
+    }
+  }, 2000)
 
   const editor = useEditor({
     extensions: [
@@ -163,8 +173,10 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
     ],
     content: conteudoInicial,
     onUpdate: ({ editor }) => {
+      const html = editor.getHTML()
+      localStorage.setItem(chaveStorage, html)
       setSalvando(true)
-      salvarComDebounce(editor.getHTML())
+      salvarComDebounce(html)
     },
     editorProps: {
       attributes: { class: CLASSES_CONTEUDO },
@@ -172,10 +184,15 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
   })
 
   useEffect(() => {
-    if (editor && conteudoInicial !== editor.getHTML()) {
+    if (!editor) return
+    const rascunho = localStorage.getItem(chaveStorage)
+    if (rascunho && rascunho !== conteudoInicial) {
+      editor.commands.setContent(rascunho)
+      salvarComDebounce(rascunho)
+    } else if (conteudoInicial !== editor.getHTML()) {
       editor.commands.setContent(conteudoInicial)
     }
-  }, [conteudoInicial, editor])
+  }, [conteudoInicial, editor, chaveStorage, salvarComDebounce])
 
   const inserirImagem = useCallback(
     async (arquivo: File) => {
@@ -496,6 +513,8 @@ export function EditorAnotacao({ conteudoInicial, onSalvar }: EditorAnotacaoProp
                   <Loader2 className="size-3 animate-spin text-muted-foreground" />
                   <span className="hidden sm:inline">Salvando...</span>
                 </>
+              ) : erroSalvar ? (
+                <span className="text-destructive font-medium">Erro ao salvar</span>
               ) : (
                 <>
                   <Check className="size-3 text-emerald-500" />

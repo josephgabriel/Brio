@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, type ReactNode, useEffect } from "react"
 import { getToken, setToken as salvarToken, clearToken } from "@/lib/api-client"
 
 interface AuthContextType {
@@ -24,6 +24,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearToken()
     setTokenState(null)
   }
+
+  useEffect(() => {
+    function aoExpirar() {
+      clearToken()
+      setTokenState(null)
+    }
+    window.addEventListener("brio:sessao-expirada", aoExpirar)
+    return () => window.removeEventListener("brio:sessao-expirada", aoExpirar)
+  }, [])
 
   return (
     <AuthContext.Provider

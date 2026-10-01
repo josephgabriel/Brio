@@ -247,8 +247,9 @@ export function SessaoPage() {
 
             {anotacao && (
               <EditorAnotacao
-                conteudoInicial={anotacao.conteudo_html}
-                onSalvar={(html) => salvarAnotacaoMutation.mutate(html)}
+               conteudoInicial={anotacao.conteudo_html}
+               chaveRascunho={`topico-${topicoAtual?.id}`}
+               onSalvar={(html) => salvarAnotacaoMutation.mutateAsync(html)}
               />
             )}
           </div>

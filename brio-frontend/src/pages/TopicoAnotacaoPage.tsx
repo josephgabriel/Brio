@@ -72,9 +72,10 @@ export function TopicoAnotacaoPage() {
 
       <div className="w-full">
         <EditorAnotacao
-          conteudoInicial={anotacao.conteudo_html}
-          onSalvar={(html) => salvar.mutate(html)}
-        />
+         conteudoInicial={anotacao.conteudo_html}
+         chaveRascunho={`topico-${topicoId}`}
+         onSalvar={(html) => salvar.mutateAsync(html)}
+/>
       </div>
     </div>
   )
