@@ -140,7 +140,7 @@ export function AppLayout() {
             )}
           </Button>
 
-                <Button
+          <Button
             variant="ghost"
             size="sm"
             title={sidebarRecolhida ? "Minha assinatura" : undefined}
@@ -150,7 +150,7 @@ export function AppLayout() {
           >
             <Link to="/conta">
               <CreditCard className="size-4 shrink-0" />
-              {!sidebarRecolhida && <span>Assinatura</span>}
+              {!sidebarRecolhida && <span>Minha assinatura</span>}
             </Link>
           </Button>
 
@@ -162,15 +162,14 @@ export function AppLayout() {
             }`}
             onClick={logout}
           >
-            <LogOut className="size-4" />
+            <LogOut className="size-4 shrink-0" />
 
             {!sidebarRecolhida && <span>Sair</span>}
           </Button>
-
         </div>
-
       </aside>
 
+      {/* Conteúdo Principal Rolável */}
       <main className="h-full min-w-0 flex-1 overflow-y-auto p-8">
         {!emailVerificado && (
           <div className="mb-4 flex items-center justify-between rounded-md border border-status-atencao/40 bg-status-atencao/10 px-4 py-2 text-sm">
