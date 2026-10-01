@@ -150,7 +150,7 @@ export function AppLayout() {
           >
             <Link to="/conta">
               <CreditCard className="size-4 shrink-0" />
-              {!sidebarRecolhida && <span>Minha assinatura</span>}
+              {!sidebarRecolhida && <span>Assinatura</span>}
             </Link>
           </Button>
 
