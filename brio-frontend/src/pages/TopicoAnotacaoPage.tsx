@@ -14,10 +14,11 @@ export function TopicoAnotacaoPage() {
   // 1. TODOS OS HOOKS DEVEM FICAR NO TOPO (Incondicionais)
   const [exportando, setExportando] = useState(false)
 
-  const { data: anotacao, isLoading, isError } = useQuery({
-    queryKey: ["anotacao", topicoId],
-    queryFn: () => obterAnotacao(topicoId),
-  })
+  const { data: anotacao, isLoading, isError  } = useQuery({
+  queryKey: ["anotacao", topicoId],
+  queryFn: () => obterAnotacao(topicoId),
+  staleTime: Infinity,
+})
 
   const salvar = useMutation({
     mutationFn: (html: string) => salvarAnotacao(topicoId, html),

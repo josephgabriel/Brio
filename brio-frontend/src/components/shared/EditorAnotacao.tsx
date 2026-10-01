@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useRef} from "react"
 import { EditorContent, ReactNodeViewRenderer, useEditor, type Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { TextStyle } from "@tiptap/extension-text-style"
@@ -146,6 +146,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
   const [enviandoImagem, setEnviandoImagem] = useState(false)
   const [erroSalvar, setErroSalvar] = useState(false)
   const chaveStorage = `brio_rascunho_${chaveRascunho}`
+  const jaCarregouConteudoInicial = useRef(false)
 
   const salvarComDebounce = useDebounce(async (html: string) => {
     try {
@@ -157,7 +158,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
     } finally {
       setSalvando(false)
     }
-  }, 2000)
+  }, 800)
 
   const editor = useEditor({
     extensions: [
@@ -184,15 +185,17 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
   })
 
   useEffect(() => {
-    if (!editor) return
-    const rascunho = localStorage.getItem(chaveStorage)
-    if (rascunho && rascunho !== conteudoInicial) {
-      editor.commands.setContent(rascunho)
-      salvarComDebounce(rascunho)
-    } else if (conteudoInicial !== editor.getHTML()) {
-      editor.commands.setContent(conteudoInicial)
-    }
-  }, [conteudoInicial, editor, chaveStorage, salvarComDebounce])
+  if (!editor || jaCarregouConteudoInicial.current) return
+  jaCarregouConteudoInicial.current = true
+
+  const rascunho = localStorage.getItem(chaveStorage)
+  if (rascunho && rascunho !== conteudoInicial) {
+    editor.commands.setContent(rascunho)
+    salvarComDebounce(rascunho)
+  } else {
+    editor.commands.setContent(conteudoInicial)
+  }
+   }, [editor])
 
   const inserirImagem = useCallback(
     async (arquivo: File) => {

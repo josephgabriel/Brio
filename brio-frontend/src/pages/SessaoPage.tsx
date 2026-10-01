@@ -101,10 +101,11 @@ export function SessaoPage() {
     : null
 
   const { data: anotacao } = useQuery({
-    queryKey: ["anotacao", topicoAtual?.id],
-    queryFn: () => obterAnotacao(topicoAtual!.id),
-    enabled: !!topicoAtual,
-  })
+  queryKey: ["anotacao", topicoAtual?.id],
+  queryFn: () => obterAnotacao(topicoAtual!.id),
+  enabled: !!topicoAtual,
+  staleTime: Infinity,
+})
 
   const salvarAnotacaoMutation = useMutation({
     mutationFn: (html: string) => salvarAnotacao(topicoAtual!.id, html),
