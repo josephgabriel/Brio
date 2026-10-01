@@ -142,7 +142,6 @@ export function AppLayout() {
 
           <Button
             variant="ghost"
-            size="sm"
             title={sidebarRecolhida ? "Minha assinatura" : undefined}
             className={`gap-2 ${
               sidebarRecolhida ? "justify-center" : "justify-start"
