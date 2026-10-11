@@ -23,5 +23,6 @@ from app.infrastructure.db.models.avaliacao_desempenho import AvaliacaoDesempenh
 from app.infrastructure.db.models.historico_resposta import HistoricoRespostaModel  # noqa: F401
 from app.infrastructure.db.models.material_estudo import MaterialEstudoModel  # noqa: F401
 from app.infrastructure.db.models.questao import QuestaoModel  # noqa: F401
+from app.infrastructure.db.models.anotacao_versao import AnotacaoVersaoModel  # noqa: F401
 
 __all__ = ["TopicoModel", "RevisaoModel", "AnotacaoModel"]
