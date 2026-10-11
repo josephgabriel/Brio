@@ -84,6 +84,7 @@ export function CalendarioPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["calendario"] })
       setModalAberto(false)
+      
     },
   })
 

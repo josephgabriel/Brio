@@ -2,7 +2,7 @@ import { type SubmitEvent, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
-
+import { notificar } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -91,12 +91,11 @@ export function ProvaFormPage() {
         : criarProva(form),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["provas"],
-      })
-
+      queryClient.invalidateQueries({queryKey: ["provas"] })
+      notificar.sucesso(estaEditando ? "Prova atualizada" : "Prova criada")
       navigate("/provas")
     },
+    onError: (erro) => notificar.erro(erro.message),
   })
 
   const excluir = useMutation({

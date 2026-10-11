@@ -105,6 +105,7 @@ export function SessaoPage() {
   queryFn: () => obterAnotacao(topicoAtual!.id),
   enabled: !!topicoAtual,
   staleTime: Infinity,
+  gcTime: 0,
 })
 
   const salvarAnotacaoMutation = useMutation({
@@ -248,6 +249,7 @@ export function SessaoPage() {
 
             {anotacao && (
               <EditorAnotacao
+               key={topicoAtual?.id}
                conteudoInicial={anotacao.conteudo_html}
                chaveRascunho={`topico-${topicoAtual?.id}`}
                onSalvar={(html) => salvarAnotacaoMutation.mutateAsync(html)}

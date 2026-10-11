@@ -14,10 +14,11 @@ export function TopicoAnotacaoPage() {
   // 1. TODOS OS HOOKS DEVEM FICAR NO TOPO (Incondicionais)
   const [exportando, setExportando] = useState(false)
 
-  const { data: anotacao, isLoading, isError  } = useQuery({
+  const { data: anotacao, isLoading, isError } = useQuery({
   queryKey: ["anotacao", topicoId],
   queryFn: () => obterAnotacao(topicoId),
   staleTime: Infinity,
+  gcTime: 0,
 })
 
   const salvar = useMutation({
@@ -73,6 +74,7 @@ export function TopicoAnotacaoPage() {
 
       <div className="w-full">
         <EditorAnotacao
+         key={topicoId}
          conteudoInicial={anotacao.conteudo_html}
          chaveRascunho={`topico-${topicoId}`}
          onSalvar={(html) => salvar.mutateAsync(html)}
