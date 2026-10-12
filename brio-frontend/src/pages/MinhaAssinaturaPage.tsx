@@ -11,7 +11,6 @@ import {
   solicitarReembolso,
 } from "@/features/assinatura/api/assinatura-api"
 
-const confirmar = useConfirmar()
 const NOME_PLANO: Record<string, string> = { mensal: "Mensal", anual: "Anual" }
 const NOME_STATUS: Record<string, string> = {
   pendente: "Pendente",
@@ -35,6 +34,7 @@ function dentroDoPrazoReembolso(dataInicio: string | null): boolean {
 
 export function MinhaAssinaturaPage() {
   const queryClient = useQueryClient()
+  const confirmar = useConfirmar() // ✅ CORRETO: Declarado dentro do componente
 
   const { data: assinatura, isLoading } = useQuery({
     queryKey: ["assinatura"],
@@ -94,7 +94,7 @@ export function MinhaAssinaturaPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
             <p className="text-muted-foreground">Você ainda não tem uma assinatura ativa.</p>
-            <Button asChild>
+            <Button>
               <Link to="/planos">Ver planos</Link>
             </Button>
           </CardContent>
@@ -154,7 +154,7 @@ export function MinhaAssinaturaPage() {
             )}
 
             {!ativa && (
-              <Button asChild>
+              <Button>
                 <Link to="/planos">Assinar novamente</Link>
               </Button>
             )}

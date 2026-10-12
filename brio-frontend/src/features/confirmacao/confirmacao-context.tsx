@@ -1,10 +1,10 @@
+import type { ReactNode } from "react"
 import {
   createContext,
   useCallback,
   useContext,
   useRef,
   useState,
-  type ReactNode,
 } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,7 @@ interface OpcoesConfirmacao {
 
 type Confirmar = (opcoes: OpcoesConfirmacao) => Promise<boolean>
 
-const ConfirmacaoContext = createContext<Confirmar | undefined>(undefined)
+const ConfirmacaoContext = createContext<Confirmar | null>(null)
 
 export function ConfirmacaoProvider({ children }: { children: ReactNode }) {
   const [aberto, setAberto] = useState(false)
@@ -87,7 +87,7 @@ export function ConfirmacaoProvider({ children }: { children: ReactNode }) {
 
 export function useConfirmar(): Confirmar {
   const contexto = useContext(ConfirmacaoContext)
-  if (contexto === undefined) {
+  if (!contexto) {
     throw new Error("useConfirmar precisa ser usado dentro de um ConfirmacaoProvider")
   }
   return contexto
