@@ -9,14 +9,17 @@ import { queryClient } from "@/lib/query-client"
 import { router } from "@/routes"
 import { Toaster } from "@/components/ui/sonner"
 import "./index.css"
+import { ConfirmacaoProvider } from "@/features/confirmacao/confirmacao-context"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SessaoAtivaProvider>
-          <RouterProvider router={router} />
-          <Toaster />
+          <ConfirmacaoProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </ConfirmacaoProvider>
         </SessaoAtivaProvider>
       </AuthProvider>
     </QueryClientProvider>

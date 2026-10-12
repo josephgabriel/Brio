@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react"
 
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -48,6 +49,7 @@ export function CalendarioPage() {
   const [descricaoForm, setDescricaoForm] = useState("")
 
   const queryClient = useQueryClient()
+  const confirmar = useConfirmar()
 
   const dias = useMemo(
     () =>
@@ -84,7 +86,8 @@ export function CalendarioPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["calendario"] })
       setModalAberto(false)
-      
+      setTituloForm("")
+      setDescricaoForm("")
     },
   })
 
@@ -105,6 +108,19 @@ export function CalendarioPage() {
     setTipoForm("evento")
     setDescricaoForm("")
     setModalAberto(true)
+  }
+
+  async function handleExcluirEvento(id: number) {
+    const confirmado = await confirmar({
+      titulo: "Excluir item do calendário?",
+      descricao: "Esta ação removerá este item do seu calendário permanentemente.",
+      textoConfirmar: "Excluir",
+      destrutivo: true,
+    })
+
+    if (confirmado) {
+      excluir.mutate(id)
+    }
   }
 
   function navegar(direcao: 1 | -1) {
@@ -204,7 +220,7 @@ export function CalendarioPage() {
                     onAlternarConcluido={() =>
                       alternarConcluido.mutate({ id: item.id, concluido: !item.concluido })
                     }
-                    onExcluir={() => excluir.mutate(item.id)}
+                    onExcluir={() => handleExcluirEvento(item.id)}
                   />
                 ))}
               </div>
@@ -226,6 +242,7 @@ export function CalendarioPage() {
                 id="titulo"
                 value={tituloForm}
                 onChange={(e) => setTituloForm(e.target.value)}
+                placeholder="Ex: Simulado Geral ou Revisão"
               />
             </div>
 
@@ -244,7 +261,7 @@ export function CalendarioPage() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => criar.mutate()} disabled={!tituloForm || criar.isPending}>
+            <Button onClick={() => criar.mutate()} disabled={!tituloForm.trim() || criar.isPending}>
               {criar.isPending ? "Salvando..." : "Criar"}
             </Button>
           </DialogFooter>

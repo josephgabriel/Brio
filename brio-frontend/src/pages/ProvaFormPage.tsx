@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
+
 import {
   atualizarProva,
   criarProva,
@@ -58,6 +60,7 @@ export function ProvaFormPage() {
 
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const confirmar = useConfirmar()
 
   const [form, setForm] = useState<ProvaFormData>(FORM_VAZIO)
 
@@ -133,6 +136,16 @@ export function ProvaFormPage() {
   function handleSubmit(evento: SubmitEvent<HTMLFormElement>) {
     evento.preventDefault()
     salvar.mutate()
+  }
+
+  async function handleExcluir() {
+    const confirmado = await confirmar({
+      titulo: "Excluir esta prova?",
+      descricao: "Essa ação não pode ser desfeita.",
+      textoConfirmar: "Excluir",
+      destrutivo: true,
+    })
+    if (confirmado) excluir.mutate()
   }
 
   return (
@@ -380,7 +393,7 @@ export function ProvaFormPage() {
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => excluir.mutate()}
+                onClick={handleExcluir}
                 disabled={excluir.isPending}
               >
                 <Trash2 className="size-4" />

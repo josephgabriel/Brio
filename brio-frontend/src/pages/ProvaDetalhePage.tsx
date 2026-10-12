@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, BarChart3, Pencil, Plus, Trash2 } from "lucide-react"
-
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -32,7 +32,9 @@ export function ProvaDetalhePage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const provaId = Number(id)
-  const queryClient = useQueryClient() // Declarado primeiro para ser usado nas mutações
+  const queryClient = useQueryClient()
+
+  const confirmar = useConfirmar()
 
   // Estados
   const [disciplinaSelecionadaId, setDisciplinaSelecionadaId] = useState<number | null>(null)
@@ -63,7 +65,7 @@ export function ProvaDetalhePage() {
     enabled: disciplinaSelecionadaId !== null,
   })
 
-  // Mutações (Agora declaradas DEPOIS de queryClient e disciplinaSelecionadaId)
+  // Mutações
   const atualizarDisciplinaMutation = useMutation({
     mutationFn: (id: number) => atualizarDisciplina(id, nomeDisciplinaEditado),
     onSuccess: () => {
@@ -127,6 +129,30 @@ export function ProvaDetalhePage() {
     atualizarTopicoMutation.mutate(topico.id)
   }
 
+  async function handleExcluirDisciplina(disciplinaId: number) {
+    const confirmado = await confirmar({
+      titulo: "Excluir a matéria?",
+      descricao: "Os conteúdos e anotações dela serão apagados. Suas sessões de estudo continuam no histórico",
+      textoConfirmar: "Excluir",
+      destrutivo: true,
+    })
+    if (confirmado) {
+      deletarDisciplinaMutation.mutate(disciplinaId)
+    }
+  }
+
+  async function handleExcluirTopico(topicoId: number) {
+    const confirmado = await confirmar({
+      titulo: "Excluir o tópico?",
+      descricao: "Os conteúdos e anotações dele serão apagados. Suas sessões de estudo continuam no histórico.",
+      textoConfirmar: "Excluir",
+      destrutivo: true,
+    })
+    if (confirmado) {
+      deletarTopicoMutation.mutate(topicoId)
+    }
+  }
+
   function handleCriar() {
     if (!novoNome.trim()) return
 
@@ -167,14 +193,14 @@ export function ProvaDetalhePage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline">
             <Link to={`/provas/${provaId}/estatisticas`}>
               <BarChart3 className="size-4" />
               Estatísticas
             </Link>
           </Button>
 
-          <Button variant="outline" asChild>
+          <Button variant="outline">
             <Link to={`/provas/${provaId}/editar`}>
               <Pencil className="size-4" />
               Editar prova
@@ -255,7 +281,7 @@ export function ProvaDetalhePage() {
                     size="sm"
                     onClick={(event) => {
                       event.stopPropagation()
-                      deletarDisciplinaMutation.mutate(disciplina.id)
+                      handleExcluirDisciplina(disciplina.id)
                     }}
                   >
                     <Trash2 className="size-4" />
@@ -303,7 +329,7 @@ export function ProvaDetalhePage() {
                     autoFocus
                     value={nomeTopicoEditado}
                     onChange={(e) => setNomeTopicoEditado(e.target.value)}
-                    onClick={(e) => e.stopPropagation()} // <-- Adicionado para evitar navegação
+                    onClick={(e) => e.stopPropagation()}
                     onBlur={() => handleSalvarTopico(topico)}
                     onKeyDown={(e) => e.key === "Enter" && handleSalvarTopico(topico)}
                     className="h-7"
@@ -312,7 +338,7 @@ export function ProvaDetalhePage() {
                   <span
                     className="flex items-center gap-1.5"
                     onClick={(e) => {
-                      e.stopPropagation() // <-- Adicionado para evitar navegação
+                      e.stopPropagation()
                       setEditandoTopicoId(topico.id)
                       setNomeTopicoEditado(topico.nome)
                     }}
@@ -321,12 +347,13 @@ export function ProvaDetalhePage() {
                     <Pencil className="size-3 text-muted-foreground" />
                   </span>
                 )}
+                
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation()
-                    deletarTopicoMutation.mutate(topico.id)
+                    handleExcluirTopico(topico.id)
                   }}
                 >
                   <Trash2 className="size-4" />

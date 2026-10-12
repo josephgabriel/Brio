@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Download, Menu, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
-
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -59,7 +59,7 @@ export function SessaoPage() {
   const [concentracao, setConcentracao] = useState("3")
   const [dificuldade, setDificuldade] = useState("3")
   const [aprendizado, setAprendizado] = useState("70")
-
+  const confirmar = useConfirmar()
   const [exportando, setExportando] = useState(false)
 
   const [menuAberto, setMenuAberto] = useState(false)
@@ -183,6 +183,17 @@ export function SessaoPage() {
     finalizar.mutate()
   }
 
+  async function handleCancelar() {
+    const confirmado = await confirmar({
+      titulo: "Cancelar esta sessão?",
+      descricao: "O tempo estudado até agora não será registrado e nenhuma revisão será agendada.",
+      textoConfirmar: "Cancelar sessão",
+      textoCancelar: "Continuar estudando",
+      destrutivo: true,
+    })
+    if (confirmado) cancelar.mutate()
+  }
+
   function handleSelecionarTopico(topico: Topico) {
     setTopicoVisualizado({ id: topico.id, nome: topico.nome })
     setMenuAberto(false)
@@ -301,7 +312,7 @@ export function SessaoPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => cancelar.mutate()}
+                  onClick={handleCancelar}
                   disabled={cancelar.isPending}
                 >
                   Cancelar sessão

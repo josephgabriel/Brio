@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,7 @@ import {
   solicitarReembolso,
 } from "@/features/assinatura/api/assinatura-api"
 
+const confirmar = useConfirmar()
 const NOME_PLANO: Record<string, string> = { mensal: "Mensal", anual: "Anual" }
 const NOME_STATUS: Record<string, string> = {
   pendente: "Pendente",
@@ -65,6 +66,26 @@ export function MinhaAssinaturaPage() {
   const ativa = assinatura?.status === "ativa"
   const podeReembolsar = ativa && dentroDoPrazoReembolso(assinatura?.data_inicio ?? null)
 
+  async function handleCancelarRenovacao() {
+    const confirmado = await confirmar({
+      titulo: "Cancelar a renovação automática?",
+      descricao: `Você continua com acesso até ${formatarData(assinatura?.data_expiracao ?? null)} e não será cobrado novamente.`,
+      textoConfirmar: "Cancelar renovação",
+      textoCancelar: "Manter renovação",
+    })
+    if (confirmado) cancelar.mutate()
+  }
+
+  async function handleReembolsar() {
+    const confirmado = await confirmar({
+      titulo: "Solicitar reembolso?",
+      descricao: "O valor será devolvido e seu acesso ao Brio será encerrado imediatamente.",
+      textoConfirmar: "Solicitar reembolso",
+      destrutivo: true,
+    })
+    if (confirmado) reembolsar.mutate()
+  }
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <h1 className="text-2xl font-semibold">Minha Assinatura</h1>
@@ -114,7 +135,7 @@ export function MinhaAssinaturaPage() {
                 {assinatura.renovacao_automatica && (
                   <Button
                     variant="outline"
-                    onClick={() => cancelar.mutate()}
+                    onClick={handleCancelarRenovacao}
                     disabled={cancelar.isPending}
                   >
                     {cancelar.isPending ? "Cancelando..." : "Cancelar renovação automática"}
@@ -123,7 +144,7 @@ export function MinhaAssinaturaPage() {
                 {podeReembolsar && (
                   <Button
                     variant="outline"
-                    onClick={() => reembolsar.mutate()}
+                    onClick={handleReembolsar}
                     disabled={reembolsar.isPending}
                   >
                     {reembolsar.isPending ? "Processando..." : "Solicitar reembolso (7 dias)"}

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Trash2 } from "lucide-react"
 
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -37,6 +38,7 @@ export function CronogramaPage() {
   const [duracao, setDuracao] = useState("60")
 
   const queryClient = useQueryClient()
+  const confirmar = useConfirmar()
 
   const { data: itens } = useQuery({ queryKey: ["cronograma"], queryFn: listarCronograma })
   const { data: provas } = useQuery({ queryKey: ["provas"], queryFn: listarProvas })
@@ -57,6 +59,10 @@ export function CronogramaPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cronograma"] })
       setModalAberto(false)
+      setProvaId("")
+      setDisciplinaId("")
+      setHorario("")
+      setDuracao("60")
     },
   })
 
@@ -72,6 +78,19 @@ export function CronogramaPage() {
     setHorario("")
     setDuracao("60")
     setModalAberto(true)
+  }
+
+  async function handleExcluir(id: number) {
+    const confirmado = await confirmar({
+      titulo: "Excluir do cronograma?",
+      descricao: "Esta matéria deixará de aparecer neste dia do seu planejamento semanal.",
+      textoConfirmar: "Excluir",
+      destrutivo: true,
+    })
+
+    if (confirmado) {
+      excluir.mutate(id)
+    }
   }
 
   return (
@@ -110,7 +129,10 @@ export function CronogramaPage() {
                       <span className="font-medium">{item.disciplina_nome}</span>
                       <button
                         type="button"
-                        onClick={() => excluir.mutate(item.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleExcluir(item.id)
+                        }}
                         className="hidden text-muted-foreground hover:text-destructive group-hover:block"
                       >
                         <Trash2 className="size-3" />
@@ -200,7 +222,10 @@ export function CronogramaPage() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => criar.mutate()} disabled={!disciplinaId || criar.isPending}>
+            <Button
+              onClick={() => criar.mutate()}
+              disabled={!disciplinaId || Number(duracao) <= 0 || criar.isPending}
+            >
               {criar.isPending ? "Salvando..." : "Adicionar"}
             </Button>
           </DialogFooter>

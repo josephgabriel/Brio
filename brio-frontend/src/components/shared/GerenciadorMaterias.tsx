@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
 
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -28,6 +29,7 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
   const [disciplinaExpandidaId, setDisciplinaExpandidaId] = useState<number | null>(null)
   const [novaDisciplina, setNovaDisciplina] = useState("")
   const queryClient = useQueryClient()
+  const confirmar = useConfirmar()
 
   const { data: disciplinas } = useQuery({
     queryKey: ["disciplinas", provaId],
@@ -49,6 +51,18 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
     },
   })
 
+  async function handleExcluirDisciplina(disciplinaId: number) {
+    const confirmado = await confirmar({
+      titulo: "Excluir a matéria?",
+      descricao: "Os conteúdos e anotações dela serão apagados. Suas sessões de estudo continuam no histórico",
+      textoConfirmar: "Excluir",
+      destrutivo: true,
+    })
+    if (confirmado) {
+      deletarDisciplinaMutation.mutate(disciplinaId)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">Matérias e Conteúdos</h2>
@@ -62,7 +76,7 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
         <Button
           type="button"
           onClick={() => criarDisciplinaMutation.mutate()}
-          disabled={!novaDisciplina || criarDisciplinaMutation.isPending}
+          disabled={!novaDisciplina.trim() || criarDisciplinaMutation.isPending}
         >
           <Plus className="size-4" />
           Adicionar
@@ -78,13 +92,14 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
           <DisciplinaItem
             key={disciplina.id}
             disciplina={disciplina}
+            provaId={provaId}
             expandida={disciplinaExpandidaId === disciplina.id}
             onToggle={() =>
               setDisciplinaExpandidaId(
                 disciplinaExpandidaId === disciplina.id ? null : disciplina.id,
               )
             }
-            onExcluir={() => deletarDisciplinaMutation.mutate(disciplina.id)}
+            onExcluir={() => handleExcluirDisciplina(disciplina.id)}
             onSelecionarTopico={onSelecionarTopico}
           />
         ))}
@@ -95,6 +110,7 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
 
 interface DisciplinaItemProps {
   disciplina: Disciplina
+  provaId: number
   expandida: boolean
   onToggle: () => void
   onExcluir: () => void
@@ -103,6 +119,7 @@ interface DisciplinaItemProps {
 
 function DisciplinaItem({
   disciplina,
+  provaId,
   expandida,
   onToggle,
   onExcluir,
@@ -130,7 +147,7 @@ function DisciplinaItem({
   const atualizarDisciplinaMutation = useMutation({
     mutationFn: () => atualizarDisciplina(disciplina.id, nomeDisciplinaEditado),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["disciplinas"] })
+      queryClient.invalidateQueries({ queryKey: ["disciplinas", provaId] })
       setEditandoDisciplina(false)
     },
   })
@@ -169,6 +186,7 @@ function DisciplinaItem({
               onClick={(e) => {
                 e.stopPropagation()
                 setEditandoDisciplina(true)
+                setNomeDisciplinaEditado(disciplina.nome)
               }}
             >
               {disciplina.nome}
@@ -206,7 +224,7 @@ function DisciplinaItem({
               type="button"
               size="sm"
               onClick={() => criarTopicoMutation.mutate()}
-              disabled={!novoTopico || criarTopicoMutation.isPending}
+              disabled={!novoTopico.trim() || criarTopicoMutation.isPending}
             >
               <Plus className="size-4" />
             </Button>
@@ -227,6 +245,7 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
   const [editando, setEditando] = useState(false)
   const [nomeEditado, setNomeEditado] = useState(topico.nome)
   const queryClient = useQueryClient()
+  const confirmar = useConfirmar()
 
   const atualizarTopicoMutation = useMutation({
     mutationFn: () => atualizarTopico(topico.id, nomeEditado),
@@ -250,6 +269,18 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
       return
     }
     atualizarTopicoMutation.mutate()
+  }
+
+  async function handleExcluirTopico() {
+    const confirmado = await confirmar({
+      titulo: "Excluir o tópico?",
+      descricao: "Os conteúdos e anotações dele serão apagados. Suas sessões de estudo continuam no histórico.",
+      textoConfirmar: "Excluir",
+      destrutivo: true,
+    })
+    if (confirmado) {
+      deletarTopicoMutation.mutate(topico.id)
+    }
   }
 
   if (editando) {
@@ -278,6 +309,7 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
           onClick={(e) => {
             e.stopPropagation()
             setEditando(true)
+            setNomeEditado(topico.nome)
           }}
         >
           {topico.nome}
@@ -286,7 +318,7 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
           className="size-3.5 text-muted-foreground hover:text-destructive"
           onClick={(e) => {
             e.stopPropagation()
-            deletarTopicoMutation.mutate(topico.id)
+            handleExcluirTopico()
           }}
         />
       </button>
@@ -295,14 +327,20 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
 
   return (
     <div className="flex items-center justify-between text-sm">
-      <span onClick={() => setEditando(true)} className="cursor-pointer">
+      <span
+        onClick={() => {
+          setEditando(true)
+          setNomeEditado(topico.nome)
+        }}
+        className="cursor-pointer"
+      >
         {topico.nome}
       </span>
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        onClick={() => deletarTopicoMutation.mutate(topico.id)}
+        onClick={handleExcluirTopico}
       >
         <Trash2 className="size-3.5" />
       </Button>
