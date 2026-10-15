@@ -83,7 +83,7 @@ def atualizar(
     return ProvaResponseSchema.from_model(prova)
 
 
-router.delete("/{prova_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{prova_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar(
     prova_id: int,
     usuario: UsuarioModel = Depends(get_usuario_assinante),

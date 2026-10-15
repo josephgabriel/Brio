@@ -37,6 +37,7 @@ import {
   Undo2,
 } from "lucide-react"
 
+import { notificar } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -205,7 +206,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
         const url = await enviarImagem(arquivo)
         editor.chain().focus().setImage({ src: url }).run()
       } catch (erro) {
-        console.error("Erro ao enviar imagem:", erro)
+        notificar.erro(erro)
       } finally {
         setEnviandoImagem(false)
       }

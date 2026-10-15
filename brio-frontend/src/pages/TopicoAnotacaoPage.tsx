@@ -5,7 +5,7 @@ import { exportarAnotacaoPdf, obterAnotacao, salvarAnotacao } from "@/features/a
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { EditorAnotacao } from "@/components/shared/EditorAnotacao"
-
+import { notificar } from "@/lib/toast"
 export function TopicoAnotacaoPage() {
   const { id } = useParams()
   const topicoId = Number(id)
@@ -31,6 +31,9 @@ export function TopicoAnotacaoPage() {
     setExportando(true)
     try {
       await exportarAnotacaoPdf(topicoId, `topico-${topicoId}`)
+      notificar.sucesso("PDF exportado")
+    } catch (erro) {
+      notificar.erro(erro)
     } finally {
       setExportando(false)
     }

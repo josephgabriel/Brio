@@ -30,6 +30,7 @@ import { listarTopicos, obterContextoTopico } from "@/features/topicos/api/topic
 import type { Topico } from "@/features/topicos/types"
 import { type ConfigPomodoro } from "@/hooks/usePomodoro"
 import { Link } from "react-router-dom"
+import { notificar } from "@/lib/toast"
 
 const ROTULO_FASE: Record<string, string> = {
   foco: "Foco",
@@ -137,6 +138,7 @@ export function SessaoPage() {
         configPomodoro,
       })
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const finalizar = useMutation({
@@ -152,6 +154,7 @@ export function SessaoPage() {
       setDisciplinaId("")
       setTopicoId("")
       setObjetivo("")
+      notificar.sucesso("Sessão finalizada com sucesso! Suas revisões foram agendadas.")
     },
     onError: (erro: Error) => {
       if (erro.message.includes("já foi finalizada")) {
@@ -162,7 +165,9 @@ export function SessaoPage() {
 
   const cancelar = useMutation({
     mutationFn: () => cancelarSessao(sessaoAtiva!.id),
-    onSuccess: () => encerrarSessaoAtiva(),
+    onSuccess: () => {encerrarSessaoAtiva(),
+      notificar.sucesso("Sessão cancelada com sucesso!")
+    },
     onError: (erro: Error) => {
       if (erro.message.includes("já foi finalizado")) {
         encerrarSessaoAtiva()

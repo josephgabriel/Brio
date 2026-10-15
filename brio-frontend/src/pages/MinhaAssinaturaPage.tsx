@@ -10,6 +10,7 @@ import {
   obterMinhaAssinatura,
   solicitarReembolso,
 } from "@/features/assinatura/api/assinatura-api"
+import { notificar } from "@/lib/toast"
 
 const NOME_PLANO: Record<string, string> = { mensal: "Mensal", anual: "Anual" }
 const NOME_STATUS: Record<string, string> = {
@@ -48,7 +49,10 @@ export function MinhaAssinaturaPage() {
 
   const cancelar = useMutation({
     mutationFn: cancelarAssinatura,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["assinatura"] }),
+    onSuccess: () => {queryClient.invalidateQueries({ queryKey: ["assinatura"] }),
+    notificar.sucesso("Renovação automática cancelada com sucesso!")
+  },
+  onError: (erro) => notificar.erro(erro),
   })
 
   const reembolsar = useMutation({
@@ -56,7 +60,9 @@ export function MinhaAssinaturaPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assinatura"] })
       queryClient.invalidateQueries({ queryKey: ["pagamentos"] })
+      notificar.sucesso("Reembolso solicitado. O valor voltará ao seu cartão em alguns dias")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   if (isLoading) {

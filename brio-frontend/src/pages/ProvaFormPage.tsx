@@ -103,14 +103,14 @@ export function ProvaFormPage() {
 
   const excluir = useMutation({
     mutationFn: () => deletarProva(provaId!),
-
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["provas"],
+      queryKey: ["provas"],
       })
-
+      notificar.sucesso("Prova deletada com sucesso!")
       navigate("/provas")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const arquivar = useMutation({
@@ -120,17 +120,20 @@ export function ProvaFormPage() {
       queryClient.invalidateQueries({
         queryKey: ["provas"],
       })
-
+      notificar.sucesso("Prova arquivada com sucesso!")
       navigate("/provas")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const desarquivar = useMutation({
     mutationFn: () => desarquivarProva(provaId!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["provas"] })
+      notificar.sucesso("Prova restaurada com sucesso!")
       navigate("/provas")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   function handleSubmit(evento: SubmitEvent<HTMLFormElement>) {

@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-
+import { notificar } from "@/lib/toast"
 import {
   criarDisciplina,
   deletarDisciplina,
@@ -70,16 +70,20 @@ export function ProvaDetalhePage() {
     mutationFn: (id: number) => atualizarDisciplina(id, nomeDisciplinaEditado),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["disciplinas", provaId] })
+      notificar.sucesso("Matéria renomeada com sucesso!")
       setEditandoDisciplinaId(null)
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const atualizarTopicoMutation = useMutation({
     mutationFn: (id: number) => atualizarTopico(id, nomeTopicoEditado),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaSelecionadaId] })
+      notificar.sucesso("Conteúdo atualizado com sucesso!")
       setEditandoTopicoId(null)
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const criarDisciplinaMutation = useMutation({
@@ -87,29 +91,37 @@ export function ProvaDetalhePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["disciplinas", provaId] })
       setNovoNome("")
+      notificar.sucesso("Matéria adicionada com sucesso!")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const deletarDisciplinaMutation = useMutation({
     mutationFn: deletarDisciplina,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["disciplinas", provaId] })
+      notificar.sucesso("Matéria excluída com sucesso!")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const criarTopicoMutation = useMutation({
     mutationFn: () => criarTopico(disciplinaSelecionadaId!, novoNome),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaSelecionadaId] })
+      notificar.sucesso("Conteúdo adicionado com sucesso!")
       setNovoNome("")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const deletarTopicoMutation = useMutation({
     mutationFn: deletarTopico,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaSelecionadaId] })
+      notificar.sucesso("Conteúdo excluído com sucesso!")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   // Handlers

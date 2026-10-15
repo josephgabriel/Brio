@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Check, Sparkles } from "lucide-react"
-
+import { notificar } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useForceDarkMode } from "@/hooks/useForceDarkMode"
@@ -48,6 +48,7 @@ export function PlanosPage() {
     onSuccess: (checkoutUrl) => {
       window.location.href = checkoutUrl
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const reembolsar = useMutation({

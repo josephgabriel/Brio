@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react"
-
+import { notificar } from "@/lib/toast"
 import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import {
@@ -88,7 +88,9 @@ export function CalendarioPage() {
       setModalAberto(false)
       setTituloForm("")
       setDescricaoForm("")
+      notificar.sucesso("Evento criado com sucesso!")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const alternarConcluido = useMutation({
@@ -99,7 +101,11 @@ export function CalendarioPage() {
 
   const excluir = useMutation({
     mutationFn: (id: number) => excluirEvento(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["calendario"] }),
+    onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["calendario"] })
+    notificar.sucesso("Item excluído com sucesso!")
+  },
+  onError: (erro) => notificar.erro(erro),
   })
 
   function abrirNovoEvento(dia: Date) {

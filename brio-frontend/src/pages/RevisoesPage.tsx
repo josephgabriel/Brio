@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Check } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-
+import { notificar } from "@/lib/toast"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -67,11 +67,13 @@ export function RevisoesPage() {
     queryFn: () => listarRevisoes(calcularIntervalo(periodo)),
   })
 
-  const concluir = useMutation({
+    const concluir = useMutation({
     mutationFn: concluirRevisao,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["revisoes"] })
+      notificar.sucesso("Revisão concluída")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const revisoesFiltradas = revisoes?.filter((revisao) => {

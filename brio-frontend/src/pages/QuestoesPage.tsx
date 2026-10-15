@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { CheckCircle2, FileText, Loader2, Sparkles, Upload, XCircle } from "lucide-react"
-
+import { notificar } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -33,7 +33,9 @@ export function QuestoesPage() {
       setRespostaSelecionada(null)
       setResultado(null)
       queryClient.invalidateQueries({ queryKey: ["cota-ia"] })
+      notificar.sucesso("Questões geradas com sucesso!")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const responder = useMutation({

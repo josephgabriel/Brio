@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus, Trash2 } from "lucide-react"
-
+import { notificar } from "@/lib/toast"
 import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import {
@@ -59,16 +59,18 @@ export function CronogramaPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cronograma"] })
       setModalAberto(false)
-      setProvaId("")
-      setDisciplinaId("")
-      setHorario("")
-      setDuracao("60")
+      notificar.sucesso("Adicionado ao cronograma")
     },
+    onError: (erro) => notificar.erro(erro),
   })
 
   const excluir = useMutation({
     mutationFn: excluirItemCronograma,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cronograma"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cronograma"] })
+      notificar.sucesso("Removido do cronograma")
+    },
+    onError: (erro) => notificar.erro(erro),
   })
 
   function abrirModal(dia: number) {

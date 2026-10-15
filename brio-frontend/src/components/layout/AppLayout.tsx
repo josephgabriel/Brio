@@ -17,7 +17,7 @@ import {
   Brain,
   CreditCard,
 } from "lucide-react"
-
+import { notificar } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { reenviarVerificacao } from "@/features/auth/auth-api"
 import { useAuth } from "@/features/auth/auth-context"
@@ -59,6 +59,8 @@ export function AppLayout() {
 
   const reenviar = useMutation({
     mutationFn: reenviarVerificacao,
+    onSuccess: () => notificar.sucesso("Email de verificação reenviado. Confira sua caixa de entrada."),
+    onError: (erro) => notificar.erro(erro),
   })
 
   return (
