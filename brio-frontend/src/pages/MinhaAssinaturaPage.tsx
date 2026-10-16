@@ -11,6 +11,7 @@ import {
   solicitarReembolso,
 } from "@/features/assinatura/api/assinatura-api"
 import { notificar } from "@/lib/toast"
+import { SkeletonLista, Carregando } from "@/components/shared/Skeletons"
 
 const NOME_PLANO: Record<string, string> = { mensal: "Mensal", anual: "Anual" }
 const NOME_STATUS: Record<string, string> = {
@@ -66,7 +67,10 @@ export function MinhaAssinaturaPage() {
   })
 
   if (isLoading) {
-    return <p className="text-muted-foreground">Carregando...</p>
+    return (
+    <Carregando>
+          <SkeletonLista quantidade={6} />
+      </Carregando> )
   }
 
   const ativa = assinatura?.status === "ativa"

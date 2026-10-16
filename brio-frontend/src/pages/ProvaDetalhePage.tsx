@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, BarChart3, Pencil, Plus, Trash2 } from "lucide-react"
 import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
+import { SkeletonCards, Carregando } from "@/components/shared/Skeletons"
 import {
   Card,
   CardContent,
@@ -176,7 +177,11 @@ export function ProvaDetalhePage() {
   }
 
   if (!prova) {
-    return <p className="text-muted-foreground">Carregando...</p>
+    return (
+    <Carregando>
+          <SkeletonCards quantidade={6} />
+      </Carregando>
+        )
   }
 
   return (

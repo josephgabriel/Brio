@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom"
 import { Bar, Line } from "react-chartjs-2"
 import { useQuery } from "@tanstack/react-query"
-
+import { SkeletonMetricas, SkeletonGrafico } from "@/components/shared/Skeletons"
+import { Skeleton } from "@/components/ui/skeleton"
 import "@/lib/chart-setup"
 import { CardMetrica } from "@/components/shared/CardMetrica"
 import { IndicePreparacaoCard } from "@/components/shared/IndicePreparacaoCard"
@@ -50,7 +51,20 @@ export function ProvaEstatisticasPage() {
 
   // 1. Verificações de carregamento e erro
   if (isLoadingEstatisticas) {
-    return <p className="text-muted-foreground">Carregando...</p>
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96 max-w-full" />
+        </div>
+        <SkeletonMetricas />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SkeletonGrafico />
+          <SkeletonGrafico />
+        </div>
+        <SkeletonMetricas quantidade={3} />
+      </div>
+    )
   }
 
   if (isErrorEstatisticas || !data) {

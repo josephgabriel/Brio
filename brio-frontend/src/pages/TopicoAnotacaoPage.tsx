@@ -6,6 +6,9 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { EditorAnotacao } from "@/components/shared/EditorAnotacao"
 import { notificar } from "@/lib/toast"
+import { Carregando, SkeletonEditor } from "@/components/shared/Skeletons"
+import { Skeleton } from "@/components/ui/skeleton"
+
 export function TopicoAnotacaoPage() {
   const { id } = useParams()
   const topicoId = Number(id)
@@ -40,8 +43,16 @@ export function TopicoAnotacaoPage() {
   }
 
   // 2. RETORNOS CONDICIONAIS APENAS APÓS OS HOOKS
-  if (isLoading) {
-    return <p className="p-6 text-muted-foreground">Carregando anotação...</p>
+    if (isLoading) {
+    return (
+      <Carregando>
+        <div className="mx-auto flex max-w-2xl flex-col gap-4">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-7 w-32" />
+          <SkeletonEditor />
+        </div>
+      </Carregando>
+    )
   }
 
   if (isError || !anotacao) {

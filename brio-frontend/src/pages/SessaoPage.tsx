@@ -31,6 +31,7 @@ import type { Topico } from "@/features/topicos/types"
 import { type ConfigPomodoro } from "@/hooks/usePomodoro"
 import { Link } from "react-router-dom"
 import { notificar } from "@/lib/toast"
+import { SkeletonEditor } from "@/components/shared/Skeletons"
 
 const ROTULO_FASE: Record<string, string> = {
   foco: "Foco",
@@ -101,7 +102,7 @@ export function SessaoPage() {
     ? (topicoVisualizado ?? { id: sessaoAtiva.topicoId, nome: sessaoAtiva.assunto })
     : null
 
-  const { data: anotacao } = useQuery({
+  const { data: anotacao, isLoading: carregandoAnotacao } = useQuery({
   queryKey: ["anotacao", topicoAtual?.id],
   queryFn: () => obterAnotacao(topicoAtual!.id),
   enabled: !!topicoAtual,
@@ -262,6 +263,8 @@ export function SessaoPage() {
                 {exportando ? "Exportando..." : "Exportar PDF"}
               </Button>
             </div>
+
+            {carregandoAnotacao && <SkeletonEditor />}
 
             {anotacao && (
               <EditorAnotacao

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { listarProvas } from "@/features/provas/api/provas-api"
 
+import { Carregando, SkeletonCards } from "@/components/shared/Skeletons"
+
 function variantePrioridade(
   prioridade: string,
 ): "prioridade_alta" | "prioridade_media" | "prioridade_baixa" {
@@ -33,7 +35,12 @@ export function ProvasPage() {
         </Button>
       </div>
 
-      {isLoading && <p className="text-muted-foreground">Carregando...</p>}
+      {isLoading && (
+        <Carregando>
+          <SkeletonCards quantidade={6} />
+        </Carregando>
+      )}
+      
       {isError && <p className="text-destructive">Erro ao carregar provas.</p>}
 
       {provas && provas.length === 0 && (

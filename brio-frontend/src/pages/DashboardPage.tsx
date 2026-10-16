@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CardMetrica } from "@/components/shared/CardMetrica"
 import { obterDashboard } from "@/features/dashboard/api/dashboard-api"
 
+import { Carregando, SkeletonCards, SkeletonMetricas } from "@/components/shared/Skeletons"
+import { Skeleton } from "@/components/ui/skeleton"
+
 function variantePrioridade(
   prioridade: string,
 ): "prioridade_alta" | "prioridade_media" | "prioridade_baixa" {
@@ -21,8 +24,26 @@ export function DashboardPage() {
     queryFn: obterDashboard,
   })
 
-  if (isLoading) {
-    return <p className="text-muted-foreground">Carregando...</p>
+    if (isLoading) {
+    return (
+      <Carregando>
+        <div className="flex flex-col gap-8">
+          <div>
+            <Skeleton className="mb-2 h-8 w-40" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <SkeletonMetricas />
+          <div className="flex gap-3">
+            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-9 w-32" />
+          </div>
+          <div>
+            <Skeleton className="mb-4 h-6 w-40" />
+            <SkeletonCards />
+          </div>
+        </div>
+      </Carregando>
+    )
   }
 
   if (isError || !data) {

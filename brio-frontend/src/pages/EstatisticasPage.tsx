@@ -4,10 +4,12 @@ import { useQuery } from "@tanstack/react-query"
 import "@/lib/chart-setup"
 import { CardMetrica } from "@/components/shared/CardMetrica"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   obterEstatisticas,
   obterComparacaoProvas,
 } from "@/features/estatisticas/api/estatisticas-api"
+import { SkeletonMetricas, SkeletonGrafico } from "@/components/shared/Skeletons"
 
 const COR_CIANO = "#10B981"
 const COR_CIANO_ALPHA = "rgba(8, 145, 178, 0.15)"
@@ -72,10 +74,25 @@ export function EstatisticasPage() {
     queryFn: obterComparacaoProvas,
   })
 
+  // 1. Skeleton Loading estruturado
   if (isLoadingEstatisticas) {
-    return <p className="text-muted-foreground">Carregando...</p>
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96 max-w-full" />
+        </div>
+        <SkeletonMetricas />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SkeletonGrafico />
+          <SkeletonGrafico />
+        </div>
+        <SkeletonMetricas quantidade={2} />
+      </div>
+    )
   }
 
+  // 2. Tratamento de erro após o carregamento
   if (isErrorEstatisticas || !data) {
     return (
       <p className="text-destructive">

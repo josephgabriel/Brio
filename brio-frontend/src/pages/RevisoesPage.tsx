@@ -4,6 +4,7 @@ import { Check } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { notificar } from "@/lib/toast"
 import { Badge } from "@/components/ui/badge"
+import { SkeletonLista, Carregando } from "@/components/shared/Skeletons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { concluirRevisao, listarRevisoes } from "@/features/revisoes/api/revisoes-api"
@@ -118,7 +119,11 @@ export function RevisoesPage() {
         </div>
       </div>
 
-      {isLoading && <p className="text-muted-foreground">Carregando...</p>}
+      {
+      isLoading && <Carregando>
+        <SkeletonLista quantidade={5} />
+        </Carregando>
+        }
 
       {revisoesFiltradas?.length === 0 && (
         <p className="text-muted-foreground">Nenhuma revisão encontrada nesse filtro.</p>

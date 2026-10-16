@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-
+import { Loader2 } from "lucide-react"
 import { obterMinhaAssinatura } from "@/features/assinatura/api/assinatura-api"
 import { assinaturaEstaValida } from "@/features/assinatura/regras"
 
@@ -10,8 +10,13 @@ export function AssinaturaRoute() {
     queryFn: obterMinhaAssinatura,
   })
 
-  if (isLoading) {
-    return <p className="p-8 text-muted-foreground">Verificando assinatura...</p>
+    if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" role="status">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <span className="sr-only">Verificando assinatura...</span>
+      </div>
+    )
   }
 
   if (!assinaturaEstaValida(assinatura)) {
