@@ -8,7 +8,9 @@ from app.domain.regras.dashboard import calcular_horas_estudadas
 from app.domain.regras.estatisticas import calcular_taxa_conclusao
 from app.domain.regras.indice_preparacao import calcular_indice_preparacao, classificar_indice
 from app.infrastructure.db.models.prova import StatusProva
-
+from app.application.interfaces.disciplina_repository import DisciplinaRepository
+from app.application.interfaces.topico_repository import TopicoRepository
+from app.domain.regras.progresso import calcular_cobertura_conteudo
 
 @dataclass
 class ResumoComparacaoProva:
@@ -27,10 +29,14 @@ class ObterComparacaoProvas:
         prova_repository: ProvaRepository,
         sessao_repository: SessaoEstudoRepository,
         revisao_repository: RevisaoRepository,
+        disciplina_repository: DisciplinaRepository,
+        topico_repository: TopicoRepository,
     ) -> None:
         self.prova_repository = prova_repository
         self.sessao_repository = sessao_repository
         self.revisao_repository = revisao_repository
+        self.disciplina_repository = disciplina_repository
+        self.topico_repository = topico_repository
 
     def executar(self, usuario_id: int) -> list[ResumoComparacaoProva]:
         hoje = date.today()
@@ -64,8 +70,14 @@ class ObterComparacaoProvas:
             )
 
             meta_horas_semana = prova.horas_disponiveis_dia * prova.dias_disponiveis_semana
-            indice = calcular_indice_preparacao(taxa_conclusao, horas_semana_atual, meta_horas_semana)
-
+            disciplinas = self.disciplina_repository.listar_por_prova(prova.id)
+            contagens = self.topico_repository.contar_por_disciplinas(
+                [d.id for d in disciplinas]
+            )
+            cobertura = calcular_cobertura_conteudo(contagens)
+            indice = calcular_indice_preparacao(
+                taxa_conclusao, horas_semana_atual, meta_horas_semana, cobertura
+            )
             resultado.append(
                 ResumoComparacaoProva(
                     prova_id=prova.id,

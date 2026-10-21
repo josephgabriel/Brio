@@ -21,7 +21,8 @@ import {
 } from "@/features/disciplinas/api/disciplinas-api"
 
 import { obterProva } from "@/features/provas/api/provas-api"
-
+import { CheckboxConcluido, ProgressoDisciplina } from "@/components/shared/Progresso"
+import { useConcluirTopico } from "@/features/topicos/use-concluir-topico"
 import {
   criarTopico,
   deletarTopico,
@@ -44,6 +45,7 @@ export function ProvaDetalhePage() {
   const [nomeDisciplinaEditado, setNomeDisciplinaEditado] = useState("")
   const [editandoTopicoId, setEditandoTopicoId] = useState<number | null>(null)
   const [nomeTopicoEditado, setNomeTopicoEditado] = useState("")
+  const concluirTopico = useConcluirTopico(disciplinaSelecionadaId)
 
   // Queries
   const { data: prova } = useQuery({
@@ -66,6 +68,20 @@ export function ProvaDetalhePage() {
     enabled: disciplinaSelecionadaId !== null,
   })
 
+  // Cálculo em tempo real do progresso da disciplina selecionada com base nos tópicos
+  const totalTopicos = topicos?.length ?? disciplinaSelecionada?.total_topicos ?? 0
+  const topicosConcluidos = topicos?.filter((t) => t.concluido).length ?? disciplinaSelecionada?.topicos_concluidos ?? 0
+  const progressoPercentual = totalTopicos > 0 ? (topicosConcluidos / totalTopicos) * 100 : (disciplinaSelecionada?.progresso_percentual ?? 0)
+
+  const disciplinaComProgressoAtualizado = disciplinaSelecionada
+    ? {
+        ...disciplinaSelecionada,
+        total_topicos: totalTopicos,
+        topicos_concluidos: topicosConcluidos,
+        progresso_percentual: progressoPercentual,
+      }
+    : null
+
   // Mutações
   const atualizarDisciplinaMutation = useMutation({
     mutationFn: (id: number) => atualizarDisciplina(id, nomeDisciplinaEditado),
@@ -81,6 +97,7 @@ export function ProvaDetalhePage() {
     mutationFn: (id: number) => atualizarTopico(id, nomeTopicoEditado),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaSelecionadaId] })
+      queryClient.invalidateQueries({ queryKey: ["disciplinas", provaId] })
       notificar.sucesso("Conteúdo atualizado com sucesso!")
       setEditandoTopicoId(null)
     },
@@ -110,6 +127,7 @@ export function ProvaDetalhePage() {
     mutationFn: () => criarTopico(disciplinaSelecionadaId!, novoNome),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaSelecionadaId] })
+      queryClient.invalidateQueries({ queryKey: ["disciplinas", provaId] })
       notificar.sucesso("Conteúdo adicionado com sucesso!")
       setNovoNome("")
     },
@@ -120,6 +138,7 @@ export function ProvaDetalhePage() {
     mutationFn: deletarTopico,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaSelecionadaId] })
+      queryClient.invalidateQueries({ queryKey: ["disciplinas", provaId] })
       notificar.sucesso("Conteúdo excluído com sucesso!")
     },
     onError: (erro) => notificar.erro(erro),
@@ -178,10 +197,10 @@ export function ProvaDetalhePage() {
 
   if (!prova) {
     return (
-    <Carregando>
-          <SkeletonCards quantidade={6} />
+      <Carregando>
+        <SkeletonCards quantidade={6} />
       </Carregando>
-        )
+    )
   }
 
   return (
@@ -210,14 +229,14 @@ export function ProvaDetalhePage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" asChild>
             <Link to={`/provas/${provaId}/estatisticas`}>
               <BarChart3 className="size-4" />
               Estatísticas
             </Link>
           </Button>
 
-          <Button variant="outline">
+          <Button variant="outline" asChild>
             <Link to={`/provas/${provaId}/editar`}>
               <Pencil className="size-4" />
               Editar prova
@@ -225,6 +244,13 @@ export function ProvaDetalhePage() {
           </Button>
         </div>
       </div>
+
+      {/* Barra de Progresso na visão de Tópicos */}
+      {disciplinaSelecionadaId !== null && disciplinaComProgressoAtualizado && (
+        <Card className="p-4">
+          <ProgressoDisciplina disciplina={disciplinaComProgressoAtualizado} />
+        </Card>
+      )}
 
       {/* Formulário de criação */}
       <div className="flex gap-2">
@@ -307,20 +333,7 @@ export function ProvaDetalhePage() {
               </CardHeader>
 
               <CardContent>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all"
-                      style={{
-                        width: `${disciplina.nivel_conhecimento}%`,
-                      }}
-                    />
-                  </div>
-
-                  <span className="text-xs text-muted-foreground">
-                    {disciplina.nivel_conhecimento}%
-                  </span>
-                </div>
+                <ProgressoDisciplina disciplina={disciplina} />
               </CardContent>
             </Card>
           ))}
@@ -341,30 +354,40 @@ export function ProvaDetalhePage() {
               onClick={() => navigate(`/topicos/${topico.id}/anotacao`)}
             >
               <CardContent className="flex items-center justify-between py-4">
-                {editandoTopicoId === topico.id ? (
-                  <Input
-                    autoFocus
-                    value={nomeTopicoEditado}
-                    onChange={(e) => setNomeTopicoEditado(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    onBlur={() => handleSalvarTopico(topico)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSalvarTopico(topico)}
-                    className="h-7"
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <CheckboxConcluido
+                    checked={topico.concluido}
+                    rotulo={`Marcar "${topico.nome}" como concluído`}
+                    onChange={(concluido) =>
+                      concluirTopico.mutate({ topicoId: topico.id, concluido })
+                    }
                   />
-                ) : (
-                  <span
-                    className="flex items-center gap-1.5"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditandoTopicoId(topico.id)
-                      setNomeTopicoEditado(topico.nome)
-                    }}
-                  >
-                    {topico.nome}
-                    <Pencil className="size-3 text-muted-foreground" />
-                  </span>
-                )}
-                
+
+                  {editandoTopicoId === topico.id ? (
+                    <Input
+                      autoFocus
+                      value={nomeTopicoEditado}
+                      onChange={(e) => setNomeTopicoEditado(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onBlur={() => handleSalvarTopico(topico)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSalvarTopico(topico)}
+                      className="h-7"
+                    />
+                  ) : (
+                    <span
+                      className="flex items-center gap-1.5"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditandoTopicoId(topico.id)
+                        setNomeTopicoEditado(topico.nome)
+                      }}
+                    >
+                      {topico.nome}
+                      <Pencil className="size-3 text-muted-foreground" />
+                    </span>
+                  )}
+                </div>
+
                 <Button
                   variant="ghost"
                   size="sm"

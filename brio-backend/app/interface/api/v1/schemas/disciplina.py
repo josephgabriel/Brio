@@ -12,7 +12,9 @@ class DisciplinaResponseSchema(BaseModel):
     id: int
     prova_id: int
     nome: str
-    nivel_conhecimento: int
     criada_em: datetime
+    total_topicos: int = 0
+    topicos_concluidos: int = 0
+    progresso_percentual: float = 0.0
 
     model_config = {"from_attributes": True}

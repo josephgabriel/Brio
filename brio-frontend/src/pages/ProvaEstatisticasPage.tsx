@@ -170,6 +170,12 @@ export function ProvaEstatisticasPage() {
               : `${Math.round(Number(nivelMedio))}%`
           }
         />
+         <CardMetrica
+          label="Conteúdos concluídos"
+          valor={
+            data.cobertura_conteudo === null ? "—" : `${Math.round(data.cobertura_conteudo)}%`
+          }
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

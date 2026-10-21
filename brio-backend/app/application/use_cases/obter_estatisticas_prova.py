@@ -15,7 +15,9 @@ from app.domain.regras.estatisticas import (
     gerar_meses_recentes,
 )
 from app.domain.regras.indice_preparacao import calcular_indice_preparacao, classificar_indice
-
+from app.application.interfaces.disciplina_repository import DisciplinaRepository
+from app.application.interfaces.topico_repository import TopicoRepository
+from app.domain.regras.progresso import calcular_cobertura_conteudo
 
 @dataclass
 class PontoEvolucaoSemanal:
@@ -42,7 +44,9 @@ class EstatisticasProvaData:
     nivel_medio_conhecimento: float | None
     indice_preparacao: int | None
     classificacao_indice: str | None
+    cobertura_conteudo: float | None
     motivos: list[str] = field(default_factory=list)
+    
     
 
 
@@ -53,12 +57,14 @@ class ObterEstatisticasProva:
         sessao_repository: SessaoEstudoRepository,
         revisao_repository: RevisaoRepository,
         disciplina_repository: DisciplinaRepository,
+        topico_repository: TopicoRepository,
     ) -> None:
         self.prova_repository = prova_repository
         self.sessao_repository = sessao_repository
         self.revisao_repository = revisao_repository
         self.disciplina_repository = disciplina_repository
         self.obter_prova = ObterProva(prova_repository)
+        self.topico_repository = topico_repository
 
     def executar(self, prova_id: int, usuario_id: int) -> EstatisticasProvaData:
         prova = self.obter_prova.executar(prova_id, usuario_id)
@@ -91,7 +97,7 @@ class ObterEstatisticasProva:
             for semana in semanas
         ]
 
-                # Evolução mensal (últimos 6 meses)
+        # Evolução mensal (últimos 6 meses)
         meses = gerar_meses_recentes(quantidade=6)
         minutos_por_mes: dict[date, list[int]] = defaultdict(list)
         for sessao in finalizadas:
@@ -127,34 +133,35 @@ class ObterEstatisticasProva:
             calcular_media([d.nivel_conhecimento for d in disciplinas]) if disciplinas else None
         )
 
-        indice = None
-        classificacao = None
+        # Novo trecho integrado
+        contagens = self.topico_repository.contar_por_disciplinas([d.id for d in disciplinas])
+        cobertura = calcular_cobertura_conteudo(contagens)
+
+        inicio_semana_atual = hoje - timedelta(days=hoje.weekday())
+        horas_semana_atual = calcular_horas_estudadas(
+            minutos_por_semana.get(inicio_semana_atual, [])
+        )
+        meta_horas_semana = prova.horas_disponiveis_dia * prova.dias_disponiveis_semana
+
+        indice = calcular_indice_preparacao(
+            taxa_conclusao, horas_semana_atual, meta_horas_semana, cobertura
+        )
+        classificacao = classificar_indice(indice)
+
         motivos: list[str] = []
-
-        if nivel_medio is not None:
-            inicio_semana_atual = hoje - timedelta(days=hoje.weekday())
-            horas_semana_atual = calcular_horas_estudadas(
-                minutos_por_semana.get(inicio_semana_atual, [])
+        if cobertura is None:
+            motivos.append(
+                "Cadastre conteúdos nas matérias e marque os concluídos para o índice "
+                "considerar seu avanço no conteúdo."
             )
-            meta_horas_semana = prova.horas_disponiveis_dia * prova.dias_disponiveis_semana
-
-            indice = calcular_indice_preparacao(
-                nivel_medio, taxa_conclusao, horas_semana_atual, meta_horas_semana
-            )
-            classificacao = classificar_indice(indice)
-
-            if nivel_medio < 50:
-                motivos.append(
-                    f"O nível médio de conhecimento das matérias está em {round(nivel_medio)}%."
-                )
-            if taxa_conclusao < 50:
-                motivos.append("Menos da metade das revisões agendadas foram concluídas.")
-            if meta_horas_semana > 0 and horas_semana_atual < meta_horas_semana * 0.7:
-                motivos.append(
-                    "Você estudou menos horas do que sua meta semanal para esta prova."
-                )
-            if not motivos:
-                motivos.append("Seu ritmo está alinhado com a meta definida para esta prova.")
+        elif cobertura < 50:
+            motivos.append(f"Você concluiu {round(cobertura)}% dos conteúdos desta prova.")
+        if taxa_conclusao < 50:
+            motivos.append("Menos da metade das revisões agendadas foram concluídas.")
+        if meta_horas_semana > 0 and horas_semana_atual < meta_horas_semana * 0.7:
+            motivos.append("Você estudou menos horas do que sua meta semanal para esta prova.")
+        if not motivos:
+            motivos.append("Seu ritmo está alinhado com a meta definida para esta prova.")
 
         return EstatisticasProvaData(
             total_horas_estudadas=calcular_horas_estudadas(
@@ -172,4 +179,5 @@ class ObterEstatisticasProva:
             classificacao_indice=classificacao,
             motivos=motivos,
             evolucao_mensal=evolucao_mensal,
+            cobertura_conteudo=cobertura,
         )

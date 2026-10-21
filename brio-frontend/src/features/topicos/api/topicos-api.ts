@@ -44,3 +44,12 @@ export async function obterContextoTopico(topicoId: number): Promise<ContextoTop
   if (!response.ok) throw new Error("Não foi possível carregar o contexto")
   return response.json()
 }
+
+export async function definirTopicoConcluido(id: number, concluido: boolean): Promise<Topico> {
+  const response = await apiFetch(`/api/v1/topicos/${id}/concluido`, {
+    method: "PATCH",
+    body: JSON.stringify({ concluido }),
+  })
+  if (!response.ok) throw new Error("Não foi possível atualizar o conteúdo")
+  return response.json()
+}

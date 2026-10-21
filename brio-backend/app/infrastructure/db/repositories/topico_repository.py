@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.application.interfaces.topico_repository import TopicoRepository
 from app.infrastructure.db.models.topico import TopicoModel
-
+from sqlalchemy import case, func
 
 class SQLAlchemyTopicoRepository(TopicoRepository):
     def __init__(self, db: Session) -> None:
@@ -33,3 +33,24 @@ class SQLAlchemyTopicoRepository(TopicoRepository):
         self.db.commit()
         self.db.refresh(topico)
         return topico
+    
+    def contar_por_disciplinas(
+        self, disciplina_ids: list[int]
+    ) -> dict[int, tuple[int, int]]:
+        if not disciplina_ids:
+            return {}
+
+        linhas = (
+            self.db.query(
+                TopicoModel.disciplina_id,
+                func.count(TopicoModel.id),
+                func.sum(case((TopicoModel.concluido.is_(True), 1), else_=0)),
+            )
+            .filter(TopicoModel.disciplina_id.in_(disciplina_ids))
+            .group_by(TopicoModel.disciplina_id)
+            .all()
+        )
+        return {
+            disciplina_id: (int(total), int(concluidos or 0))
+            for disciplina_id, total, concluidos in linhas
+        }

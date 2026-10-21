@@ -17,6 +17,9 @@ from app.infrastructure.db.repositories.sessao_estudo_repository import (
 from app.infrastructure.db.session import get_db
 from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.estatisticas_prova import EstatisticasProvaResponseSchema
+from app.infrastructure.db.repositories.topico_repository import (
+    SQLAlchemyTopicoRepository,
+)
 
 router = APIRouter(tags=["estatisticas"])
 
@@ -33,9 +36,10 @@ def obter(
     sessao_repository = SQLAlchemySessaoEstudoRepository(db)
     revisao_repository = SQLAlchemyRevisaoRepository(db)
     disciplina_repository = SQLAlchemyDisciplinaRepository(db)
+    topico_repository = SQLAlchemyTopicoRepository(db)
 
     use_case = ObterEstatisticasProva(
-        prova_repository, sessao_repository, revisao_repository, disciplina_repository
+        prova_repository, sessao_repository, revisao_repository, disciplina_repository, topico_repository
     )
 
     try:

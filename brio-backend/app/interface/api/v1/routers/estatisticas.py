@@ -15,6 +15,12 @@ from app.interface.api.v1.schemas.estatisticas import EstatisticasResponseSchema
 from app.application.use_cases.obter_comparacao_provas import ObterComparacaoProvas
 from app.infrastructure.db.repositories.prova_repository import SQLAlchemyProvaRepository
 from app.interface.api.v1.schemas.comparacao_provas import ResumoComparacaoProvaSchema
+from app.infrastructure.db.repositories.topico_repository import (
+    SQLAlchemyTopicoRepository,
+)
+from app.infrastructure.db.repositories.disciplina_repository import (
+    SQLAlchemyDisciplinaRepository,
+)
 
 router = APIRouter(
     prefix="/api/v1/estatisticas",
@@ -32,10 +38,14 @@ def obter(
 ):
     sessao_repository = SQLAlchemySessaoEstudoRepository(db)
     revisao_repository = SQLAlchemyRevisaoRepository(db)
+    disciplina_repository = SQLAlchemyDisciplinaRepository(db)
+    topico_repository = SQLAlchemyTopicoRepository(db)
 
     use_case = ObterEstatisticas(
         sessao_repository,
         revisao_repository,
+        disciplina_repository,
+        topico_repository,
     )
 
     dados = use_case.executar(

@@ -6,6 +6,7 @@ from app.application.use_cases.criar_topico import CriarTopico
 from app.application.use_cases.deletar_topico import DeletarTopico
 from app.application.use_cases.listar_topico import ListarTopicos
 from app.application.use_cases.atualizar_topico import AtualizarTopico
+from app.application.use_cases.definir_topico_concluido import DefinirTopicoConcluido
 
 from app.domain.exceptions import DisciplinaNaoEncontradaError, TopicoNaoEncontradoError
 from app.infrastructure.db.models.usuario import UsuarioModel
@@ -21,6 +22,8 @@ from app.interface.api.v1.schemas.topico import TopicoCreateSchema, TopicoRespon
 from app.infrastructure.db.repositories.sessao_estudo_repository import (
     SQLAlchemySessaoEstudoRepository,
 )
+from app.interface.api.v1.schemas.topico import TopicoConcluidoSchema
+
 
 router = APIRouter(tags=["topicos"])
 
@@ -60,7 +63,7 @@ def listar(
 ):
     repository = SQLAlchemyTopicoRepository(db)
     use_case = ListarTopicos(repository)
-    return use_case.executar(disciplina_id=disciplina_id)
+    return use_case.executar(disciplina_id=disciplina_id, usuario_id=usuario.id)
 
 
 @router.delete("/api/v1/topicos/{topico_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -115,3 +118,18 @@ def contexto(
         prova_id=prova.id,
         prova_nome=prova.nome,
     )
+
+@router.patch("/api/v1/topicos/{topico_id}/concluido", response_model=TopicoResponseSchema)
+def definir_concluido(
+    topico_id: int,
+    dados: TopicoConcluidoSchema,
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
+    db: Session = Depends(get_db),
+):
+    use_case = DefinirTopicoConcluido(SQLAlchemyTopicoRepository(db))
+    try:
+        return use_case.executar(
+            topico_id=topico_id, usuario_id=usuario.id, concluido=dados.concluido
+        )
+    except TopicoNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))

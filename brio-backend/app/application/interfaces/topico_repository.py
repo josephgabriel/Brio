@@ -18,3 +18,8 @@ class TopicoRepository(ABC):
 
     @abstractmethod
     def atualizar(self, topico: TopicoModel) -> TopicoModel: ...
+
+    @abstractmethod
+    def contar_por_disciplinas(
+        self, disciplina_ids: list[int]
+    ) -> dict[int, tuple[int, int]]: ...

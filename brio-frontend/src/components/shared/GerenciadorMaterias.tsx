@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
 
+import { CheckboxConcluido, ProgressoDisciplina } from "@/components/shared/Progresso"
+import { useConcluirTopico } from "@/features/topicos/use-concluir-topico"
 import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -139,6 +141,7 @@ function DisciplinaItem({
   const criarTopicoMutation = useMutation({
     mutationFn: () => criarTopico(disciplina.id, novoTopico),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["disciplinas"] })
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplina.id] })
       setNovoTopico("")
     },
@@ -199,6 +202,10 @@ function DisciplinaItem({
         </Button>
       </div>
 
+      <div className="px-3 pb-3">
+        <ProgressoDisciplina disciplina={disciplina} />
+      </div>
+
       {expandida && (
         <div className="flex flex-col gap-2 border-t border-border p-3">
           {topicos?.map((topico) =>
@@ -242,6 +249,14 @@ interface TopicoLinhaProps {
 }
 
 function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
+  const concluirTopico = useConcluirTopico(disciplinaId)
+  const checkbox = (
+    <CheckboxConcluido
+      checked={topico.concluido}
+      rotulo={`Marcar "${topico.nome}" como concluído`}
+      onChange={(concluido) => concluirTopico.mutate({ topicoId: topico.id, concluido })}
+    />
+  )
   const [editando, setEditando] = useState(false)
   const [nomeEditado, setNomeEditado] = useState(topico.nome)
   const queryClient = useQueryClient()
@@ -258,6 +273,7 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
   const deletarTopicoMutation = useMutation({
     mutationFn: deletarTopico,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["disciplinas"] })
       queryClient.invalidateQueries({ queryKey: ["topicos", disciplinaId] })
     },
   })
@@ -300,17 +316,20 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
 
   if (onSelecionar) {
     return (
-      <button
-        type="button"
-        onClick={onSelecionar}
-        className="flex items-center justify-between rounded-md p-1.5 text-left text-sm hover:bg-accent"
-      >
+    <div className="flex items-center gap-2">
+        {checkbox}
+        <button
+          type="button"
+          onClick={onSelecionar}
+          className="flex flex-1 items-center justify-between rounded-md p-1.5 text-left text-sm hover:bg-accent"
+        >
         <span
           onClick={(e) => {
             e.stopPropagation()
             setEditando(true)
             setNomeEditado(topico.nome)
           }}
+          className={topico.concluido ? "text-muted-foreground line-through" : ""}
         >
           {topico.nome}
         </span>
@@ -322,6 +341,7 @@ function TopicoLinha({ topico, disciplinaId, onSelecionar }: TopicoLinhaProps) {
           }}
         />
       </button>
+      </div>
     )
   }
 

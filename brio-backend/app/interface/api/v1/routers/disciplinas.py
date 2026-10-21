@@ -16,6 +16,7 @@ from app.interface.api.v1.schemas.disciplina import (
     DisciplinaCreateSchema,
     DisciplinaResponseSchema,
 )
+from app.infrastructure.db.repositories.topico_repository import SQLAlchemyTopicoRepository
 
 router = APIRouter(tags=["disciplinas"])
 
@@ -45,9 +46,10 @@ def listar(
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
-    repository = SQLAlchemyDisciplinaRepository(db)
-    use_case = ListarDisciplinas(repository)
-    return use_case.executar(prova_id=prova_id)
+    use_case = ListarDisciplinas(
+        SQLAlchemyDisciplinaRepository(db), SQLAlchemyTopicoRepository(db)
+    )
+    return use_case.executar(prova_id=prova_id, usuario_id=usuario.id)
 
 
 @router.delete("/api/v1/disciplinas/{disciplina_id}", status_code=status.HTTP_204_NO_CONTENT)

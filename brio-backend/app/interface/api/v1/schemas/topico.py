@@ -12,6 +12,8 @@ class TopicoResponseSchema(BaseModel):
     id: int
     disciplina_id: int
     nome: str
+    concluido: bool
+    concluido_em: datetime | None
     criada_em: datetime
 
     model_config = {"from_attributes": True}
@@ -23,3 +25,6 @@ class TopicoContextoSchema(BaseModel):
     disciplina_nome: str
     prova_id: int
     prova_nome: str
+
+class TopicoConcluidoSchema(BaseModel):
+    concluido: bool

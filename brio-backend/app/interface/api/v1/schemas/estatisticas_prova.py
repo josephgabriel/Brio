@@ -28,6 +28,7 @@ class EstatisticasProvaResponseSchema(BaseModel):
     classificacao_indice: str | None
     motivos: list[str]
     evolucao_mensal: list[PontoEvolucaoMensalSchema]
+    cobertura_conteudo: float | None
 
     @classmethod
     def from_data(cls, dados: EstatisticasProvaData) -> "EstatisticasProvaResponseSchema":
@@ -51,4 +52,5 @@ class EstatisticasProvaResponseSchema(BaseModel):
                 PontoEvolucaoMensalSchema(mes=p.mes, horas=p.horas)
                 for p in dados.evolucao_mensal
             ],
+            cobertura_conteudo=dados.cobertura_conteudo,
         )

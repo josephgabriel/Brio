@@ -23,6 +23,7 @@ class EstatisticasResponseSchema(BaseModel):
     media_dificuldade: float
     media_aprendizado: float
     evolucao_mensal: list[PontoEvolucaoMensalSchema]
+    cobertura_conteudo: float | None
 
     @classmethod
     def from_estatisticas_data(
@@ -43,4 +44,5 @@ class EstatisticasResponseSchema(BaseModel):
                 PontoEvolucaoMensalSchema(mes=p.mes, horas=p.horas)
                 for p in dados.evolucao_mensal
             ],
+            cobertura_conteudo=dados.cobertura_conteudo,
         )
