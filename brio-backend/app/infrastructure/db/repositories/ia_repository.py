@@ -1,7 +1,7 @@
 from datetime import date
 
 from sqlalchemy.orm import Session
-
+from sqlalchemy import case, func
 from app.application.interfaces.ia_repository import (
     AvaliacaoDesempenhoRepository,
     HistoricoRespostaRepository,
@@ -79,6 +79,17 @@ class SQLAlchemyHistoricoRespostaRepository(HistoricoRespostaRepository):
             .filter(HistoricoRespostaModel.questao_id.in_(questoes_ids))
             .all()
         )
+    
+    def contar_por_usuario(self, usuario_id: int) -> tuple[int, int]:
+        total, acertos = (
+            self.db.query(
+                func.count(HistoricoRespostaModel.id),
+                func.sum(case((HistoricoRespostaModel.acertou.is_(True), 1), else_=0)),
+            )
+            .filter(HistoricoRespostaModel.usuario_id == usuario_id)
+            .one()
+        )
+        return int(total), int(acertos or 0)
 
 
 class SQLAlchemyAvaliacaoDesempenhoRepository(AvaliacaoDesempenhoRepository):

@@ -38,6 +38,9 @@ class HistoricoRespostaRepository(ABC):
         self, usuario_id: int, questoes_ids: list[int]
     ) -> list[HistoricoRespostaModel]: ...
 
+    @abstractmethod
+    def contar_por_usuario(self, usuario_id: int) -> tuple[int, int]: ...
+
 
 class AvaliacaoDesempenhoRepository(ABC):
     @abstractmethod

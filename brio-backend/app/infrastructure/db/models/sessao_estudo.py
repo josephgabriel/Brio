@@ -33,7 +33,8 @@ class SessaoEstudoModel(Base):
     )
     finalizada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     duracao_minutos: Mapped[int | None] = mapped_column(Integer)
-
+# LEGADO: não são mais preenchidas nem lidas pelo app (avaliação da sessão removida).
+    # As colunas continuam no banco de propósito; ver "expandir e contrair" na etapa 23.4.
     concentracao: Mapped[int | None] = mapped_column(Integer)
     dificuldade: Mapped[int | None] = mapped_column(Integer)
     aprendizado_percentual: Mapped[int | None] = mapped_column(Integer)

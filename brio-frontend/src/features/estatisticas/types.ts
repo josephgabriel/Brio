@@ -8,24 +8,33 @@ export interface PontoEvolucaoMensal {
   horas: number
 }
 
+export type ClassificacaoIndice = "excelente" | "atencao" | "risco" | "critico"
+
 export interface Estatisticas {
   total_horas_estudadas: number
   total_sessoes: number
   evolucao_semanal: PontoEvolucaoSemanal[]
   evolucao_mensal: PontoEvolucaoMensal[]
-  taxa_conclusao_revisoes: number
-  media_concentracao: number
-  media_dificuldade: number
-  media_aprendizado: number
+  total_conteudos: number
+  conteudos_concluidos: number
+  cobertura_conteudo: number | null
+  taxa_revisoes_em_dia: number | null
+  questoes_respondidas: number
+  questoes_acertos: number
+  taxa_acerto_questoes: number | null
 }
 
-export interface EstatisticasProva extends Estatisticas {
+export interface EstatisticasProva {
+  total_horas_estudadas: number
+  total_sessoes: number
   horas_por_disciplina: Record<string, number>
-  indice_preparacao: number | null
-  classificacao_indice: "excelente" | "atencao" | "risco" | "critico" | null
-  motivos: string[]
-  nivel_medio_conhecimento: number | null
+  evolucao_semanal: PontoEvolucaoSemanal[]
+  evolucao_mensal: PontoEvolucaoMensal[]
+  taxa_revisoes_em_dia: number | null
   cobertura_conteudo: number | null
+  indice_preparacao: number | null
+  classificacao_indice: ClassificacaoIndice | null
+  motivos: string[]
 }
 
 export interface ResumoComparacaoProva {
@@ -33,7 +42,8 @@ export interface ResumoComparacaoProva {
   nome: string
   total_horas_estudadas: number
   total_sessoes: number
-  taxa_conclusao_revisoes: number
+  taxa_revisoes_em_dia: number | null
+  cobertura_conteudo: number | null
   indice_preparacao: number
-  classificacao_indice: "excelente" | "atencao" | "risco" | "critico"
+  classificacao_indice: ClassificacaoIndice
 }

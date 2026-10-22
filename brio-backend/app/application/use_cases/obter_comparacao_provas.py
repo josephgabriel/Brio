@@ -5,7 +5,7 @@ from app.application.interfaces.prova_repository import ProvaRepository
 from app.application.interfaces.revisao_repository import RevisaoRepository
 from app.application.interfaces.sessao_estudo_repository import SessaoEstudoRepository
 from app.domain.regras.dashboard import calcular_horas_estudadas
-from app.domain.regras.estatisticas import calcular_taxa_conclusao
+from app.domain.regras.estatisticas import calcular_taxa_conclusao, calcular_taxa_revisoes_em_dia
 from app.domain.regras.indice_preparacao import calcular_indice_preparacao, classificar_indice
 from app.infrastructure.db.models.prova import StatusProva
 from app.application.interfaces.disciplina_repository import DisciplinaRepository
@@ -18,7 +18,8 @@ class ResumoComparacaoProva:
     nome: str
     total_horas_estudadas: float
     total_sessoes: int
-    taxa_conclusao_revisoes: float
+    taxa_revisoes_em_dia: float | None
+    cobertura_conteudo: float | None
     indice_preparacao: int
     classificacao_indice: str
 
@@ -65,8 +66,8 @@ class ObterComparacaoProvas:
             )
 
             revisoes = self.revisao_repository.listar_por_usuario(usuario_id, prova.id)
-            taxa_conclusao = calcular_taxa_conclusao(
-                len(revisoes), len([r for r in revisoes if r.concluida_em is not None])
+            taxa_revisoes = calcular_taxa_revisoes_em_dia(
+                [(r.data_agendada, r.concluida_em is not None) for r in revisoes], hoje
             )
 
             meta_horas_semana = prova.horas_disponiveis_dia * prova.dias_disponiveis_semana
@@ -76,7 +77,7 @@ class ObterComparacaoProvas:
             )
             cobertura = calcular_cobertura_conteudo(contagens)
             indice = calcular_indice_preparacao(
-                taxa_conclusao, horas_semana_atual, meta_horas_semana, cobertura
+                taxa_revisoes, horas_semana_atual, meta_horas_semana, cobertura
             )
             resultado.append(
                 ResumoComparacaoProva(
@@ -84,7 +85,8 @@ class ObterComparacaoProvas:
                     nome=prova.nome,
                     total_horas_estudadas=total_horas,
                     total_sessoes=len(finalizadas),
-                    taxa_conclusao_revisoes=taxa_conclusao,
+                    taxa_revisoes_em_dia=taxa_revisoes,
+                    cobertura_conteudo=cobertura,
                     indice_preparacao=indice,
                     classificacao_indice=classificar_indice(indice),
                 )

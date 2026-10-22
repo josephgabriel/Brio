@@ -11,12 +11,6 @@ class SessaoIniciarSchema(BaseModel):
     objetivo: str | None = Field(default=None, max_length=500)
 
 
-class SessaoFinalizarSchema(BaseModel):
-    concentracao: int = Field(ge=1, le=5)
-    dificuldade: int = Field(ge=1, le=5)
-    aprendizado_percentual: int = Field(ge=0, le=100)
-
-
 class SessaoResponseSchema(BaseModel):
     id: int
     prova_id: int
@@ -26,9 +20,6 @@ class SessaoResponseSchema(BaseModel):
     iniciada_em: datetime
     finalizada_em: datetime | None
     duracao_minutos: int | None
-    concentracao: int | None
-    dificuldade: int | None
-    aprendizado_percentual: int | None
 
     @classmethod
     def from_model(cls, sessao: SessaoEstudoModel) -> "SessaoResponseSchema":

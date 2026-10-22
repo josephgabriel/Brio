@@ -58,9 +58,6 @@ export function SessaoPage() {
   const [pausaLongaMinutos, setPausaLongaMinutos] = useState("10")
   const [ciclosAtePausaLonga, setCiclosAtePausaLonga] = useState("2")
 
-  const [concentracao, setConcentracao] = useState("3")
-  const [dificuldade, setDificuldade] = useState("3")
-  const [aprendizado, setAprendizado] = useState("70")
   const confirmar = useConfirmar()
   const [exportando, setExportando] = useState(false)
 
@@ -144,11 +141,7 @@ export function SessaoPage() {
 
   const finalizar = useMutation({
     mutationFn: () =>
-      finalizarSessao(sessaoAtiva!.id, {
-        concentracao: Number(concentracao),
-        dificuldade: Number(dificuldade),
-        aprendizado_percentual: Number(aprendizado),
-      }),
+      finalizarSessao(sessaoAtiva!.id,),
     onSuccess: () => {
       encerrarSessaoAtiva()
       setProvaId("")
@@ -182,11 +175,6 @@ export function SessaoPage() {
   function handleIniciar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     iniciar.mutate()
-  }
-
-  function handleFinalizar(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault()
-    finalizar.mutate()
   }
 
   async function handleCancelar() {
@@ -327,54 +315,19 @@ export function SessaoPage() {
                 </Button>
               </div>
 
-              <form
-                onSubmit={handleFinalizar}
-                className="flex w-full flex-col gap-4 border-t border-border pt-6"
-              >
-                <p className="text-sm text-muted-foreground">
-                  Terminou de estudar? Avalie a sessão:
-                </p>
-
-                <div className="flex flex-col gap-1.5 text-left">
-                  <Label htmlFor="concentracao">Concentração (1-5)</Label>
-                  <Input
-                    id="concentracao"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={concentracao}
-                    onChange={(e) => setConcentracao(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5 text-left">
-                  <Label htmlFor="dificuldade">Dificuldade (1-5)</Label>
-                  <Input
-                    id="dificuldade"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={dificuldade}
-                    onChange={(e) => setDificuldade(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5 text-left">
-                  <Label htmlFor="aprendizado">Aprendizado (0-100%)</Label>
-                  <Input
-                    id="aprendizado"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={aprendizado}
-                    onChange={(e) => setAprendizado(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={finalizar.isPending}>
-                  {finalizar.isPending ? "Finalizando..." : "Finalizar sessão"}
-                </Button>
-              </form>
+              <div className="w-full border-t border-border pt-6">
+  <Button
+    type="button"
+    className="w-full"
+    onClick={() => finalizar.mutate()}
+    disabled={finalizar.isPending}
+  >
+    {finalizar.isPending ? "Finalizando..." : "Finalizar sessão"}
+  </Button>
+  <p className="mt-2 text-center text-xs text-muted-foreground">
+    As revisões deste conteúdo serão agendadas automaticamente.
+  </p>
+</div>
             </div>
           </div>
         </div>

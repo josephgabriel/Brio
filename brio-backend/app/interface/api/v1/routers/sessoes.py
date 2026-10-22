@@ -24,7 +24,6 @@ from app.infrastructure.db.repositories.sessao_estudo_repository import (
 from app.infrastructure.db.session import get_db
 from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.sessao_estudo import (
-    SessaoFinalizarSchema,
     SessaoIniciarSchema,
     SessaoResponseSchema,
 )
@@ -70,18 +69,16 @@ def iniciar(
 @router.patch("/{sessao_id}/finalizar", response_model=SessaoResponseSchema)
 def finalizar(
     sessao_id: int,
-    dados: SessaoFinalizarSchema,
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     sessao_repository = SQLAlchemySessaoEstudoRepository(db)
     revisao_repository = SQLAlchemyRevisaoRepository(db)
-    disciplina_repository = SQLAlchemyDisciplinaRepository(db)
-    use_case = FinalizarSessao(sessao_repository, revisao_repository, disciplina_repository)
+    use_case = FinalizarSessao(sessao_repository, revisao_repository)
 
     try:
         sessao = use_case.executar(
-            sessao_id=sessao_id, usuario_id=usuario.id, **dados.model_dump()
+            sessao_id=sessao_id, usuario_id=usuario.id
         )
     except SessaoNaoEncontradaError as erro:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))

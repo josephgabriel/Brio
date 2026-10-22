@@ -22,36 +22,34 @@ from app.infrastructure.db.repositories.disciplina_repository import (
     SQLAlchemyDisciplinaRepository,
 )
 
+from app.infrastructure.db.repositories.disciplina_repository import (
+    SQLAlchemyDisciplinaRepository,
+)
+from app.infrastructure.db.repositories.ia_repository import (
+    SQLAlchemyHistoricoRespostaRepository,
+)
+from app.infrastructure.db.repositories.topico_repository import SQLAlchemyTopicoRepository
+
 router = APIRouter(
     prefix="/api/v1/estatisticas",
     tags=["estatisticas"],
 )
 
 
-@router.get(
-    "",
-    response_model=EstatisticasResponseSchema,
-)
+@router.get("", response_model=EstatisticasResponseSchema)
 def obter(
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
-    sessao_repository = SQLAlchemySessaoEstudoRepository(db)
-    revisao_repository = SQLAlchemyRevisaoRepository(db)
-    disciplina_repository = SQLAlchemyDisciplinaRepository(db)
-    topico_repository = SQLAlchemyTopicoRepository(db)
-
     use_case = ObterEstatisticas(
-        sessao_repository,
-        revisao_repository,
-        disciplina_repository,
-        topico_repository,
+        SQLAlchemyProvaRepository(db),
+        SQLAlchemySessaoEstudoRepository(db),
+        SQLAlchemyRevisaoRepository(db),
+        SQLAlchemyDisciplinaRepository(db),
+        SQLAlchemyTopicoRepository(db),
+        SQLAlchemyHistoricoRespostaRepository(db),
     )
-
-    dados = use_case.executar(
-        usuario_id=usuario.id,
-    )
-
+    dados = use_case.executar(usuario_id=usuario.id)
     return EstatisticasResponseSchema.from_estatisticas_data(dados)
 
 @router.get("/comparacao", response_model=list[ResumoComparacaoProvaSchema])

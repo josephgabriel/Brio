@@ -9,10 +9,9 @@ from app.application.interfaces.sessao_estudo_repository import SessaoEstudoRepo
 from app.application.use_cases.obter_provas import ObterProva
 from app.domain.regras.dashboard import calcular_horas_estudadas
 from app.domain.regras.estatisticas import (
-    calcular_media,
-    calcular_taxa_conclusao,
     gerar_semanas_recentes,
     gerar_meses_recentes,
+    calcular_taxa_revisoes_em_dia,
 )
 from app.domain.regras.indice_preparacao import calcular_indice_preparacao, classificar_indice
 from app.application.interfaces.disciplina_repository import DisciplinaRepository
@@ -37,18 +36,12 @@ class EstatisticasProvaData:
     horas_por_disciplina: dict[str, float]
     evolucao_semanal: list[PontoEvolucaoSemanal]
     evolucao_mensal: list[PontoEvolucaoMensal]
-    taxa_conclusao_revisoes: float
-    media_concentracao: float
-    media_dificuldade: float
-    media_aprendizado: float
+    taxa_revisoes_em_dia: float | None
     nivel_medio_conhecimento: float | None
     indice_preparacao: int | None
     classificacao_indice: str | None
     cobertura_conteudo: float | None
     motivos: list[str] = field(default_factory=list)
-    
-    
-
 
 class ObterEstatisticasProva:
     def __init__(
@@ -114,24 +107,11 @@ class ObterEstatisticasProva:
         ]
 
         revisoes = self.revisao_repository.listar_por_usuario(usuario_id, prova_id)
-        total_revisoes = len(revisoes)
-        revisoes_concluidas = len([r for r in revisoes if r.concluida_em is not None])
-        taxa_conclusao = calcular_taxa_conclusao(total_revisoes, revisoes_concluidas)
-
-        media_concentracao = calcular_media(
-            [s.concentracao for s in finalizadas if s.concentracao is not None]
-        )
-        media_dificuldade = calcular_media(
-            [s.dificuldade for s in finalizadas if s.dificuldade is not None]
-        )
-        media_aprendizado = calcular_media(
-            [s.aprendizado_percentual for s in finalizadas if s.aprendizado_percentual is not None]
+        taxa_revisoes = calcular_taxa_revisoes_em_dia(
+            [(r.data_agendada, r.concluida_em is not None) for r in revisoes], hoje
         )
 
         disciplinas = self.disciplina_repository.listar_por_prova(prova_id)
-        nivel_medio = (
-            calcular_media([d.nivel_conhecimento for d in disciplinas]) if disciplinas else None
-        )
 
         # Novo trecho integrado
         contagens = self.topico_repository.contar_por_disciplinas([d.id for d in disciplinas])
@@ -144,7 +124,7 @@ class ObterEstatisticasProva:
         meta_horas_semana = prova.horas_disponiveis_dia * prova.dias_disponiveis_semana
 
         indice = calcular_indice_preparacao(
-            taxa_conclusao, horas_semana_atual, meta_horas_semana, cobertura
+            taxa_revisoes, horas_semana_atual, meta_horas_semana, cobertura
         )
         classificacao = classificar_indice(indice)
 
@@ -156,7 +136,7 @@ class ObterEstatisticasProva:
             )
         elif cobertura < 50:
             motivos.append(f"Você concluiu {round(cobertura)}% dos conteúdos desta prova.")
-        if taxa_conclusao < 50:
+        if taxa_revisoes < 50:
             motivos.append("Menos da metade das revisões agendadas foram concluídas.")
         if meta_horas_semana > 0 and horas_semana_atual < meta_horas_semana * 0.7:
             motivos.append("Você estudou menos horas do que sua meta semanal para esta prova.")
@@ -170,11 +150,7 @@ class ObterEstatisticasProva:
             total_sessoes=len(finalizadas),
             horas_por_disciplina=horas_por_disciplina,
             evolucao_semanal=evolucao_semanal,
-            taxa_conclusao_revisoes=taxa_conclusao,
-            media_concentracao=media_concentracao,
-            media_dificuldade=media_dificuldade,
-            media_aprendizado=media_aprendizado,
-            nivel_medio_conhecimento=nivel_medio,
+            taxa_revisoes_em_dia=taxa_revisoes,
             indice_preparacao=indice,
             classificacao_indice=classificacao,
             motivos=motivos,

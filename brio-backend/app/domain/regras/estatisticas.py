@@ -60,3 +60,20 @@ def gerar_meses_recentes(quantidade: int = 6, hoje: date | None = None) -> list[
             a -= 1
         meses.append(date(a, m, 1))
     return meses
+
+def calcular_taxa_revisoes_em_dia(
+    revisoes: list[tuple[date, bool]], hoje: date | None = None
+) -> float | None:
+    """
+    Percentual de revisões concluídas entre as que JÁ VENCERAM (data agendada
+    <= hoje). Revisões futuras não entram: ainda não dá para estar atrasado
+    nelas. Devolve None se nenhuma venceu, para não confundir "sem dados"
+    com 0%.
+
+    Cada item de `revisoes` é (data_agendada, foi_concluida).
+    """
+    hoje = hoje or date.today()
+    vencidas = [concluida for data_agendada, concluida in revisoes if data_agendada <= hoje]
+    if not vencidas:
+        return None
+    return calcular_taxa_conclusao(len(vencidas), sum(vencidas))

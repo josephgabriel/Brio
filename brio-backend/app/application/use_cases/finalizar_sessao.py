@@ -28,9 +28,6 @@ class FinalizarSessao:
         self,
         sessao_id: int,
         usuario_id: int,
-        concentracao: int,
-        dificuldade: int,
-        aprendizado_percentual: int,
     ) -> SessaoEstudoModel:
         sessao = self.obter_sessao.executar(sessao_id, usuario_id)
 
@@ -41,9 +38,6 @@ class FinalizarSessao:
         sessao.duracao_minutos = calcular_duracao_minutos(
             sessao.iniciada_em, sessao.finalizada_em
         )
-        sessao.concentracao = concentracao
-        sessao.dificuldade = dificuldade
-        sessao.aprendizado_percentual = aprendizado_percentual
         sessao = self.sessao_repository.atualizar(sessao)
 
         # Revisões (Etapa 8, inalterado)
@@ -69,7 +63,7 @@ class FinalizarSessao:
             disciplina = self.disciplina_repository.buscar_por_id(sessao.disciplina_id)
             if disciplina is not None:
                 disciplina.nivel_conhecimento = calcular_novo_nivel(
-                    disciplina.nivel_conhecimento, aprendizado_percentual
+                    disciplina.nivel_conhecimento
                 )
                 self.disciplina_repository.atualizar(disciplina)
 

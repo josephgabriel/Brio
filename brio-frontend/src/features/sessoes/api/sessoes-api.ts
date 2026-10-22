@@ -1,6 +1,5 @@
 import { apiFetch } from "@/lib/api-client"
 import type {
-  FinalizarSessaoData,
   IniciarSessaoData,
   Sessao,
 } from "@/features/sessoes/types"
@@ -14,19 +13,15 @@ export async function iniciarSessao(dados: IniciarSessaoData): Promise<Sessao> {
   return response.json()
 }
 
-export async function finalizarSessao(
-  id: number,
-  dados: FinalizarSessaoData,
-): Promise<Sessao> {
+export async function finalizarSessao(id: number): Promise<Sessao> {
   const response = await apiFetch(`/api/v1/sessoes/${id}/finalizar`, {
     method: "PATCH",
-    body: JSON.stringify(dados),
   })
   if (!response.ok) {
     const erro = await response.json().catch(() => null)
     throw new Error(erro?.detail ?? "Não foi possível finalizar a sessão")
-   }
-   return response.json()
+  }
+  return response.json()
 }
 
 export async function cancelarSessao(id: number): Promise<void> {

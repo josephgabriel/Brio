@@ -159,8 +159,12 @@ export function ProvaEstatisticasPage() {
           valor={String(dadosApi.total_sessoes ?? 0)}
         />
         <CardMetrica
-          label="Revisões concluídas"
-          valor={`${dadosApi.taxa_conclusao_revisoes ?? 0}%`}
+          label="Revisões em dia"
+          valor={
+            data.taxa_revisoes_em_dia === null
+              ? "—"
+              : `${Math.round(data.taxa_revisoes_em_dia)}%`
+          }
         />
         <CardMetrica
           label="Nível médio"
