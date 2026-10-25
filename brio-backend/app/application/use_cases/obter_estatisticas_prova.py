@@ -37,7 +37,6 @@ class EstatisticasProvaData:
     evolucao_semanal: list[PontoEvolucaoSemanal]
     evolucao_mensal: list[PontoEvolucaoMensal]
     taxa_revisoes_em_dia: float | None
-    nivel_medio_conhecimento: float | None
     indice_preparacao: int | None
     classificacao_indice: str | None
     cobertura_conteudo: float | None

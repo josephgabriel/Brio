@@ -62,9 +62,6 @@ class FinalizarSessao:
         if sessao.disciplina_id is not None:
             disciplina = self.disciplina_repository.buscar_por_id(sessao.disciplina_id)
             if disciplina is not None:
-                disciplina.nivel_conhecimento = calcular_novo_nivel(
-                    disciplina.nivel_conhecimento
-                )
                 self.disciplina_repository.atualizar(disciplina)
 
         return sessao

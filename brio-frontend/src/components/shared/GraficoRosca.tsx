@@ -19,6 +19,10 @@ interface GraficoRoscaProps {
   sufixo?: string
 }
 
+function formatar(valor: number): string {
+  return valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })
+}
+
 export function GraficoRosca({
   titulo,
   fatias,
@@ -54,7 +58,7 @@ export function GraficoRosca({
 
   const descricao = vazio
     ? `${titulo}: sem dados ainda`
-    : `${titulo}: ${fatias.map((fatia) => `${fatia.rotulo} ${fatia.valor}${sufixo}`).join(", ")}`
+    : `${titulo}: ${fatias.map((fatia) => `${fatia.rotulo} ${formatar(fatia.valor)}${sufixo}`).join(", ")}`
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6">
@@ -84,7 +88,7 @@ export function GraficoRosca({
                 {fatia.rotulo}
               </span>
               <span className="font-medium tabular-nums">
-                {fatia.valor}
+                {formatar(fatia.valor)}
                 {sufixo}
               </span>
             </li>

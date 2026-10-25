@@ -61,6 +61,12 @@ def comparacao(
     revisao_repository = SQLAlchemyRevisaoRepository(db)
     prova_repository = SQLAlchemyProvaRepository(db)
 
-    use_case = ObterComparacaoProvas(prova_repository, sessao_repository, revisao_repository)
+    use_case = ObterComparacaoProvas(
+        prova_repository=prova_repository,
+        sessao_repository=sessao_repository,
+        revisao_repository=revisao_repository,
+        disciplina_repository=SQLAlchemyDisciplinaRepository(db),
+        topico_repository=SQLAlchemyTopicoRepository(db),
+    )
     resumos = use_case.executar(usuario_id=usuario.id)
     return [ResumoComparacaoProvaSchema.from_resumo(r) for r in resumos]

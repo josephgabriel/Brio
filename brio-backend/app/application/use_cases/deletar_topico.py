@@ -37,5 +37,4 @@ class DeletarTopico:
             and s.aprendizado_percentual is not None
         ]
 
-        disciplina.nivel_conhecimento = round(calcular_media(aprendizados))
         self.disciplina_repository.atualizar(disciplina)

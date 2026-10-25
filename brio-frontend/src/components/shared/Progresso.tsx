@@ -4,9 +4,14 @@ import { Check } from "lucide-react"
 interface BarraProgressoProps {
   percentual: number
   rotulo?: string
+  corPreenchimento?: string
 }
 
-export function BarraProgresso({ percentual, rotulo }: BarraProgressoProps) {
+export function BarraProgresso({
+  percentual,
+  rotulo,
+  corPreenchimento = "bg-primary",
+}: BarraProgressoProps) {
   const valor = Math.min(100, Math.max(0, Math.round(percentual)))
 
   return (
@@ -20,7 +25,7 @@ export function BarraProgresso({ percentual, rotulo }: BarraProgressoProps) {
         className="h-2 flex-1 overflow-hidden rounded-full bg-muted"
       >
         <div
-          className="h-full rounded-full bg-primary transition-all duration-500"
+          className={`h-full rounded-full transition-all duration-500 ${corPreenchimento}`}
           style={{ width: `${valor}%` }}
         />
       </div>

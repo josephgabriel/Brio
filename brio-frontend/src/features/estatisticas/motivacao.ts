@@ -19,6 +19,10 @@ export function formatarNumero(valor: number): string {
   return valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })
 }
 
+export function formatarPercentual(valor: number | null): string {
+  return valor === null ? "—" : `${Math.round(valor)}%`
+}
+
 export function formatarQuantidade(
   valor: number,
   unidade: Pick<Trilha, "singular" | "plural">,

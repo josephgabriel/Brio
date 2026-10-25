@@ -1,213 +1,375 @@
-import { useParams } from "react-router-dom"
-import { Bar, Line } from "react-chartjs-2"
+import { Link, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-import { SkeletonMetricas, SkeletonGrafico } from "@/components/shared/Skeletons"
+import {
+  ArrowLeft,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Lightbulb,
+  Timer,
+} from "lucide-react"
+
+import { CartaoNumero } from "@/components/shared/CartaoNumero"
+import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
+import { GraficoRosca } from "@/components/shared/GraficoRosca"
+import { BarraProgresso } from "@/components/shared/Progresso"
+import { Carregando, SkeletonGrafico, SkeletonMetricas } from "@/components/shared/Skeletons"
 import { Skeleton } from "@/components/ui/skeleton"
-import "@/lib/chart-setup"
-import { CardMetrica } from "@/components/shared/CardMetrica"
-import { IndicePreparacaoCard } from "@/components/shared/IndicePreparacaoCard"
+import { listarDisciplinas } from "@/features/disciplinas/api/disciplinas-api"
 import { obterEstatisticasProva } from "@/features/estatisticas/api/estatisticas-api"
+import { formatarNumero, formatarPercentual } from "@/features/estatisticas/motivacao"
+import type { ClassificacaoIndice } from "@/features/estatisticas/types"
+import { ESMERALDA, GRADIENTE_HERO } from "@/features/estatisticas/visual"
+import { obterProva } from "@/features/provas/api/provas-api"
 
-const COR_PADRAO = "#10B981"
-const COR_BORDA = "#E7E7EA"
-
-function formatarSemana(data: string) {
-  return new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-  })
+const ROTULOS_CLASSIFICACAO: Record<ClassificacaoIndice, string> = {
+  excelente: "Excelente",
+  atencao: "Atenção",
+  risco: "Em risco",
+  critico: "Crítico",
 }
 
-function formatarMes(mes: string) {
-  const dataFormatada = mes.length === 7 ? `${mes}-01` : mes
-  return new Date(`${dataFormatada}T00:00:00`).toLocaleDateString("pt-BR", {
-    month: "short",
-    year: "2-digit",
-  })
+function textoContagem(dias: number | null | undefined): string {
+  if (dias === null || dias === undefined) return "Data da prova ainda não definida"
+  if (dias < 0) return "Prova já realizada"
+  if (dias === 0) return "A prova é hoje"
+  return dias === 1 ? "Falta 1 dia para a prova" : `Faltam ${dias} dias para a prova`
 }
 
-const OPCOES_COMUNS = {
-  responsive: true,
-  plugins: { legend: { display: false } },
-  scales: {
-    x: { grid: { color: COR_BORDA } },
-    y: { grid: { color: COR_BORDA }, beginAtZero: true },
-  },
+function arredondar(valor: number): number {
+  return Math.round(valor * 10) / 10
 }
 
 export function ProvaEstatisticasPage() {
   const { id } = useParams()
   const provaId = Number(id)
 
-  const {
-    data,
-    isLoading: isLoadingEstatisticas,
-    isError: isErrorEstatisticas,
-  } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["estatisticas-prova", provaId],
     queryFn: () => obterEstatisticasProva(provaId),
-    enabled: !isNaN(provaId) && provaId > 0,
+  })
+  const { data: prova, isLoading: carregandoProva } = useQuery({
+    queryKey: ["provas", provaId],
+    queryFn: () => obterProva(provaId),
+  })
+  const { data: disciplinas, isLoading: carregandoDisciplinas } = useQuery({
+    queryKey: ["disciplinas", provaId],
+    queryFn: () => listarDisciplinas(provaId),
   })
 
-  // 1. Verificações de carregamento e erro
-  if (isLoadingEstatisticas) {
+  if (isLoading || carregandoProva || carregandoDisciplinas) {
     return (
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96 max-w-full" />
-        </div>
-        <SkeletonMetricas />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <Carregando>
+        <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-44 w-full rounded-3xl" />
+          </div>
+          <SkeletonMetricas className="grid grid-cols-2 gap-4 lg:grid-cols-4" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Skeleton className="h-72 rounded-2xl" />
+            <Skeleton className="h-72 rounded-2xl" />
+            <Skeleton className="h-72 rounded-2xl" />
+          </div>
           <SkeletonGrafico />
-          <SkeletonGrafico />
         </div>
-        <SkeletonMetricas quantidade={3} />
+      </Carregando>
+    )
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-destructive">Não foi possível carregar as estatísticas desta prova.</p>
+        <Link to="/provas" className="text-sm text-primary hover:underline">
+          Voltar para as provas
+        </Link>
       </div>
     )
   }
 
-  if (isErrorEstatisticas || !data) {
-    return (
-      <p className="text-destructive">
-        Não foi possível carregar as estatísticas.
-      </p>
-    )
-  }
+  // Conteúdos: tudo vem da lista de matérias (mesma fonte da barra de cada matéria),
+  // assim os números desta tela nunca divergem entre si.
+  const materias = disciplinas ?? []
+  const totalConteudos = materias.reduce((soma, m) => soma + m.total_topicos, 0)
+  const conteudosConcluidos = materias.reduce((soma, m) => soma + m.topicos_concluidos, 0)
+  const percentualConteudos =
+    totalConteudos > 0 ? (conteudosConcluidos / totalConteudos) * 100 : null
 
-  // Cast seguro para acessar propriedades dinâmicas sem erro de TypeScript
-  const dadosApi = data as Record<string, any>
+  const emDia = data.taxa_revisoes_em_dia === null ? 0 : Math.round(data.taxa_revisoes_em_dia)
 
-  // 2. Extração de dados com proteções completas contra null/undefined
-  const horasPorDisciplina = dadosApi.horas_por_disciplina || {}
-  const disciplinas = Object.keys(horasPorDisciplina)
-  const valoresHoras = Object.values(horasPorDisciplina)
+  const semanas = data.evolucao_semanal
+  const estaSemana = semanas.length > 0 ? semanas[semanas.length - 1].horas : 0
+  const metaSemanal = prova ? prova.horas_disponiveis_dia * prova.dias_disponiveis_semana : 0
+  const percentualMeta = metaSemanal > 0 ? Math.min(100, (estaSemana / metaSemanal) * 100) : 0
 
-  const dadosBarra = {
-    labels: disciplinas,
-    datasets: [
-      {
-        label: "Horas estudadas",
-        data: valoresHoras,
-        backgroundColor: COR_PADRAO,
-        borderRadius: 6,
-      },
-    ],
-  }
+  const tempoPorMateria = Object.entries(data.horas_por_disciplina).sort((a, b) => b[1] - a[1])
+  const maiorTempo = tempoPorMateria.length > 0 ? tempoPorMateria[0][1] : 0
 
-  const evolucaoSemanal = Array.isArray(dadosApi.evolucao_semanal)
-    ? dadosApi.evolucao_semanal
-    : []
-
-  const dadosLinhaSemanal = {
-    labels: evolucaoSemanal.map((ponto: { semana_inicio: string }) =>
-      formatarSemana(ponto.semana_inicio),
-    ),
-    datasets: [
-      {
-        label: "Horas por semana",
-        data: evolucaoSemanal.map((ponto: { horas: number }) => ponto.horas),
-        borderColor: COR_PADRAO,
-        backgroundColor: COR_PADRAO,
-        tension: 0.3,
-      },
-    ],
-  }
-
-  const evolucaoMensal = Array.isArray(dadosApi.evolucao_mensal)
-    ? dadosApi.evolucao_mensal
-    : []
-
-  const dadosLinhaMensal = {
-    labels: evolucaoMensal.map((ponto: { mes: string }) =>
-      formatarMes(ponto.mes),
-    ),
-    datasets: [
-      {
-        label: "Horas por mês",
-        data: evolucaoMensal.map((ponto: { horas: number }) => ponto.horas),
-        borderColor: COR_PADRAO,
-        backgroundColor: COR_PADRAO,
-        tension: 0.3,
-      },
-    ],
-  }
-
-  // Garantia de que motivos é um array
-  const motivosLista = Array.isArray(dadosApi.motivos) ? dadosApi.motivos : []
-
-  // Leitura segura do nível médio de conhecimento
-  const nivelMedio = dadosApi.nivel_medio_conhecimento
+  const semHistorico = data.total_sessoes === 0
+  const indice = semHistorico ? null : data.indice_preparacao
+  const rotuloIndice = data.classificacao_indice
+    ? ROTULOS_CLASSIFICACAO[data.classificacao_indice]
+    : null
 
   return (
-    <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-semibold">Estatísticas da Prova</h1>
+    <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-4">
+        <Link
+          to={`/provas/${provaId}`}
+          className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Voltar para a prova
+        </Link>
 
-      <IndicePreparacaoCard
-        indice={dadosApi.indice_preparacao}
-        classificacao={dadosApi.classificacao_indice}
-        motivos={motivosLista}
-      />
+        <section
+          className="relative overflow-hidden rounded-3xl p-8 text-white"
+          style={{ background: GRADIENTE_HERO }}
+        >
+          <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-16 right-28 size-40 rounded-full bg-white/10" />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <CardMetrica
-          label="Total de horas"
-          valor={`${dadosApi.total_horas_estudadas ?? 0}h`}
-        />
-        <CardMetrica
-          label="Total de sessões"
-          valor={String(dadosApi.total_sessoes ?? 0)}
-        />
-        <CardMetrica
-          label="Revisões em dia"
-          valor={
-            data.taxa_revisoes_em_dia === null
-              ? "—"
-              : `${Math.round(data.taxa_revisoes_em_dia)}%`
-          }
-        />
-        <CardMetrica
-          label="Nível médio"
-          valor={
-            nivelMedio === null || nivelMedio === undefined
-              ? "—"
-              : `${Math.round(Number(nivelMedio))}%`
-          }
-        />
-         <CardMetrica
-          label="Conteúdos concluídos"
-          valor={
-            data.cobertura_conteudo === null ? "—" : `${Math.round(data.cobertura_conteudo)}%`
-          }
-        />
-      </div>
+          <div className="relative flex flex-wrap items-center justify-between gap-6">
+            <div className="max-w-md">
+              <p className="text-xs font-medium uppercase tracking-widest text-white/70">
+                Estatísticas da prova
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">
+                {prova?.nome ?? "Sua prova"}
+              </h1>
+              <p className="mt-3 flex items-center gap-2 text-sm text-white/85">
+                <CalendarDays className="size-4" />
+                {textoContagem(prova?.dias_restantes)}
+              </p>
+              {metaSemanal > 0 && (
+                <p className="mt-1 text-sm text-white/85">
+                  Esta semana: {formatarNumero(estaSemana)} h de {formatarNumero(metaSemanal)} h
+                  planejadas
+                </p>
+              )}
+            </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Horas por matéria</h2>
-          {disciplinas.length === 0 ? (
-            <p className="text-muted-foreground">Sem dados ainda.</p>
-          ) : (
-            <Bar data={dadosBarra} options={OPCOES_COMUNS} />
-          )}
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Evolução semanal</h2>
-          {evolucaoSemanal.length === 0 ? (
-            <p className="text-muted-foreground">Sem dados ainda.</p>
-          ) : (
-            <Line data={dadosLinhaSemanal} options={OPCOES_COMUNS} />
-          )}
-        </div>
-
-        {evolucaoMensal.length > 0 && (
-          <div className="rounded-xl border border-border bg-card p-6 lg:col-span-2">
-            <h2 className="mb-4 text-lg font-semibold">Evolução mensal</h2>
-            <Line data={dadosLinhaMensal} options={OPCOES_COMUNS} />
+            <div className="w-full rounded-2xl bg-black/20 p-5 backdrop-blur-sm sm:w-64">
+              <p className="text-xs font-medium uppercase tracking-widest text-white/70">
+                Índice de preparação
+              </p>
+              {indice === null ? (
+                <p className="mt-2 text-sm text-white/85">
+                  {semHistorico
+                    ? "Seu índice aparece depois da primeira sessão de estudos nesta prova."
+                    : "Ainda sem dados suficientes."}
+                </p>
+              ) : (
+                <>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-5xl font-semibold leading-none tabular-nums">
+                      {indice}
+                    </span>
+                    <span className="text-sm text-white/70">/ 100</span>
+                  </div>
+                  <div
+                    role="progressbar"
+                    aria-valuenow={indice}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Índice de preparação"
+                    className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"
+                  >
+                    <div
+                      className="h-full rounded-full bg-white transition-all duration-700"
+                      style={{ width: `${indice}%` }}
+                    />
+                  </div>
+                  {rotuloIndice && (
+                    <span className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
+                      {rotuloIndice}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        )}
+        </section>
       </div>
+
+      {!semHistorico && data.motivos.length > 0 && (
+        <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
+          <div className="mb-3 flex items-center gap-2">
+            <Lightbulb className="size-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-semibold">Leitura do seu índice</h2>
+          </div>
+          <ul className="flex flex-col gap-2 text-sm">
+            {data.motivos.map((motivo) => (
+              <li key={motivo} className="flex gap-2">
+                <span aria-hidden className="text-emerald-500">
+                  •
+                </span>
+                {motivo}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs text-muted-foreground">
+            O índice combina conteúdos concluídos, revisões em dia e sua constância semanal. Ele
+            não é uma previsão de aprovação: mostra o quanto seu ritmo está alinhado à meta que
+            você definiu.
+          </p>
+        </section>
+      )}
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <CartaoNumero
+          icone={Clock}
+          rotulo="Horas estudadas"
+          valor={`${formatarNumero(data.total_horas_estudadas)} h`}
+        />
+        <CartaoNumero
+          icone={Timer}
+          rotulo="Sessões concluídas"
+          valor={String(data.total_sessoes)}
+        />
+        <CartaoNumero
+          icone={CheckCircle2}
+          rotulo="Conteúdos concluídos"
+          valor={totalConteudos === 0 ? "—" : `${conteudosConcluidos} de ${totalConteudos}`}
+        />
+        <CartaoNumero icone={BookOpen} rotulo="Matérias" valor={String(materias.length)} />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Seu avanço</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <GraficoRosca
+            titulo="Conteúdos concluídos"
+            fatias={[
+              { rotulo: "Concluídos", valor: conteudosConcluidos, cor: ESMERALDA.base },
+              {
+                rotulo: "Restantes",
+                valor: totalConteudos - conteudosConcluidos,
+                cor: ESMERALDA.trilho,
+              },
+            ]}
+            textoCentral={formatarPercentual(percentualConteudos)}
+            legendaCentral="concluído"
+            mensagemVazia="Cadastre conteúdos nas matérias desta prova e marque os que você concluir."
+          />
+          <GraficoRosca
+            titulo="Revisões em dia"
+            fatias={
+              data.taxa_revisoes_em_dia === null
+                ? []
+                : [
+                    { rotulo: "Em dia", valor: emDia, cor: ESMERALDA.base },
+                    { rotulo: "Pendentes", valor: 100 - emDia, cor: ESMERALDA.trilho },
+                  ]
+            }
+            textoCentral={`${emDia}%`}
+            legendaCentral="em dia"
+            sufixo="%"
+            mensagemVazia="Nenhuma revisão desta prova venceu ainda. Elas aparecem depois da sua primeira sessão."
+          />
+          <GraficoRosca
+            titulo="Meta da semana"
+            fatias={
+              metaSemanal > 0
+                ? [
+                    {
+                      rotulo: "Estudado",
+                      valor: arredondar(Math.min(estaSemana, metaSemanal)),
+                      cor: ESMERALDA.base,
+                    },
+                    {
+                      rotulo: "Falta",
+                      valor: arredondar(Math.max(metaSemanal - estaSemana, 0)),
+                      cor: ESMERALDA.trilho,
+                    },
+                  ]
+                : []
+            }
+            textoCentral={`${Math.round(percentualMeta)}%`}
+            legendaCentral="da meta"
+            sufixo=" h"
+            mensagemVazia="Defina as horas por dia e os dias por semana na prova para acompanhar sua meta."
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          “Revisões em dia” considera só as revisões que já venceram. A meta da semana usa as
+          horas por dia e os dias por semana que você definiu na prova.
+        </p>
+      </section>
+
+      <GraficoEvolucao semanal={data.evolucao_semanal} mensal={data.evolucao_mensal} />
+
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="mb-4 text-lg font-semibold">Progresso por matéria</h2>
+          {materias.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Esta prova ainda não tem matérias.{" "}
+              <Link to={`/provas/${provaId}`} className="text-primary hover:underline">
+                Cadastre a primeira
+              </Link>
+              .
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-5">
+              {materias.map((materia) => (
+                <li key={materia.id} className="flex flex-col gap-1.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-sm font-medium">{materia.nome}</span>
+                    {materia.total_topicos > 0 && (
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {materia.topicos_concluidos} de {materia.total_topicos}
+                      </span>
+                    )}
+                  </div>
+                  {materia.total_topicos === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Cadastre conteúdos para acompanhar o progresso
+                    </p>
+                  ) : (
+                    <BarraProgresso
+                      percentual={materia.progresso_percentual}
+                      rotulo={`Progresso em ${materia.nome}`}
+                      corPreenchimento="bg-emerald-500"
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="mb-4 text-lg font-semibold">Onde seu tempo foi</h2>
+          {tempoPorMateria.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Finalize uma sessão nesta prova para ver como seu tempo se distribui entre as
+              matérias.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-5">
+              {tempoPorMateria.map(([nome, horas]) => (
+                <li key={nome} className="flex flex-col gap-1.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-sm font-medium">{nome}</span>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {formatarNumero(horas)} h
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-emerald-500/20">
+                    <div
+                      className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                      style={{ width: `${maiorTempo > 0 ? (horas / maiorTempo) * 100 : 0}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
     </div>
   )
 }

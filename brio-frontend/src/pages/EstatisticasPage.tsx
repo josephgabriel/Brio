@@ -1,7 +1,4 @@
-import { useState } from "react"
-import { Line } from "react-chartjs-2"
 import { useQuery } from "@tanstack/react-query"
-import type { ChartData } from "chart.js"
 import {
   Brain,
   CheckCircle2,
@@ -13,7 +10,8 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import "@/lib/chart-setup"
+import { CartaoNumero } from "@/components/shared/CartaoNumero"
+import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
 import { GraficoRosca } from "@/components/shared/GraficoRosca"
 import { Carregando, SkeletonGrafico, SkeletonMetricas } from "@/components/shared/Skeletons"
 import { Badge } from "@/components/ui/badge"
@@ -26,18 +24,12 @@ import {
 import {
   calcularTrilhas,
   formatarNumero,
+  formatarPercentual,
   formatarQuantidade,
   mensagemMotivacional,
   type ProgressoTrilha,
 } from "@/features/estatisticas/motivacao"
-import {
-  ESMERALDA,
-  GRADIENTE_HERO,
-  OPCOES_LINHA,
-  gradienteArea,
-} from "@/features/estatisticas/visual"
-
-type Periodo = "semana" | "mes"
+import { ESMERALDA, GRADIENTE_HERO } from "@/features/estatisticas/visual"
 
 const CORES_CLASSIFICACAO: Record<string, string> = {
   excelente: "bg-status-excelente text-white",
@@ -51,34 +43,6 @@ const ICONES_TRILHA: Record<string, LucideIcon> = {
   sessoes: Timer,
   questoes: Brain,
   conteudos: CheckCircle2,
-}
-
-function formatarPercentual(valor: number | null): string {
-  return valor === null ? "—" : `${Math.round(valor)}%`
-}
-
-function formatarData(data: string, opcoes: Intl.DateTimeFormatOptions): string {
-  return new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", opcoes)
-}
-
-interface CartaoNumeroProps {
-  icone: LucideIcon
-  rotulo: string
-  valor: string
-}
-
-function CartaoNumero({ icone: Icone, rotulo, valor }: CartaoNumeroProps) {
-  return (
-    <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-        <Icone className="size-5" />
-      </div>
-      <div>
-        <p className="text-2xl font-semibold leading-none tabular-nums">{valor}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{rotulo}</p>
-      </div>
-    </div>
-  )
 }
 
 function LinhaTrilha({ trilha }: { trilha: ProgressoTrilha }) {
@@ -130,8 +94,6 @@ function LinhaTrilha({ trilha }: { trilha: ProgressoTrilha }) {
 }
 
 export function EstatisticasPage() {
-  const [periodo, setPeriodo] = useState<Periodo>("semana")
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ["estatisticas"],
     queryFn: obterEstatisticas,
@@ -170,45 +132,6 @@ export function EstatisticasPage() {
 
   const emDia = data.taxa_revisoes_em_dia === null ? 0 : Math.round(data.taxa_revisoes_em_dia)
   const erros = data.questoes_respondidas - data.questoes_acertos
-
-  const serie =
-    periodo === "semana"
-      ? {
-          rotulos: data.evolucao_semanal.map((p) =>
-            formatarData(p.semana_inicio, { day: "2-digit", month: "2-digit" }),
-          ),
-          valores: data.evolucao_semanal.map((p) => p.horas),
-          nome: "Horas por semana",
-          legenda: "Últimas 8 semanas",
-        }
-      : {
-          rotulos: data.evolucao_mensal.map((p) =>
-            formatarData(p.mes, { month: "short", year: "2-digit" }),
-          ),
-          valores: data.evolucao_mensal.map((p) => p.horas),
-          nome: "Horas por mês",
-          legenda: "Últimos 6 meses",
-        }
-
-  const dadosLinha: ChartData<"line"> = {
-    labels: serie.rotulos,
-    datasets: [
-      {
-        label: serie.nome,
-        data: serie.valores,
-        borderColor: ESMERALDA.base,
-        backgroundColor: gradienteArea,
-        borderWidth: 3,
-        fill: true,
-        tension: 0.35,
-        pointBackgroundColor: ESMERALDA.base,
-        pointBorderColor: "#FFFFFF",
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 7,
-      },
-    ],
-  }
 
   return (
     <div className="flex flex-col gap-10">
@@ -314,31 +237,7 @@ export function EstatisticasPage() {
         </p>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Evolução das suas horas</h2>
-            <p className="text-xs text-muted-foreground">{serie.legenda}</p>
-          </div>
-          <div className="flex gap-1 rounded-full bg-muted p-1">
-            {(["semana", "mes"] as const).map((opcao) => (
-              <button
-                key={opcao}
-                type="button"
-                onClick={() => setPeriodo(opcao)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  periodo === opcao
-                    ? "bg-emerald-500 text-white"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {opcao === "semana" ? "Semanas" : "Meses"}
-              </button>
-            ))}
-          </div>
-        </div>
-        <Line data={dadosLinha} options={OPCOES_LINHA} />
-      </section>
+      <GraficoEvolucao semanal={data.evolucao_semanal} mensal={data.evolucao_mensal} />
 
       <section className="rounded-2xl border border-border bg-card p-6">
         <div className="mb-5 flex items-center justify-between">

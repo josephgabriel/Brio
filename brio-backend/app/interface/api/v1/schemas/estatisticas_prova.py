@@ -20,10 +20,6 @@ class EstatisticasProvaResponseSchema(BaseModel):
     horas_por_disciplina: dict[str, float]
     evolucao_semanal: list[PontoEvolucaoSemanalSchema]
     taxa_revisoes_em_dia: float | None
-    media_concentracao: float
-    media_dificuldade: float
-    media_aprendizado: float
-    nivel_medio_conhecimento: float | None
     indice_preparacao: int | None
     classificacao_indice: str | None
     motivos: list[str]
@@ -41,7 +37,6 @@ class EstatisticasProvaResponseSchema(BaseModel):
                 for p in dados.evolucao_semanal
             ],
             taxa_revisoes_em_dia=dados.taxa_revisoes_em_dia,
-            nivel_medio_conhecimento=dados.nivel_medio_conhecimento,
             indice_preparacao=dados.indice_preparacao,
             classificacao_indice=dados.classificacao_indice,
             motivos=dados.motivos,
