@@ -1,5 +1,5 @@
 # app/application/use_cases/processar_webhook_pagamento.py
-from datetime import date
+from app.domain.regras.tempo import hoje_local
 
 from app.application.interfaces.assinatura_repository import AssinaturaRepository
 from app.application.interfaces.pagamento_repository import PagamentoRepository
@@ -48,5 +48,5 @@ class ProcessarWebhookPagamento:
         assinatura.status = StatusAssinatura.ATIVA
         assinatura.data_expiracao = calcular_data_expiracao(assinatura.plano)
         if assinatura.data_inicio is None:
-            assinatura.data_inicio = date.today()
+            assinatura.data_inicio = hoje_local()
         self.assinatura_repository.atualizar(assinatura)

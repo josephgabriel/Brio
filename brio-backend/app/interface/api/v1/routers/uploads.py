@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
-from app.domain.exceptions import ArquivoInvalidoError
 from app.infrastructure.armazenamento.cloudinary_client import enviar_imagem
 from app.infrastructure.db.models.usuario import UsuarioModel
 from app.interface.api.v1.dependencies import get_usuario_assinante

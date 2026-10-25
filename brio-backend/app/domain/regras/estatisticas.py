@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-
+from app.domain.regras.tempo import hoje_local
 
 def calcular_taxa_conclusao(total: int, concluidas: int) -> float:
     """
@@ -35,7 +35,7 @@ def gerar_semanas_recentes(quantidade: int = 8, hoje: date | None = None) -> lis
     semana aparece no gráfico, mesmo as que tiveram 0 horas
     estudadas, em vez de simplesmente não aparecerem.
     """
-    hoje = hoje or date.today()
+    hoje = hoje or hoje_local()
     inicio_semana_atual = hoje - timedelta(days=hoje.weekday())
     return [
         inicio_semana_atual - timedelta(weeks=i) for i in range(quantidade - 1, -1, -1)
@@ -48,7 +48,7 @@ def gerar_meses_recentes(quantidade: int = 6, hoje: date | None = None) -> list[
     primeiro. Mesmo espírito de "esqueleto" do gráfico que já usamos
     em gerar_semanas_recentes -- todo mês aparece, mesmo com 0 horas.
     """
-    hoje = hoje or date.today()
+    hoje = hoje or hoje_local()
     ano, mes = hoje.year, hoje.month
 
     meses: list[date] = []
@@ -72,7 +72,7 @@ def calcular_taxa_revisoes_em_dia(
 
     Cada item de `revisoes` é (data_agendada, foi_concluida).
     """
-    hoje = hoje or date.today()
+    hoje = hoje or hoje_local()
     vencidas = [concluida for data_agendada, concluida in revisoes if data_agendada <= hoje]
     if not vencidas:
         return None

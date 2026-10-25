@@ -19,6 +19,7 @@ class EstatisticasProvaResponseSchema(BaseModel):
     total_sessoes: int
     horas_por_disciplina: dict[str, float]
     evolucao_semanal: list[PontoEvolucaoSemanalSchema]
+    horas_materias_removidas: float
     taxa_revisoes_em_dia: float | None
     indice_preparacao: int | None
     classificacao_indice: str | None
@@ -45,4 +46,5 @@ class EstatisticasProvaResponseSchema(BaseModel):
                 for p in dados.evolucao_mensal
             ],
             cobertura_conteudo=dados.cobertura_conteudo,
+            horas_materias_removidas=dados.horas_materias_removidas,
         )

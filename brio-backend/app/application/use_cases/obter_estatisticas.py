@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
+from app.domain.regras.tempo import data_local, hoje_local
 
 from app.application.interfaces.disciplina_repository import DisciplinaRepository
 from app.application.interfaces.ia_repository import HistoricoRespostaRepository
@@ -64,7 +65,7 @@ class ObterEstatisticas:
         self.historico_repository = historico_repository
 
     def executar(self, usuario_id: int) -> EstatisticasData:
-        hoje = date.today()
+        hoje = hoje_local()
 
         # --- Histórico de estudo: todas as provas ---
         sessoes = self.sessao_repository.listar_por_usuario(usuario_id)
@@ -75,7 +76,7 @@ class ObterEstatisticas:
         minutos_por_semana: dict[date, list[int]] = defaultdict(list)
         minutos_por_mes: dict[date, list[int]] = defaultdict(list)
         for sessao in finalizadas:
-            dia = sessao.finalizada_em.date()
+            dia = data_local(sessao.finalizada_em)
             minutos_por_semana[dia - timedelta(days=dia.weekday())].append(sessao.duracao_minutos)
             minutos_por_mes[dia.replace(day=1)].append(sessao.duracao_minutos)
 

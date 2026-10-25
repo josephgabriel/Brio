@@ -1,5 +1,5 @@
 # app/application/use_cases/solicitar_reembolso.py
-from datetime import date
+from app.domain.regras.tempo import data_local, hoje_local
 
 from app.application.interfaces.assinatura_repository import AssinaturaRepository
 from app.application.interfaces.pagamento_repository import PagamentoRepository
@@ -31,7 +31,7 @@ class SolicitarReembolso:
         if primeiro_pagamento is None:
             raise AssinaturaNaoEncontradaError("Nenhum pagamento encontrado para essa assinatura")
 
-        if not esta_dentro_do_prazo_reembolso(primeiro_pagamento.criado_em.date(), date.today()):
+        if not esta_dentro_do_prazo_reembolso(data_local(primeiro_pagamento.criado_em), hoje_local()):
             raise ForaDoPrazoReembolsoError("O prazo de 7 dias para reembolso já passou")
 
         self.mercadopago_client.reembolsar_pagamento(primeiro_pagamento.mercadopago_payment_id)
@@ -39,5 +39,5 @@ class SolicitarReembolso:
             self.mercadopago_client.cancelar_preapproval(assinatura.mercadopago_preapproval_id)
 
         assinatura.status = StatusAssinatura.CANCELADA
-        assinatura.data_expiracao = date.today()
+        assinatura.data_expiracao = hoje_local()
         self.assinatura_repository.atualizar(assinatura)

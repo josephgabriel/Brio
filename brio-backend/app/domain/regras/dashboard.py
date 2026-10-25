@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from app.domain.regras.tempo import hoje_local
 
 def calcular_horas_estudadas(duracoes_minutos: list[int]) -> float:
 
@@ -8,7 +9,7 @@ def calcular_horas_estudadas(duracoes_minutos: list[int]) -> float:
 def calcular_sequencia_dias_estudando(
         datas_estudadas: set[date], hoje: date | None = None
 ) -> int:
-    hoje = hoje or date.today()
+    hoje = hoje or hoje_local()
     sequencia = 0
     dia_atual = hoje
 

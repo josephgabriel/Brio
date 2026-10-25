@@ -1,16 +1,17 @@
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import timedelta
 
 from app.application.interfaces.prova_repository import ProvaRepository
 from app.application.interfaces.revisao_repository import RevisaoRepository
 from app.application.interfaces.sessao_estudo_repository import SessaoEstudoRepository
 from app.domain.regras.dashboard import calcular_horas_estudadas
-from app.domain.regras.estatisticas import calcular_taxa_conclusao, calcular_taxa_revisoes_em_dia
+from app.domain.regras.estatisticas import calcular_taxa_revisoes_em_dia
 from app.domain.regras.indice_preparacao import calcular_indice_preparacao, classificar_indice
 from app.infrastructure.db.models.prova import StatusProva
 from app.application.interfaces.disciplina_repository import DisciplinaRepository
 from app.application.interfaces.topico_repository import TopicoRepository
 from app.domain.regras.progresso import calcular_cobertura_conteudo
+from app.domain.regras.tempo import data_local, hoje_local
 
 @dataclass
 class ResumoComparacaoProva:
@@ -40,7 +41,7 @@ class ObterComparacaoProvas:
         self.topico_repository = topico_repository
 
     def executar(self, usuario_id: int) -> list[ResumoComparacaoProva]:
-        hoje = date.today()
+        hoje = hoje_local()
         inicio_semana_atual = hoje - timedelta(days=hoje.weekday())
 
         provas_ativas = [
@@ -61,7 +62,7 @@ class ObterComparacaoProvas:
                 [
                     s.duracao_minutos
                     for s in finalizadas
-                    if s.finalizada_em.date() >= inicio_semana_atual
+                    if data_local(s.finalizada_em) >= inicio_semana_atual
                 ]
             )
 

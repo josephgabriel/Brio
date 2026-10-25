@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import timedelta
+from app.domain.regras.tempo import hoje_local
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -25,7 +26,7 @@ class ObterResumoMetricas:
         self.db = db
 
     def executar(self) -> ResumoMetricas:
-        hoje = date.today()
+        hoje = hoje_local()
         inicio_semana = hoje - timedelta(days=7)
 
         total_usuarios = self.db.query(UsuarioModel).count()

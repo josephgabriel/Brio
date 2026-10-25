@@ -1,5 +1,5 @@
 from datetime import date
-
+from app.domain.regras.tempo import hoje_local
 from app.application.interfaces.revisao_repository import RevisaoRepository
 from app.infrastructure.db.models.revisao import RevisaoModel
 
@@ -26,4 +26,4 @@ class ListarRevisoesDeHoje:
         self.repository = repository
 
     def executar(self, usuario_id: int) -> list[RevisaoModel]:
-        return self.repository.listar_ate_data(usuario_id, date.today())
+        return self.repository.listar_ate_data(usuario_id, hoje_local())

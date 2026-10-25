@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from app.domain.regras.tempo import data_local, hoje_local
 
 from app.application.interfaces.disciplina_repository import DisciplinaRepository
 from app.application.interfaces.prova_repository import ProvaRepository
@@ -40,6 +41,7 @@ class EstatisticasProvaData:
     indice_preparacao: int | None
     classificacao_indice: str | None
     cobertura_conteudo: float | None
+    horas_materias_removidas: float
     motivos: list[str] = field(default_factory=list)
 
 class ObterEstatisticasProva:
@@ -60,25 +62,36 @@ class ObterEstatisticasProva:
 
     def executar(self, prova_id: int, usuario_id: int) -> EstatisticasProvaData:
         prova = self.obter_prova.executar(prova_id, usuario_id)
-        hoje = date.today()
+        hoje = hoje_local()
 
         sessoes = self.sessao_repository.listar_por_usuario(usuario_id, prova_id)
         finalizadas = [
             s for s in sessoes if s.finalizada_em is not None and s.duracao_minutos is not None
         ]
 
-        minutos_por_disciplina: dict[str, list[int]] = defaultdict(list)
+        disciplinas = self.disciplina_repository.listar_por_prova(prova_id)
+        nomes = {d.id: d.nome for d in disciplinas}
+
+        minutos_por_id: dict[int, list[int]] = defaultdict(list)
+        minutos_removidas: list[int] = []
         for sessao in finalizadas:
-            minutos_por_disciplina[sessao.disciplina].append(sessao.duracao_minutos)
-        horas_por_disciplina = {
-            disciplina: calcular_horas_estudadas(minutos)
-            for disciplina, minutos in minutos_por_disciplina.items()
-        }
+            if sessao.disciplina_id in nomes:
+                minutos_por_id[sessao.disciplina_id].append(sessao.duracao_minutos)
+            else:
+                minutos_removidas.append(sessao.duracao_minutos)
+
+        horas_por_disciplina: dict[str, float] = {}
+        for disciplina_id, minutos in minutos_por_id.items():
+            nome = nomes[disciplina_id]
+            horas_por_disciplina[nome] = round(
+                horas_por_disciplina.get(nome, 0.0) + calcular_horas_estudadas(minutos), 1
+            )
+        horas_materias_removidas = calcular_horas_estudadas(minutos_removidas)
 
         semanas = gerar_semanas_recentes(quantidade=8)
         minutos_por_semana: dict[date, list[int]] = defaultdict(list)
         for sessao in finalizadas:
-            data_sessao = sessao.finalizada_em.date()
+            data_sessao = data_local(sessao.finalizada_em)
             inicio_da_semana = data_sessao - timedelta(days=data_sessao.weekday())
             minutos_por_semana[inicio_da_semana].append(sessao.duracao_minutos)
         evolucao_semanal = [
@@ -93,7 +106,7 @@ class ObterEstatisticasProva:
         meses = gerar_meses_recentes(quantidade=6)
         minutos_por_mes: dict[date, list[int]] = defaultdict(list)
         for sessao in finalizadas:
-            data_sessao = sessao.finalizada_em.date()
+            data_sessao = data_local(sessao.finalizada_em)
             inicio_do_mes = data_sessao.replace(day=1)
             minutos_por_mes[inicio_do_mes].append(sessao.duracao_minutos)
 
@@ -109,8 +122,6 @@ class ObterEstatisticasProva:
         taxa_revisoes = calcular_taxa_revisoes_em_dia(
             [(r.data_agendada, r.concluida_em is not None) for r in revisoes], hoje
         )
-
-        disciplinas = self.disciplina_repository.listar_por_prova(prova_id)
 
         # Novo trecho integrado
         contagens = self.topico_repository.contar_por_disciplinas([d.id for d in disciplinas])
@@ -155,4 +166,5 @@ class ObterEstatisticasProva:
             motivos=motivos,
             evolucao_mensal=evolucao_mensal,
             cobertura_conteudo=cobertura,
+            horas_materias_removidas=horas_materias_removidas,
         )

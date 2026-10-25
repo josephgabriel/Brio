@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { concluirRevisao, listarRevisoes } from "@/features/revisoes/api/revisoes-api"
 import type { StatusRevisao } from "@/features/revisoes/types"
+import { paraISO } from "@/features/calendario/grade"
 
 type FiltroStatus = "ativas" | "pendente" | "atrasada" | "concluida" | "todas"
 type Periodo = "todas" | "hoje" | "7dias" | "30dias"
@@ -27,10 +28,6 @@ const PERIODOS: { valor: Periodo; label: string }[] = [
   { valor: "7dias", label: "Próximos 7 dias" },
   { valor: "30dias", label: "Próximos 30 dias" },
 ]
-
-function paraISO(data: Date): string {
-  return data.toISOString().slice(0, 10)
-}
 
 function calcularIntervalo(periodo: Periodo): { dataInicio?: string; dataFim?: string } {
   if (periodo === "todas") return {}

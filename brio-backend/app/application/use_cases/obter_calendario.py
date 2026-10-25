@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import date
-
+from app.domain.regras.tempo import data_local
 from app.application.interfaces.evento_calendario_repository import (
     EventoCalendarioRepository,
 )
@@ -51,7 +51,7 @@ class ObterCalendario:
                 )
 
         for sessao in self.sessao_repository.listar_por_usuario(usuario_id):
-            data_sessao = sessao.iniciada_em.date()
+            data_sessao = data_local(sessao.iniciada_em)
             if data_inicio <= data_sessao <= data_fim:
                 itens.append(
                     ItemCalendario(

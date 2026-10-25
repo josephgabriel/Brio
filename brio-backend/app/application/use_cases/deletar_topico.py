@@ -2,7 +2,6 @@ from app.application.interfaces.disciplina_repository import DisciplinaRepositor
 from app.application.interfaces.sessao_estudo_repository import SessaoEstudoRepository
 from app.application.interfaces.topico_repository import TopicoRepository
 from app.domain.exceptions import TopicoNaoEncontradoError
-from app.domain.regras.estatisticas import calcular_media
 
 
 class DeletarTopico:

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from datetime import date, timedelta
-
+from datetime import timedelta
+from app.domain.regras.tempo import data_local, hoje_local
 from app.application.interfaces.prova_repository import ProvaRepository
 from app.application.interfaces.revisao_repository import RevisaoRepository
 from app.application.interfaces.cronograma_repository import CronogramaRepository
@@ -40,7 +40,7 @@ class ObterDashboard:
         self.disciplina_repository = disciplina_repository
 
     def executar(self, usuario_id: int) -> DashboardData:
-        hoje = date.today()
+        hoje = hoje_local()
 
         sessoes = self.sessao_repository.listar_por_usuario(usuario_id)
         finalizadas = [
@@ -48,22 +48,22 @@ class ObterDashboard:
         ]
 
         duracoes_hoje = [
-            s.duracao_minutos for s in finalizadas if s.finalizada_em.date() == hoje
+            s.duracao_minutos for s in finalizadas if data_local(s.finalizada_em) == hoje
         ]
 
         duracoes_semana = [
             s.duracao_minutos
             for s in finalizadas
-            if s.finalizada_em.date() >= hoje - timedelta(days=6)
+            if data_local(s.finalizada_em) >= hoje - timedelta(days=6)
         ]
         
         duracoes_mes = [
             s.duracao_minutos
             for s in finalizadas
-            if s.finalizada_em.date() >= hoje - timedelta(days=29)
+            if data_local(s.finalizada_em) >= hoje - timedelta(days=29)
         ]
 
-        datas_estudadas = {s.finalizada_em.date() for s in finalizadas}
+        datas_estudadas = {data_local(s.finalizada_em) for s in finalizadas}
 
         revisoes_hoje = self.revisao_repository.listar_ate_data(usuario_id, hoje)
 

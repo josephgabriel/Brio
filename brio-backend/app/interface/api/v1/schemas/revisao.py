@@ -1,5 +1,5 @@
 from datetime import date, datetime
-
+from app.domain.regras.tempo import hoje_local
 from pydantic import BaseModel
 
 from app.infrastructure.db.models.revisao import RevisaoModel
@@ -21,7 +21,7 @@ class RevisaoResponseSchema(BaseModel):
     def from_model(cls, revisao: RevisaoModel) -> "RevisaoResponseSchema":
         if revisao.concluida_em is not None:
             status = "concluida"
-        elif revisao.data_agendada < date.today():
+        elif revisao.data_agendada < hoje_local():
             status = "atrasada"
         else:
             status = "pendente"

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from app.domain.regras.tempo import hoje_local
 
 from app.application.interfaces.ia_repository import MaterialEstudoRepository
 from app.infrastructure.config import settings
@@ -16,7 +16,7 @@ class ObterCotaIA:
         self.repository = repository
 
     def executar(self, usuario_id: int) -> CotaIA:
-        hoje = date.today()
+        hoje = hoje_local()
         inicio_do_mes = hoje.replace(day=1)
         usadas = self.repository.contar_no_mes(usuario_id, inicio_do_mes)
         return CotaIA(usadas=usadas, limite=settings.gemini_cota_mensal)

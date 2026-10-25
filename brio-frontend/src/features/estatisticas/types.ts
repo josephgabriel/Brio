@@ -35,6 +35,7 @@ export interface EstatisticasProva {
   indice_preparacao: number | null
   classificacao_indice: ClassificacaoIndice | null
   motivos: string[]
+  horas_materias_removidas: number
 }
 
 export interface ResumoComparacaoProva {

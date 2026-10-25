@@ -105,7 +105,9 @@ export function ProvaEstatisticasPage() {
   const percentualMeta = metaSemanal > 0 ? Math.min(100, (estaSemana / metaSemanal) * 100) : 0
 
   const tempoPorMateria = Object.entries(data.horas_por_disciplina).sort((a, b) => b[1] - a[1])
-  const maiorTempo = tempoPorMateria.length > 0 ? tempoPorMateria[0][1] : 0
+  const horasRemovidas = data.horas_materias_removidas
+  const totalTempo =
+    tempoPorMateria.reduce((soma, [, horas]) => soma + horas, 0) + horasRemovidas
 
   const semHistorico = data.total_sessoes === 0
   const indice = semHistorico ? null : data.indice_preparacao
@@ -341,32 +343,46 @@ export function ProvaEstatisticasPage() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Onde seu tempo foi</h2>
-          {tempoPorMateria.length === 0 ? (
+              <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="mb-1 text-lg font-semibold">Onde seu tempo foi</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Quanto do seu tempo de estudo nesta prova foi para cada matéria
+          </p>
+          {totalTempo === 0 ? (
             <p className="text-sm text-muted-foreground">
               Finalize uma sessão nesta prova para ver como seu tempo se distribui entre as
               matérias.
             </p>
           ) : (
-            <ul className="flex flex-col gap-5">
-              {tempoPorMateria.map(([nome, horas]) => (
-                <li key={nome} className="flex flex-col gap-1.5">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-sm font-medium">{nome}</span>
-                    <span className="text-xs tabular-nums text-muted-foreground">
-                      {formatarNumero(horas)} h
-                    </span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-emerald-500/20">
-                    <div
-                      className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-                      style={{ width: `${maiorTempo > 0 ? (horas / maiorTempo) * 100 : 0}%` }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="flex flex-col gap-5">
+                {tempoPorMateria.map(([nome, horas]) => {
+                  const parte = (horas / totalTempo) * 100
+                  return (
+                    <li key={nome} className="flex flex-col gap-1.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-sm font-medium">{nome}</span>
+                        <span className="text-xs tabular-nums text-muted-foreground">
+                          {formatarNumero(horas)} h · {Math.round(parte)}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-emerald-500/20">
+                        <div
+                          className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                          style={{ width: `${parte}%` }}
+                        />
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+              {horasRemovidas > 0 && (
+                <p className="mt-5 text-xs text-muted-foreground">
+                  Mais {formatarNumero(horasRemovidas)} h ({Math.round((horasRemovidas / totalTempo) * 100)}
+                  % do total) foram estudadas em matérias removidas ou sem vínculo.
+                </p>
+              )}
+            </>
           )}
         </div>
       </section>

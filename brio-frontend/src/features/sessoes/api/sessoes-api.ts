@@ -13,9 +13,10 @@ export async function iniciarSessao(dados: IniciarSessaoData): Promise<Sessao> {
   return response.json()
 }
 
-export async function finalizarSessao(id: number): Promise<Sessao> {
+export async function finalizarSessao(id: number, duracaoFocoSegundos: number): Promise<Sessao> {
   const response = await apiFetch(`/api/v1/sessoes/${id}/finalizar`, {
     method: "PATCH",
+    body: JSON.stringify({ duracao_foco_segundos: duracaoFocoSegundos }),
   })
   if (!response.ok) {
     const erro = await response.json().catch(() => null)

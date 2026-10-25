@@ -140,8 +140,7 @@ export function SessaoPage() {
   })
 
   const finalizar = useMutation({
-    mutationFn: () =>
-      finalizarSessao(sessaoAtiva!.id,),
+      mutationFn: () => finalizarSessao(sessaoAtiva!.id, pomodoro.segundosFoco),
     onSuccess: () => {
       encerrarSessaoAtiva()
       setProvaId("")
@@ -281,6 +280,9 @@ export function SessaoPage() {
                 tempoFormatado={pomodoro.tempoFormatado}
                 label={ROTULO_FASE[pomodoro.fase]}
               />
+              <p className="text-xs text-muted-foreground">
+                Tempo de foco registrado: {Math.floor(pomodoro.segundosFoco / 60)} min
+              </p>
             </div>
 
             {/* Controles & Form */}

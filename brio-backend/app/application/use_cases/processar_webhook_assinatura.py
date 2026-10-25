@@ -1,5 +1,5 @@
 # app/application/use_cases/processar_webhook_assinatura.py
-from datetime import date
+from app.domain.regras.tempo import hoje_local
 
 from app.application.interfaces.assinatura_repository import AssinaturaRepository
 from app.domain.regras.assinatura import calcular_data_expiracao
@@ -25,7 +25,7 @@ class ProcessarWebhookAssinatura:
         if status_mp == "authorized":
             assinatura.status = StatusAssinatura.ATIVA
             if assinatura.data_inicio is None:
-                assinatura.data_inicio = date.today()
+                assinatura.data_inicio = hoje_local()
                 assinatura.data_expiracao = calcular_data_expiracao(assinatura.plano)
             self.repository.atualizar(assinatura)
 

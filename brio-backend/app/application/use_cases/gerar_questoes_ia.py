@@ -1,5 +1,4 @@
-from datetime import date
-
+from app.domain.regras.tempo import hoje_local
 from app.application.interfaces.ia_repository import MaterialEstudoRepository, QuestaoRepository
 from app.domain.exceptions import ArquivoInvalidoError, CotaIAExcedidaError
 from app.domain.regras.cota_ia import cota_disponivel
@@ -27,7 +26,7 @@ class GerarQuestoesIA:
         topico_id: int | None = None,
         quantidade: int = 5,
     ) -> tuple[MaterialEstudoModel, list[QuestaoModel]]:
-        hoje = date.today()
+        hoje = hoje_local()
         inicio_do_mes = hoje.replace(day=1)
         usadas = self.material_repository.contar_no_mes(usuario_id, inicio_do_mes)
 

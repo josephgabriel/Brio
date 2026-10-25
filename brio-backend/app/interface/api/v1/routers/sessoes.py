@@ -32,7 +32,6 @@ from app.interface.api.v1.schemas.sessao_estudo import (
 from app.infrastructure.db.repositories.disciplina_repository import SQLAlchemyDisciplinaRepository
 from app.infrastructure.db.repositories.topico_repository import SQLAlchemyTopicoRepository
 from app.infrastructure.metricas.registrador_eventos import RegistradorEventos
-from app.application.interfaces.prova_repository import ProvaRepository
 from app.domain.exceptions import ProvaNaoDisponivelError
 from app.infrastructure.db.repositories.prova_repository import SQLAlchemyProvaRepository
 
