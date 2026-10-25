@@ -36,3 +36,6 @@ class SessaoResponseSchema(BaseModel):
             dificuldade=sessao.dificuldade,
             aprendizado_percentual=sessao.aprendizado_percentual,
         )
+    
+class SessaoFinalizarSchema(BaseModel):
+    duracao_foco_segundos: int | None = Field(default=None, ge=0, le=86400)

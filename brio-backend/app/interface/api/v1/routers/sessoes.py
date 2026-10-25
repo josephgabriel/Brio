@@ -26,6 +26,7 @@ from app.interface.api.v1.dependencies import get_usuario_assinante
 from app.interface.api.v1.schemas.sessao_estudo import (
     SessaoIniciarSchema,
     SessaoResponseSchema,
+    SessaoFinalizarSchema,
 )
 
 from app.infrastructure.db.repositories.disciplina_repository import SQLAlchemyDisciplinaRepository
@@ -69,6 +70,7 @@ def iniciar(
 @router.patch("/{sessao_id}/finalizar", response_model=SessaoResponseSchema)
 def finalizar(
     sessao_id: int,
+    dados: SessaoFinalizarSchema | None = None,
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
@@ -78,7 +80,9 @@ def finalizar(
 
     try:
         sessao = use_case.executar(
-            sessao_id=sessao_id, usuario_id=usuario.id
+            sessao_id=sessao_id,
+            usuario_id=usuario.id,
+            duracao_foco_segundos=dados.duracao_foco_segundos if dados else None,
         )
     except SessaoNaoEncontradaError as erro:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
