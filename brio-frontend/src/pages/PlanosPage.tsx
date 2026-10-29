@@ -11,6 +11,7 @@ import {
 } from "@/features/assinatura/api/assinatura-api"
 import { assinaturaEstaValida } from "@/features/assinatura/regras"
 import type { Plano } from "@/features/assinatura/types"
+import { SeloConfianca } from "@/components/shared/SeloConfianca"
 
 const PLANOS: {
   valor: Plano
@@ -195,9 +196,30 @@ export function PlanosPage() {
           </p>
         )}
 
-        <p className="text-xs text-muted-foreground animate-[slideDown_0.6s_ease-out_both_600ms]">
-          Garantia de reembolso total em até 7 dias.
-        </p>
+          <SeloConfianca className="w-full" />
+
+        <p className="text-xs text-muted-foreground">
+        Ao assinar, você concorda com os{" "}
+        <a
+          href="/termos"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground"
+        >
+          Termos de Uso
+        </a>{" "}
+        e a{" "}
+        <a
+          href="/privacidade"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground"
+        >
+          Política de Privacidade
+        </a>
+        .
+      </p>
+
       </div>
 
       {/* Animação slideDown idêntica ao padrão da aplicação */}

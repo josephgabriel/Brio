@@ -38,7 +38,7 @@ def registrar(dados: UsuarioCreateSchema, db: Session = Depends(get_db)):
     use_case = RegistrarUsuario(repository)
 
     try:
-        usuario = use_case.executar(nome=dados.nome, email=dados.email, senha=dados.senha)
+        usuario = use_case.executar(nome=dados.nome, email=dados.email, senha=dados.senha, termos_versao=dados.termos_versao)
     except EmailJaCadastradoError as erro:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(erro))
 

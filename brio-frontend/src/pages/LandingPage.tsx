@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom"
+import { SeloConfianca } from "@/components/shared/SeloConfianca"
+
 import {
   ArrowRight,
   BarChart3,
@@ -97,7 +99,7 @@ export function LandingPage() {
           <div className="flex gap-2">
             {isAuthenticated ? (
               <Button asChild>
-                <Link to="/login">Ir para o app</Link>
+                <Link to="/dashboard">Ir para o app</Link>
               </Button>
             ) : (
               <>
@@ -207,63 +209,65 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
-  {/* Card Mensal */}
-  <Card className="flex flex-col">
-    <CardHeader>
-      <CardTitle>Mensal</CardTitle>
-    </CardHeader>
-    <CardContent className="flex flex-1 flex-col gap-4">
-      <p className="text-3xl font-semibold">
-        R$ 9,90{" "}
-        <span className="text-sm font-normal text-muted-foreground">/mês</span>
-      </p>
-      <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
-        <li className="flex items-center gap-2">
-          <Check className="size-4 text-primary" /> Provas e matérias ilimitadas
-        </li>
-        <li className="flex items-center gap-2">
-          <Check className="size-4 text-primary" /> Todas as funcionalidades
-        </li>
-      </ul>
-      <Button className="mt-auto w-full" asChild>
-        <Link to="/registro">Começar</Link>
-      </Button>
-    </CardContent>
-  </Card>
+          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2 mb-10">
+            {/* Card Mensal */}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle>Mensal</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col gap-4">
+                <p className="text-3xl font-semibold">
+                  R$ 9,90{" "}
+                  <span className="text-sm font-normal text-muted-foreground">/mês</span>
+                </p>
+                <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 text-primary" /> Provas e matérias ilimitadas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 text-primary" /> Todas as funcionalidades
+                  </li>
+                </ul>
+                <Button className="mt-auto w-full" asChild>
+                  <Link to="/registro">Começar</Link>
+                </Button>
+              </CardContent>
+            </Card>
 
-  {/* Card Anual */}
-  <Card className="flex flex-col border-primary">
-    <CardHeader>
-      <div className="flex items-center justify-between">
-        <CardTitle>Anual</CardTitle>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-          2 meses grátis
-        </span>
-      </div>
-    </CardHeader>
-    <CardContent className="flex flex-1 flex-col gap-4">
-      <p className="text-3xl font-semibold">
-        R$ 99,00{" "}
-        <span className="text-sm font-normal text-muted-foreground">/ano</span>
-      </p>
-      <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
-        <li className="flex items-center gap-2">
-          <Check className="size-4 text-primary" /> Provas e matérias ilimitadas
-        </li>
-        <li className="flex items-center gap-2">
-          <Check className="size-4 text-primary" /> Todas as funcionalidades
-        </li>
-        <li className="flex items-center gap-2">
-          <Check className="size-4 text-primary" /> Economize em relação ao mensal
-        </li>
-      </ul>
-      <Button className="mt-auto w-full" asChild>
-        <Link to="/registro">Começar</Link>
-      </Button>
-    </CardContent>
-  </Card>
-</div>
+            {/* Card Anual */}
+            <Card className="flex flex-col border-primary">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Anual</CardTitle>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                    2 meses grátis
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col gap-4">
+                <p className="text-3xl font-semibold">
+                  R$ 99,00{" "}
+                  <span className="text-sm font-normal text-muted-foreground">/ano</span>
+                </p>
+                <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 text-primary" /> Provas e matérias ilimitadas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 text-primary" /> Todas as funcionalidades
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="size-4 text-primary" /> Economize em relação ao mensal
+                  </li>
+                </ul>
+                <Button className="mt-auto w-full" asChild>
+                  <Link to="/registro">Começar</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <SeloConfianca className="w-full" />
         </section>
 
         <section className="mx-auto w-full max-w-3xl px-6 py-24">
@@ -271,16 +275,17 @@ export function LandingPage() {
             <h2 className="text-2xl font-semibold sm:text-3xl">Perguntas frequentes</h2>
           </div>
 
-        <Accordion className="w-full">
-  {FAQ.map((item) => (
-    <AccordionItem key={item.pergunta} value={item.pergunta}>
-      <AccordionTrigger>{item.pergunta}</AccordionTrigger>
-      <AccordionContent className="text-muted-foreground">
-        {item.resposta}
-      </AccordionContent>
-    </AccordionItem>
-  ))}
-</Accordion>
+          {/* Accordion atualizado compatível com o Base UI */}
+          <Accordion className="w-full">
+            {FAQ.map((item) => (
+              <AccordionItem key={item.pergunta} value={item.pergunta}>
+                <AccordionTrigger>{item.pergunta}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {item.resposta}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </section>
 
         <section className="border-t border-border/60">
@@ -299,7 +304,15 @@ export function LandingPage() {
       </main>
 
       <footer className="border-t border-border/60 py-8">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-2 px-6 text-center text-sm text-muted-foreground">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-3 px-6 text-center text-sm text-muted-foreground">
+          <nav className="flex gap-4">
+            <Link to="/termos" className="hover:text-foreground hover:underline">
+              Termos de Uso
+            </Link>
+            <Link to="/privacidade" className="hover:text-foreground hover:underline">
+              Política de Privacidade
+            </Link>
+          </nav>
           <span>Brio — {new Date().getFullYear()}</span>
         </div>
       </footer>

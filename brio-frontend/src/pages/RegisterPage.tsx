@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useForceDarkMode } from "@/hooks/useForceDarkMode"
 import logo3 from "@/assets/logo3.png"
 import logo2 from "@/assets/logo2.png"
+import { VERSAO_TERMOS } from "@/features/legal/constantes"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +17,7 @@ async function registrarUsuario(nome: string, email: string, senha: string): Pro
   const response = await fetch(`${API_URL}/api/v1/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, email, senha }),
+    body: JSON.stringify({ nome, email, senha, aceitou_termos: true, termos_versao: VERSAO_TERMOS }),
   })
 
   if (!response.ok) {
@@ -27,7 +28,7 @@ async function registrarUsuario(nome: string, email: string, senha: string): Pro
 
 export function RegisterPage() {
   useForceDarkMode()
-
+  const [aceitouTermos, setAceitouTermos] = useState(false)
   const [nome, setNome] = useState("")
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
@@ -50,19 +51,20 @@ export function RegisterPage() {
   const senhasCoincidem = senha === confirmarSenha && confirmarSenha.length > 0
 
   const mutation = useMutation({
-  mutationFn: () => registrarUsuario(nome, email, senha),
-  onSuccess: () => {
-    navigate("/login", {
-      state: {
-        registradoComSucesso: true,
-        emailCadastrado: email,
-      },
-    })
-  },
-})
+    mutationFn: () => registrarUsuario(nome, email, senha),
+    onSuccess: () => {
+      navigate("/login", {
+        state: {
+          registradoComSucesso: true,
+          emailCadastrado: email,
+        },
+      })
+    },
+  })
 
   function handleSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
+    if (!aceitouTermos) return
     setErroFormulario(null)
 
     if (!senhaEhValida) {
@@ -80,7 +82,7 @@ export function RegisterPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Lado esquerdo (idêntico ao Login) */}
+      {/* Lado esquerdo */}
       <section className="relative hidden w-1/2 overflow-hidden lg:flex items-center justify-center border-r border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
 
@@ -162,11 +164,7 @@ export function RegisterPage() {
                   className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
                   aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                 >
-                  {mostrarSenha ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
 
@@ -214,13 +212,9 @@ export function RegisterPage() {
                   type="button"
                   onClick={() => setMostrarConfirmarSenha((v) => !v)}
                   className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                  aria-label={mostrarConfirmarSenha ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                  aria-label={mostrarConfirmarSenha ? "Ocultar confirmação" : "Mostrar confirmação"}
                 >
-                  {mostrarConfirmarSenha ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {mostrarConfirmarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
               {confirmarSenha.length > 0 && !senhasCoincidem && (
@@ -229,6 +223,42 @@ export function RegisterPage() {
                 </p>
               )}
             </div>
+
+            {/* Termos de Uso e Política */}
+          <div className="flex items-start space-x-3 pt-2">
+            <input
+              id="aceite-termos"
+              type="checkbox"
+              checked={aceitouTermos}
+              onChange={(e) => setAceitouTermos(e.target.checked)}
+              required
+              className="mt-1 size-4 rounded border-border text-primary focus:ring-primary/25 accent-primary cursor-pointer shrink-0"
+            />
+            <label
+              htmlFor="aceite-termos"
+              className="text-sm font-normal text-muted-foreground cursor-pointer select-none"
+            >
+              Li e aceito os{" "}
+              <Link
+                to="/termos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground font-medium"
+              >
+                Termos de Uso
+              </Link>{" "}
+              e a{" "}
+              <Link
+                to="/privacidade"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground font-medium"
+              >
+                Política de Privacidade
+              </Link>
+              .
+            </label>
+          </div>
           </div>
 
           {(erroFormulario || mutation.isError) && (
@@ -239,8 +269,8 @@ export function RegisterPage() {
 
           <Button
             type="submit"
-            className="mt-8 h-11 w-full"
-            disabled={mutation.isPending || !senhaEhValida || !senhasCoincidem}
+            className="mt-6 h-11 w-full"
+            disabled={!aceitouTermos || mutation.isPending || !senhaEhValida || !senhasCoincidem}
           >
             {mutation.isPending ? "Criando conta..." : "Criar conta"}
           </Button>

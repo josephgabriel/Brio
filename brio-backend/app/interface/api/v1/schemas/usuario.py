@@ -1,10 +1,12 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
+from typing import Literal
 
 class UsuarioCreateSchema(BaseModel):
     nome: str = Field(min_length=2, max_length=200)
     email: EmailStr
     senha: str = Field(min_length=8, max_length=100)
+    aceitou_termos: Literal[True]
+    termos_versao: str = Field(min_length=1, max_length=20)
 
 
 class UsuarioResponseSchema(BaseModel):

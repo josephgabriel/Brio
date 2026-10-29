@@ -17,4 +17,8 @@ class UsuarioModel(Base):
     )
     email_verificado: Mapped[bool] = mapped_column(default=False, nullable=False)
     eh_admin: Mapped[bool] = mapped_column(default=False, nullable=False)
+    termos_aceitos_em: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    termos_versao: Mapped[str | None] = mapped_column(String(20), nullable=True)
     

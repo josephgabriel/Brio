@@ -24,16 +24,27 @@ import { CalendarioPage } from "@/pages/CalendarioPage"
 import { CronogramaPage } from "@/pages/CronogramaPage"
 import { QuestoesPage } from "@/pages/QuestoesPage"
 import { MinhaAssinaturaPage } from "@/pages/MinhaAssinaturaPage"
-
-
+import { ErroPage } from "@/pages/ErroPage"
+import { NaoEncontradaPage } from "@/pages/NaoEncontradaPage"
+import { PrivacidadePage } from "@/pages/PrivacidadePage"
+import { TermosPage } from "@/pages/TermosPage"
+import { RaizApp } from "@/routes/RaizApp"
 
 export const router = createBrowserRouter([
+  {
+    element: <RaizApp />,
+    errorElement: <ErroPage />,
+    children: [
   { path: "/", element: <LandingPage /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/registro", element: <RegisterPage /> },
   { path: "/verificar-email", element: <VerificarEmailPage /> },
   { path: "/esqueci-senha", element: <EsqueciSenhaPage /> },
   { path: "/redefinir-senha", element: <RedefinirSenhaPage /> },
+  { path: "/termos", element: <TermosPage /> },
+  { path: "/privacidade", element: <PrivacidadePage /> },
+]},
+
   {
     element: <ProtectedRoute />,
     children: [
@@ -59,6 +70,7 @@ export const router = createBrowserRouter([
               { path: "/cronograma", element: <CronogramaPage /> },
               { path: "/questoes", element: <QuestoesPage /> },
               { path: "/conta", element: <MinhaAssinaturaPage /> },
+              { path: "*", element: <NaoEncontradaPage /> },
             ],
           },
         ],
