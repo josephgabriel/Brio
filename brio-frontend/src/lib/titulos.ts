@@ -1,6 +1,6 @@
 import { matchPath } from "react-router-dom"
 
-export const TITULO_PADRAO = "Brio · Organize seus estudos"
+export const TITULO_PADRAO = "Brio | Organize seus estudos"
 
 // null = usa o título padrão (é o caso da landing).
 // ATENÇÃO À ORDEM: a busca para na primeira que casar. Rotas fixas, como
@@ -35,6 +35,6 @@ const TITULOS: { path: string; titulo: string | null }[] = [
 
 export function tituloDaAba(pathname: string): string {
   const rota = TITULOS.find(({ path }) => matchPath(path, pathname))
-  if (!rota) return "Página não encontrada · Brio"
-  return rota.titulo ? `${rota.titulo} · Brio` : TITULO_PADRAO
+  if (!rota) return "Página não encontrada | Brio"
+  return rota.titulo ? `${rota.titulo} | Brio` : TITULO_PADRAO
 }

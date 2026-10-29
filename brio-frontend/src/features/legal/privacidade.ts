@@ -58,6 +58,7 @@ export const SECOES_PRIVACIDADE: Secao[] = [
         "Resend: envio dos emails do serviço.",
         "Cloudinary: armazenamento das imagens que você insere nas anotações.",
         "Google (Gemini): geração de questões e diagnósticos no recurso de IA.",
+        "Google (Fontes): carregamento das fontes de texto do site, o que faz o navegador se comunicar com servidores do Google.",
       ],
       "Também podemos compartilhar dados quando a lei ou uma autoridade exigir.",
     ],
