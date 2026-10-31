@@ -1,8 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card"
+import type { ReactNode } from "react"
 
 interface CardMetricaProps {
   label: string
-  valor: string
+  valor: ReactNode
   destaque?: boolean
 }
 

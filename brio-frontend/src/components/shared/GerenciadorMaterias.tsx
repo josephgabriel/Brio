@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
-
+import { ChevronDown, ChevronRight, Plus, Trash2, BookOpen } from "lucide-react"
+import { EstadoVazio } from "@/components/shared/EstadoVazio"
 import { CheckboxConcluido, ProgressoDisciplina } from "@/components/shared/Progresso"
 import { useConcluirTopico } from "@/features/topicos/use-concluir-topico"
 import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
@@ -86,7 +86,12 @@ export function GerenciadorMaterias({ provaId, onSelecionarTopico }: Gerenciador
       </div>
 
       {disciplinas?.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nenhuma matéria cadastrada ainda.</p>
+        <EstadoVazio
+          compacto
+          icone={BookOpen}
+          titulo="Nenhuma matéria ainda"
+          descricao="Escreva o nome da primeira no campo acima e clique em Adicionar."
+        />
       )}
 
       <div className="flex flex-col gap-2">

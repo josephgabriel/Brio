@@ -12,7 +12,7 @@ export function AssinaturaRoute() {
 
     if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center" role="status">
+      <div className="flex min-h-dvh items-center justify-center" role="status">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
         <span className="sr-only">Verificando assinatura...</span>
       </div>

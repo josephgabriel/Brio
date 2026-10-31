@@ -28,7 +28,7 @@ export function PaginaLegal({ titulo, resumo, secoes, atual }: PaginaLegalProps)
   }, [titulo])
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <header className="border-b border-border/60">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link to="/" className="text-lg font-semibold">

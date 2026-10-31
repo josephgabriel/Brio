@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { concluirRevisao, listarRevisoes } from "@/features/revisoes/api/revisoes-api"
 import type { StatusRevisao } from "@/features/revisoes/types"
 import { paraISO } from "@/features/calendario/grade"
+import { CheckCircle2, RotateCcw, SearchX } from "lucide-react"
+import { EstadoVazio } from "@/components/shared/EstadoVazio"
 
 type FiltroStatus = "ativas" | "pendente" | "atrasada" | "concluida" | "todas"
 type Periodo = "todas" | "hoje" | "7dias" | "30dias"
@@ -122,9 +124,35 @@ export function RevisoesPage() {
         </Carregando>
         }
 
-      {revisoesFiltradas?.length === 0 && (
-        <p className="text-muted-foreground">Nenhuma revisão encontrada nesse filtro.</p>
-      )}
+            {revisoesFiltradas?.length === 0 &&
+        (revisoes?.length === 0 && periodo === "todas" ? (
+          <EstadoVazio
+            icone={RotateCcw}
+            titulo="Nenhuma revisão agendada"
+            descricao="Cada sessão finalizada agenda 4 revisões automáticas, em 1, 7, 16 e 35 dias. Elas aparecem aqui."
+            acao={{ rotulo: "Iniciar uma sessão", para: "/sessoes" }}
+          />
+        ) : filtroStatus === "ativas" && periodo === "todas" ? (
+          <EstadoVazio
+            icone={CheckCircle2}
+            titulo="Tudo em dia"
+            descricao="Você concluiu todas as revisões disponíveis. Novas aparecem conforme você finalizar sessões."
+            acao={{ rotulo: "Ver as concluídas", aoClicar: () => setFiltroStatus("concluida") }}
+          />
+        ) : (
+          <EstadoVazio
+            icone={SearchX}
+            titulo="Nenhuma revisão neste filtro"
+            descricao="Tente outro prazo ou outro status."
+            acao={{
+              rotulo: "Limpar filtros",
+              aoClicar: () => {
+                setFiltroStatus("todas")
+                setPeriodo("todas")
+              },
+            }}
+          />
+        ))}
 
       <div className="flex flex-col gap-3">
         {revisoesFiltradas?.map((revisao) => (

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
-
+import { GraduationCap } from "lucide-react"
+import { EstadoVazio } from "@/components/shared/EstadoVazio"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,9 +45,12 @@ export function ProvasPage() {
       {isError && <p className="text-destructive">Erro ao carregar provas.</p>}
 
       {provas && provas.length === 0 && (
-        <p className="text-muted-foreground">
-          Você ainda não cadastrou nenhuma prova. Clique em "Nova prova" pra começar.
-        </p>
+        <EstadoVazio
+          icone={GraduationCap}
+          titulo="Nenhuma prova por aqui ainda"
+          descricao="Cadastre a prova que você está preparando. Depois, adicione as matérias e os conteúdos para acompanhar seu avanço."
+          acao={{ rotulo: "Cadastrar minha primeira prova", para: "/provas/nova" }}
+        />
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

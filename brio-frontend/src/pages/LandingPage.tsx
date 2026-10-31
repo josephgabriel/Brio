@@ -92,7 +92,7 @@ export function LandingPage() {
   const { isAuthenticated } = useAuth()
 
   return (
-    <div className="dark flex min-h-screen flex-col bg-background text-foreground">
+    <div className="dark flex min-h-dvh flex-col bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <span className="text-lg font-semibold">Brio</span>

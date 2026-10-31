@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-
+import { NumeroAnimado } from "@/components/shared/NumeroAnimado"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CardMetrica } from "@/components/shared/CardMetrica"
 import { obterDashboard } from "@/features/dashboard/api/dashboard-api"
 
+import { GraduationCap } from "lucide-react"
+import { EstadoVazio } from "@/components/shared/EstadoVazio"
 import { Carregando, SkeletonCards, SkeletonMetricas } from "@/components/shared/Skeletons"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -33,7 +35,7 @@ export function DashboardPage() {
             <Skeleton className="h-4 w-56" />
           </div>
           <SkeletonMetricas />
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Skeleton className="h-9 w-48" />
             <Skeleton className="h-9 w-32" />
           </div>
@@ -63,12 +65,21 @@ export function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <CardMetrica label="Hoje" valor={`${data.horas_hoje}h`} />
-        <CardMetrica label="Semana" valor={`${data.horas_semana}h`} />
-        <CardMetrica label="Mês" valor={`${data.horas_mes}h`} />
+                <CardMetrica
+          label="Hoje"
+          valor={<NumeroAnimado valor={data.horas_hoje} casas={1} sufixo="h" />}
+        />
+        <CardMetrica
+          label="Semana"
+          valor={<NumeroAnimado valor={data.horas_semana} casas={1} sufixo="h" />}
+        />
+        <CardMetrica
+          label="Mês"
+          valor={<NumeroAnimado valor={data.horas_mes} casas={1} sufixo="h" />}
+        />
         <CardMetrica
           label="Revisões hoje"
-          valor={String(data.revisoes_pendentes_hoje)}
+          valor={<NumeroAnimado valor={data.revisoes_pendentes_hoje} />}
           destaque={data.revisoes_pendentes_hoje > 0}
         />
       </div>
@@ -91,7 +102,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Button asChild>
           <Link to="/sessoes">Iniciar sessão de estudos</Link>
         </Button>
@@ -106,13 +117,12 @@ export function DashboardPage() {
         </h2>
 
         {data.provas.length === 0 && (
-          <p className="text-muted-foreground">
-            Nenhuma prova ativa.{" "}
-            <Link to="/provas/nova" className="text-primary hover:underline">
-              Cadastre uma
-            </Link>
-            .
-          </p>
+          <EstadoVazio
+            icone={GraduationCap}
+            titulo="Nenhuma prova ativa"
+            descricao="Cadastre uma prova para começar a organizar seus estudos e ver suas estatísticas aqui."
+            acao={{ rotulo: "Cadastrar prova", para: "/provas/nova" }}
+          />
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

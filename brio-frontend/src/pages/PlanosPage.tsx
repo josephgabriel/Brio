@@ -61,7 +61,7 @@ export function PlanosPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
+      <div className="flex min-h-dvh items-center justify-center bg-background text-muted-foreground">
         <p className="animate-pulse">Carregando planos...</p>
       </div>
     )
@@ -69,7 +69,7 @@ export function PlanosPage() {
 
   if (assinaturaEstaValida(assinatura) && assinatura) {
     return (
-      <div className="relative flex min-h-screen w-full items-center justify-center bg-background px-4 text-foreground">
+      <div className="relative flex min-h-dvh w-full items-center justify-center bg-background px-4 text-foreground">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
 
         <div className="relative z-10 mx-auto flex max-w-md animate-[slideDown_0.6s_ease-out] flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card p-8 shadow-xl text-center">
@@ -103,7 +103,7 @@ export function PlanosPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-background px-4 py-12 text-foreground overflow-hidden">
+    <div className="relative flex min-h-dvh w-full items-center justify-center bg-background px-4 py-12 text-foreground overflow-hidden">
      
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background pointer-events-none" />
 

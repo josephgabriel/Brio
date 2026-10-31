@@ -33,7 +33,7 @@ export function AssinaturaRetornoPage() {
   }, [tentativas, confirmado, navigate, queryClient])
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 text-center">
       {tentativas < MAX_TENTATIVAS ? (
         <>
           <p className="text-muted-foreground">Confirmando seu pagamento...</p>

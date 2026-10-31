@@ -22,7 +22,7 @@ export function VerificarEmailPage() {
   }, [searchParams])
 
   return (
-    <div className="flex min-h-screen items-center justify-center text-center">
+    <div className="flex min-h-dvh items-center justify-center text-center">
       <div>
         {estado === "carregando" && <p className="text-muted-foreground">Verificando...</p>}
         {estado === "sucesso" && (

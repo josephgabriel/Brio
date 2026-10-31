@@ -1,9 +1,10 @@
 import type { LucideIcon } from "lucide-react"
+import type { ReactNode } from "react"
 
 interface CartaoNumeroProps {
   icone: LucideIcon
   rotulo: string
-  valor: string
+  valor: ReactNode
 }
 
 export function CartaoNumero({ icone: Icone, rotulo, valor }: CartaoNumeroProps) {

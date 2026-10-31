@@ -12,6 +12,8 @@ import {
 } from "@/features/assinatura/api/assinatura-api"
 import { notificar } from "@/lib/toast"
 import { SkeletonLista, Carregando } from "@/components/shared/Skeletons"
+import { Receipt } from "lucide-react"
+import { EstadoVazio } from "@/components/shared/EstadoVazio"
 
 const NOME_PLANO: Record<string, string> = { mensal: "Mensal", anual: "Anual" }
 const NOME_STATUS: Record<string, string> = {
@@ -181,7 +183,12 @@ export function MinhaAssinaturaPage() {
       <div>
         <h2 className="mb-3 text-lg font-semibold">Histórico de pagamentos</h2>
         {pagamentos?.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
+          <EstadoVazio
+            compacto
+            className="col-span-full"
+            icone={Receipt}
+            titulo="Nenhum pagamento registrado"
+          />
         )}
         <div className="flex flex-col gap-2">
           {pagamentos?.map((pagamento, indice) => (

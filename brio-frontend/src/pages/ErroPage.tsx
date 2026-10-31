@@ -13,7 +13,7 @@ export function ErroPage() {
   const detalhe = erro instanceof Error ? erro.message : null
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
       <p className="text-sm font-medium uppercase tracking-widest text-destructive">
         Algo deu errado
       </p>

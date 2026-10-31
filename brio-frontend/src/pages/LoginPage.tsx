@@ -124,7 +124,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       {/* Lado esquerdo */}
       <section className="relative hidden w-1/2 overflow-hidden lg:flex items-center justify-center border-r border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />

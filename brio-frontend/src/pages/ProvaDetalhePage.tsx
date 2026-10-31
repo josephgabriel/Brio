@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, BarChart3, Pencil, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, BarChart3, Pencil, Plus, Trash2, FileText, BookOpen } from "lucide-react"
 import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { Button } from "@/components/ui/button"
 import { SkeletonCards, Carregando } from "@/components/shared/Skeletons"
@@ -19,6 +19,7 @@ import {
   listarDisciplinas,
   atualizarDisciplina,
 } from "@/features/disciplinas/api/disciplinas-api"
+import { EstadoVazio } from "@/components/shared/EstadoVazio"
 
 import { obterProva } from "@/features/provas/api/provas-api"
 import { CheckboxConcluido, ProgressoDisciplina } from "@/components/shared/Progresso"
@@ -206,7 +207,7 @@ export function ProvaDetalhePage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           {disciplinaSelecionadaId !== null ? (
             <button
@@ -282,9 +283,13 @@ export function ProvaDetalhePage() {
       {disciplinaSelecionadaId === null ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {disciplinas?.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma matéria cadastrada ainda.
-            </p>
+          <EstadoVazio
+            compacto
+            className="col-span-full"
+            icone={BookOpen}
+            titulo="Nenhuma matéria ainda"
+            descricao="Escreva o nome da primeira no campo acima e clique em Adicionar."
+          />
           )}
 
           {disciplinas?.map((disciplina) => (
@@ -342,9 +347,13 @@ export function ProvaDetalhePage() {
         /* Lista de tópicos */
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {topicos?.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum conteúdo cadastrado ainda.
-            </p>
+          <EstadoVazio
+            compacto
+            className="col-span-full"
+            icone={FileText}
+            titulo="Nenhum conteúdo nesta matéria"
+            descricao="Adicione o primeiro no campo acima. Cada conteúdo ganha uma anotação própria e uma caixa para marcar como concluído."
+          />
           )}
 
           {topicos?.map((topico) => (

@@ -138,7 +138,7 @@ export function EstatisticasPage() {
       <h1 className="sr-only">Estatísticas</h1>
 
       <section
-        className="relative overflow-hidden rounded-3xl p-8 text-white"
+        className="relative overflow-hidden rounded-3xl p-5 text-white sm:p-8"
         style={{ background: GRADIENTE_HERO }}
       >
         <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
