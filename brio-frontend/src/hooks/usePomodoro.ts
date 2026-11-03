@@ -16,9 +16,9 @@ interface EstadoPomodoro {
   segundosFoco: number
 }
 
-// Se passou mais que isso entre dois tics, o computador dormiu ou a aba congelou.
-// Esse intervalo não conta como estudo.
-const LIMITE_SALTO_SEGUNDOS = 120
+// Navegadores em segundo plano atrasam os timers em até ~1 min. Acima disso,
+// o aparelho foi suspenso (tela bloqueada, tampa fechada): perguntamos ao usuário.
+const LIMITE_SALTO_SEGUNDOS = 90
 
 function duracaoDaFase(fase: FasePomodoro, config: ConfigPomodoro): number {
   if (fase === "foco") return config.focoMinutos * 60
@@ -39,11 +39,7 @@ function proximoEstado(estado: EstadoPomodoro, config: ConfigPomodoro): EstadoPo
   if (estado.fase === "foco") {
     const vaiPausaLonga = estado.cicloAtual >= config.ciclosAtePausaLonga
     const proximaFase: FasePomodoro = vaiPausaLonga ? "pausa_longa" : "pausa_curta"
-    return {
-      ...estado,
-      fase: proximaFase,
-      segundosRestantes: duracaoDaFase(proximaFase, config),
-    }
+    return { ...estado, fase: proximaFase, segundosRestantes: duracaoDaFase(proximaFase, config) }
   }
 
   const proximoCiclo = estado.fase === "pausa_longa" ? 1 : estado.cicloAtual + 1
@@ -55,19 +51,30 @@ function proximoEstado(estado: EstadoPomodoro, config: ConfigPomodoro): EstadoPo
   }
 }
 
-function avancarTempo(
-  estado: EstadoPomodoro,
-  segundos: number,
-  config: ConfigPomodoro,
-): EstadoPomodoro {
-  // Só a fase de foco acumula tempo de estudo, e nunca além do que faltava na fase
-  const foco = estado.fase === "foco" ? Math.min(segundos, estado.segundosRestantes) : 0
-  const segundosFoco = estado.segundosFoco + foco
+// Avança `segundos`, atravessando quantas fases forem necessárias.
+// Só a fase de foco acumula tempo de estudo.
+function avancarTempo(estado: EstadoPomodoro, segundos: number, config: ConfigPomodoro): EstadoPomodoro {
+  let atual = estado
+  let restante = segundos
+  let guarda = 0
 
-  if (estado.segundosRestantes > segundos) {
-    return { ...estado, segundosFoco, segundosRestantes: estado.segundosRestantes - segundos }
+  while (restante > 0 && guarda < 1000) {
+    guarda += 1
+    const consumo = Math.min(restante, atual.segundosRestantes)
+    const foco = atual.fase === "foco" ? consumo : 0
+    restante -= consumo
+
+    if (consumo >= atual.segundosRestantes) {
+      atual = { ...proximoEstado(atual, config), segundosFoco: atual.segundosFoco + foco }
+    } else {
+      atual = {
+        ...atual,
+        segundosRestantes: atual.segundosRestantes - consumo,
+        segundosFoco: atual.segundosFoco + foco,
+      }
+    }
   }
-  return { ...proximoEstado(estado, config), segundosFoco }
+  return atual
 }
 
 function tocarAlarme() {
@@ -92,12 +99,12 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
   const [estado, setEstado] = useState<EstadoPomodoro>(() => {
     if (chave) {
       const salvo = localStorage.getItem(chave)
-      // O espalhamento garante que estados salvos antes desta versão ganhem segundosFoco: 0
       if (salvo) return { ...estadoInicial(config), ...JSON.parse(salvo) }
     }
     return estadoInicial(config)
   })
   const [pausado, setPausado] = useState(false)
+  const [lacunaSegundos, setLacunaSegundos] = useState<number | null>(null)
   const primeiraRenderizacao = useRef(true)
   const idAnterior = useRef(idSessao)
   const ultimoTick = useRef(Date.now())
@@ -107,13 +114,13 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
       idAnterior.current = idSessao
       setEstado(estadoInicial(config))
       setPausado(false)
+      setLacunaSegundos(null)
     }
   }, [idSessao, config])
 
   useEffect(() => {
     if (pausado || idSessao === null) return
 
-    // Ao (re)começar a contar, o tempo em que ficou parado não entra na conta
     ultimoTick.current = Date.now()
 
     const intervalo = setInterval(() => {
@@ -122,11 +129,12 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
       if (decorrido < 1) return
 
       if (decorrido > LIMITE_SALTO_SEGUNDOS) {
+        // Aparelho suspenso: guarda o tempo ausente e deixa o usuário decidir
         ultimoTick.current = agora
+        setLacunaSegundos((anterior) => (anterior ?? 0) + decorrido)
         return
       }
 
-      // Soma só os segundos inteiros e guarda a sobra, para não perder tempo a cada tic
       ultimoTick.current += decorrido * 1000
       setEstado((atual) => avancarTempo(atual, decorrido, config))
     }, 1000)
@@ -135,9 +143,7 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
   }, [pausado, config, idSessao])
 
   useEffect(() => {
-    if (chave) {
-      localStorage.setItem(chave, JSON.stringify(estado))
-    }
+    if (chave) localStorage.setItem(chave, JSON.stringify(estado))
   }, [estado, chave])
 
   useEffect(() => {
@@ -149,12 +155,18 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
     tocarAlarme()
   }, [estado.fase])
 
+  function resolverLacuna(contar: boolean) {
+    if (contar && lacunaSegundos) {
+      setEstado((atual) => avancarTempo(atual, lacunaSegundos, config))
+    }
+    setLacunaSegundos(null)
+  }
+
   function pularFase() {
     setEstado((atual) => proximoEstado(atual, config))
   }
 
   function reiniciar() {
-    // Reiniciar zera o ciclo do Pomodoro, mas não apaga o tempo que você já estudou
     setEstado((atual) => ({ ...estadoInicial(config), segundosFoco: atual.segundosFoco }))
     setPausado(false)
   }
@@ -173,6 +185,8 @@ export function usePomodoro(config: ConfigPomodoro, idSessao: number | null) {
     progresso,
     pausado,
     segundosFoco: estado.segundosFoco,
+    lacunaSegundos,
+    resolverLacuna,
     pausar: () => setPausado(true),
     retomar: () => setPausado(false),
     pularFase,

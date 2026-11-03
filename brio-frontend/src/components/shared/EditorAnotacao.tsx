@@ -76,7 +76,7 @@ const CORES_TEXTO = [
 ]
 
 const CLASSES_CONTEUDO =
-  "mx-auto min-h-[560px] max-w-[760px] rounded-b-xl border border-t-0 border-border bg-card p-8 md:p-12 " +
+  "mx-auto min-h-[320px] sm:min-h-[560px] max-w-[760px] rounded-b-xl border border-t-0 border-border bg-card p-4 sm:p-8 md:p-12 " +
   "text-sm leading-relaxed text-card-foreground shadow-sm focus:outline-none " +
   "[&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1.5 " +
   "[&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 " +
@@ -122,7 +122,7 @@ function BotaoFerramenta({ ativo, rotulo, onClick, disabled, children }: BotaoFe
           type="button"
           variant={ativo ? "secondary" : "ghost"}
           size="icon"
-          className={`h-8 w-8 rounded-md transition-colors ${
+          className={`h-10 w-10 sm:h-8 sm:w-8 rounded-md transition-colors ${
             ativo ? "bg-accent text-accent-foreground font-medium shadow-xs" : "text-muted-foreground hover:text-foreground"
           }`}
           onClick={onClick}
@@ -131,7 +131,7 @@ function BotaoFerramenta({ ativo, rotulo, onClick, disabled, children }: BotaoFe
           {children}
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">
+      <TooltipContent side="bottom" className="text-xs [@media(hover:none)]:hidden">
         {rotulo}
       </TooltipContent>
     </Tooltip>
@@ -276,7 +276,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
       <div className="flex flex-col">
         {/* TOOLBAR UNIFICADA */}
         <div className="sticky top-2 z-10 mx-auto flex w-full max-w-[760px] items-center justify-between gap-1.5 rounded-t-xl border border-border bg-background/95 p-1.5 backdrop-blur-md shadow-xs">
-          <div className="flex flex-wrap items-center gap-0.5 overflow-x-auto no-scrollbar">
+          <div className="flex flex-nowrap items-center gap-0.5 overflow-x-auto no-scrollbar sm:flex-wrap [&>*]:shrink-0">
             
             <BotaoFerramenta
               rotulo="Desfazer"
@@ -417,7 +417,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
 
             <Popover>
               <PopoverTrigger>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground">
                   <Highlighter className="size-4" />
                 </Button>
               </PopoverTrigger>
@@ -448,7 +448,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
 
             <Popover>
               <PopoverTrigger>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground">
                   <Palette className="size-4" />
                 </Button>
               </PopoverTrigger>
@@ -489,7 +489,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
 
             <Tooltip>
               <TooltipTrigger>
-                <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                <label className="flex h-10 w-10 sm:h-8 sm:w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp,image/gif"
@@ -499,7 +499,7 @@ export function EditorAnotacao({ conteudoInicial, chaveRascunho, onSalvar }: Edi
                   <ImagePlus className="size-4" />
                 </label>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
+              <TooltipContent side="bottom" className="text-xs [@media(hover:none)]:hidden">
                 Inserir imagem
               </TooltipContent>
             </Tooltip>

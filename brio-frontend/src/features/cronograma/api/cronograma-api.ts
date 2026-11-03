@@ -1,24 +1,46 @@
 import { apiFetch } from "@/lib/api-client"
-import type { ItemCronograma, ItemCronogramaFormData } from "@/features/cronograma/types"
+import type { AtividadeFormData, OcorrenciaCronograma } from "@/features/cronograma/types"
 
-export async function listarCronograma(): Promise<ItemCronograma[]> {
-  const response = await apiFetch("/api/v1/cronograma")
-  if (!response.ok) throw new Error("Não foi possível carregar o cronograma")
+async function falhar(response: Response, padrao: string): Promise<never> {
+  const erro = await response.json().catch(() => null)
+  throw new Error(typeof erro?.detail === "string" ? erro.detail : padrao)
+}
+
+export async function obterSemanaCronograma(data: string): Promise<OcorrenciaCronograma[]> {
+  const response = await apiFetch(`/api/v1/cronograma/semana?data=${data}`)
+  if (!response.ok) await falhar(response, "Não foi possível carregar o cronograma")
   return response.json()
 }
 
-export async function criarItemCronograma(
-  dados: ItemCronogramaFormData,
-): Promise<ItemCronograma> {
+export async function criarAtividade(dados: AtividadeFormData): Promise<void> {
   const response = await apiFetch("/api/v1/cronograma", {
     method: "POST",
     body: JSON.stringify(dados),
   })
-  if (!response.ok) throw new Error("Não foi possível criar o item")
-  return response.json()
+  if (!response.ok) await falhar(response, "Não foi possível criar a atividade")
 }
 
-export async function excluirItemCronograma(id: number): Promise<void> {
+export async function atualizarAtividade(id: number, dados: AtividadeFormData): Promise<void> {
+  const response = await apiFetch(`/api/v1/cronograma/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(dados),
+  })
+  if (!response.ok) await falhar(response, "Não foi possível salvar a atividade")
+}
+
+export async function excluirAtividade(id: number): Promise<void> {
   const response = await apiFetch(`/api/v1/cronograma/${id}`, { method: "DELETE" })
-  if (!response.ok) throw new Error("Não foi possível excluir o item")
+  if (!response.ok) await falhar(response, "Não foi possível remover a atividade")
+}
+
+export async function definirConclusaoAtividade(
+  id: number,
+  data: string,
+  concluido: boolean,
+): Promise<void> {
+  const response = await apiFetch(`/api/v1/cronograma/${id}/conclusao`, {
+    method: "PUT",
+    body: JSON.stringify({ data, concluido }),
+  })
+  if (!response.ok) await falhar(response, "Não foi possível atualizar a atividade")
 }

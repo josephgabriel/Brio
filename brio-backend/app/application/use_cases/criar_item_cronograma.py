@@ -1,4 +1,3 @@
-# app/application/use_cases/criar_item_cronograma.py
 from datetime import time
 
 from app.application.interfaces.cronograma_repository import CronogramaRepository
@@ -18,19 +17,27 @@ class CriarItemCronograma:
 
     def executar(
         self,
+        *,
         usuario_id: int,
-        disciplina_id: int,
+        tipo: str,
         dia_semana: int,
         duracao_minutos: int,
+        disciplina_id: int | None = None,
+        titulo: str | None = None,
+        foco: str | None = None,
         horario_inicio: time | None = None,
     ) -> CronogramaModel:
-        disciplina = self.disciplina_repository.buscar_por_id(disciplina_id)
-        if disciplina is None or disciplina.usuario_id != usuario_id:
-            raise DisciplinaNaoEncontradaError(f"Disciplina {disciplina_id} não encontrada")
+        if disciplina_id is not None:
+            disciplina = self.disciplina_repository.buscar_por_id(disciplina_id)
+            if disciplina is None or disciplina.usuario_id != usuario_id:
+                raise DisciplinaNaoEncontradaError(f"Disciplina {disciplina_id} não encontrada")
 
         item = CronogramaModel(
             usuario_id=usuario_id,
             disciplina_id=disciplina_id,
+            titulo=titulo,
+            foco=foco,
+            tipo=tipo,
             dia_semana=dia_semana,
             horario_inicio=horario_inicio,
             duracao_minutos=duracao_minutos,

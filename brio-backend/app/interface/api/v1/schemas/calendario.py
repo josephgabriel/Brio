@@ -40,3 +40,4 @@ class ItemCalendarioSchema(BaseModel):
     data: date
     concluido: bool | None
     rota: str | None
+    detalhe: str | None = None

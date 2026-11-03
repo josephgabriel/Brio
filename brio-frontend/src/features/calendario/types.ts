@@ -7,11 +7,14 @@ export interface ItemCalendario {
   data: string
   concluido: boolean | null
   rota: string | null
+  detalhe: string | null
 }
+
+export type TipoEvento = "evento" | "tarefa"
 
 export interface EventoFormData {
   titulo: string
   data: string
-  tipo: "evento" | "tarefa"
+  tipo: TipoEvento
   descricao: string
 }

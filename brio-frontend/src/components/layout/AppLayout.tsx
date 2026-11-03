@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom"
+import { AvisoTempoAusente } from "@/components/sessao/AvisoTempoAusente"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import {
   BarChart3,
@@ -357,16 +358,19 @@ export function AppLayout() {
           </div>
         )}
 
-        {mostrarCronometro && (
+        {sessaoAtiva && (
           <Link
             to="/sessoes"
-            className="mb-4 hidden w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/20 md:flex"
+            className="ml-auto flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm text-primary"
           >
+            <Timer aria-hidden className="size-4" />
             <span className="font-mono tabular-nums">{pomodoro.tempoFormatado}</span>
-            <span>Sessão em andamento — voltar</span>
+            {pomodoro.pausado && <span className="text-xs">pausado</span>}
+            <span className="sr-only">Sessão em andamento, voltar</span>
           </Link>
         )}
-
+        
+ <AvisoTempoAusente />
         <Outlet />
       </main>
     </div>

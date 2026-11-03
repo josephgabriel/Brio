@@ -1,8 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Download, Menu, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
-import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
+import { BookOpen, Download, Pause, Play, RotateCcw, SkipForward } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,7 +17,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { EditorAnotacao } from "@/components/shared/EditorAnotacao"
 import { GerenciadorMaterias } from "@/components/shared/GerenciadorMaterias"
 import { LiquidTimer } from "@/components/shared/LiquidTimer"
-import { exportarAnotacaoPdf, obterAnotacao, salvarAnotacao } from "@/features/anotacoes/api/anotacoes-api"
+import { SkeletonEditor } from "@/components/shared/Skeletons"
+import {
+  exportarAnotacaoPdf,
+  obterAnotacao,
+  salvarAnotacao,
+} from "@/features/anotacoes/api/anotacoes-api"
+import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
 import { listarDisciplinas } from "@/features/disciplinas/api/disciplinas-api"
 import { listarProvas } from "@/features/provas/api/provas-api"
 import {
@@ -29,9 +35,7 @@ import { useSessaoAtiva } from "@/features/sessoes/sessao-ativa-context"
 import { listarTopicos, obterContextoTopico } from "@/features/topicos/api/topicos-api"
 import type { Topico } from "@/features/topicos/types"
 import { type ConfigPomodoro } from "@/hooks/usePomodoro"
-import { Link } from "react-router-dom"
 import { notificar } from "@/lib/toast"
-import { SkeletonEditor } from "@/components/shared/Skeletons"
 
 const ROTULO_FASE: Record<string, string> = {
   foco: "Foco",
@@ -39,14 +43,19 @@ const ROTULO_FASE: Record<string, string> = {
   pausa_longa: "Pausa longa",
 }
 
+// O servidor responde "já foi finalizada" (ou "finalizado", conforme o texto)
+const JA_ENCERRADA = /já foi finalizad[ao]/
+
 export function SessaoPage() {
   // ==========================================
-  // 1. TODOS OS HOOKS DECLARADOS NO TOPO ABSOLUTO
+  // 1. TODOS OS HOOKS NO TOPO
   // ==========================================
   const { sessaoAtiva, pomodoro, iniciarSessaoAtiva, encerrarSessaoAtiva } = useSessaoAtiva()
 
   const [searchParams] = useSearchParams()
   const topicoIdPreSelecionado = searchParams.get("topico_id")
+  const provaIdPreSelecionada = searchParams.get("prova_id")
+  const disciplinaIdPreSelecionada = searchParams.get("disciplina_id")
 
   const [provaId, setProvaId] = useState("")
   const [disciplinaId, setDisciplinaId] = useState("")
@@ -80,6 +89,13 @@ export function SessaoPage() {
     })
   }, [topicoIdPreSelecionado])
 
+  useEffect(() => {
+    if (!provaIdPreSelecionada || !disciplinaIdPreSelecionada) return
+    setProvaId(provaIdPreSelecionada)
+    setDisciplinaId(disciplinaIdPreSelecionada)
+    setTopicoId("")
+  }, [provaIdPreSelecionada, disciplinaIdPreSelecionada])
+
   const { data: provas } = useQuery({ queryKey: ["provas"], queryFn: listarProvas })
   const provasAtivas = provas?.filter((prova) => prova.status === "ativa")
 
@@ -100,12 +116,12 @@ export function SessaoPage() {
     : null
 
   const { data: anotacao, isLoading: carregandoAnotacao } = useQuery({
-  queryKey: ["anotacao", topicoAtual?.id],
-  queryFn: () => obterAnotacao(topicoAtual!.id),
-  enabled: !!topicoAtual,
-  staleTime: Infinity,
-  gcTime: 0,
-})
+    queryKey: ["anotacao", topicoAtual?.id],
+    queryFn: () => obterAnotacao(topicoAtual!.id),
+    enabled: !!topicoAtual,
+    staleTime: Infinity,
+    gcTime: 0,
+  })
 
   const salvarAnotacaoMutation = useMutation({
     mutationFn: (html: string) => salvarAnotacao(topicoAtual!.id, html),
@@ -140,30 +156,37 @@ export function SessaoPage() {
   })
 
   const finalizar = useMutation({
-      mutationFn: () => finalizarSessao(sessaoAtiva!.id, pomodoro.segundosFoco),
+    mutationFn: () => finalizarSessao(sessaoAtiva!.id, pomodoro.segundosFoco),
     onSuccess: () => {
       encerrarSessaoAtiva()
       setProvaId("")
       setDisciplinaId("")
       setTopicoId("")
       setObjetivo("")
-      notificar.sucesso("Sessão finalizada com sucesso! Suas revisões foram agendadas.")
+      notificar.sucesso("Sessão finalizada. Suas revisões foram agendadas.")
     },
     onError: (erro: Error) => {
-      if (erro.message.includes("já foi finalizada")) {
+      if (JA_ENCERRADA.test(erro.message)) {
+        // A sessão já estava encerrada no servidor: só limpa o estado local
         encerrarSessaoAtiva()
+        notificar.info("Esta sessão já tinha sido finalizada.")
+      } else {
+        notificar.erro(erro)
       }
     },
   })
 
   const cancelar = useMutation({
     mutationFn: () => cancelarSessao(sessaoAtiva!.id),
-    onSuccess: () => {encerrarSessaoAtiva(),
-      notificar.sucesso("Sessão cancelada com sucesso!")
+    onSuccess: () => {
+      encerrarSessaoAtiva()
+      notificar.sucesso("Sessão cancelada.")
     },
     onError: (erro: Error) => {
-      if (erro.message.includes("já foi finalizado")) {
+      if (JA_ENCERRADA.test(erro.message)) {
         encerrarSessaoAtiva()
+      } else {
+        notificar.erro(erro)
       }
     },
   })
@@ -174,6 +197,21 @@ export function SessaoPage() {
   function handleIniciar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     iniciar.mutate()
+  }
+
+  async function handleFinalizar() {
+    // Um toque sem querer não deve gerar uma sessão vazia com 4 revisões
+    if (pomodoro.segundosFoco < 60) {
+      const confirmado = await confirmar({
+        titulo: "Finalizar com menos de 1 minuto de foco?",
+        descricao:
+          "A sessão será registrada com 0 minuto e as 4 revisões serão agendadas mesmo assim. Se foi sem querer, continue estudando ou cancele a sessão.",
+        textoConfirmar: "Finalizar mesmo assim",
+        textoCancelar: "Continuar estudando",
+      })
+      if (!confirmado) return
+    }
+    finalizar.mutate()
   }
 
   async function handleCancelar() {
@@ -197,6 +235,9 @@ export function SessaoPage() {
     setExportando(true)
     try {
       await exportarAnotacaoPdf(topicoAtual.id, `anotacao-topico-${topicoAtual.id}`)
+      notificar.sucesso("PDF exportado")
+    } catch (erro) {
+      notificar.erro(erro)
     } finally {
       setExportando(false)
     }
@@ -208,8 +249,10 @@ export function SessaoPage() {
   if (sessaoAtiva) {
     return (
       <div className="relative">
+        <h1 className="sr-only">Sessão de estudos em andamento</h1>
+
         <Sheet open={menuAberto} onOpenChange={setMenuAberto}>
-          <SheetContent side="left" className="w-80 overflow-y-auto">
+          <SheetContent side="left" className="w-80 max-w-[90vw] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Matérias e Conteúdos</SheetTitle>
             </SheetHeader>
@@ -225,24 +268,27 @@ export function SessaoPage() {
         <Button
           type="button"
           variant="outline"
-          size="icon"
-          className="mb-6"
+          size="sm"
+          className="mb-4 h-10 sm:h-8"
           onClick={() => setMenuAberto(true)}
         >
-          <Menu className="size-4" />
+          <BookOpen className="size-4" />
+          Matérias e conteúdos
         </Button>
 
+        {/* min-w-0 nos filhos: sem ele, o conteúdo largo do editor alarga a grade inteira */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Painel de Anotações */}
-          <div className="text-left">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">
+          {/* Anotações: abaixo do cronômetro no celular, à esquerda no desktop */}
+          <div className="order-2 min-w-0 text-left lg:order-1">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground">
                 Anotações — {topicoAtual?.nome}
               </p>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="shrink-0"
                 onClick={handleExportarPdf}
                 disabled={exportando || !anotacao}
               >
@@ -255,17 +301,17 @@ export function SessaoPage() {
 
             {anotacao && (
               <EditorAnotacao
-               key={topicoAtual?.id}
-               conteudoInicial={anotacao.conteudo_html}
-               chaveRascunho={`topico-${topicoAtual?.id}`}
-               onSalvar={(html) => salvarAnotacaoMutation.mutateAsync(html)}
+                key={topicoAtual?.id}
+                conteudoInicial={anotacao.conteudo_html}
+                chaveRascunho={`topico-${topicoAtual?.id}`}
+                onSalvar={(html) => salvarAnotacaoMutation.mutateAsync(html)}
               />
             )}
           </div>
 
-          {/* Cronômetro e Controles */}
-          <div className="flex flex-col items-center gap-6 text-center">
-            <div className="flex flex-col items-center gap-6 text-center w-full">
+          {/* Cronômetro e controles: primeiro no celular, à direita no desktop */}
+          <div className="order-1 flex min-w-0 flex-col items-center gap-6 text-center lg:order-2">
+            <div className="flex w-full flex-col items-center gap-6">
               <div>
                 <p className="text-sm text-muted-foreground">
                   {sessaoAtiva.disciplina} — {sessaoAtiva.assunto}
@@ -280,56 +326,84 @@ export function SessaoPage() {
                 tempoFormatado={pomodoro.tempoFormatado}
                 label={ROTULO_FASE[pomodoro.fase]}
               />
-              <p className="text-xs text-muted-foreground">
-                Tempo de foco registrado: {Math.floor(pomodoro.segundosFoco / 60)} min
-              </p>
+
+              {pomodoro.pausado ? (
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                  Cronômetro pausado: o tempo não está sendo contado
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Tempo de foco registrado: {Math.floor(pomodoro.segundosFoco / 60)} min
+                </p>
+              )}
             </div>
 
-            {/* Controles & Form */}
             <div className="flex w-full flex-col items-center gap-6">
               <div className="flex flex-wrap justify-center gap-2">
                 {pomodoro.pausado ? (
-                  <Button type="button" variant="outline" onClick={pomodoro.retomar}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 sm:h-9"
+                    onClick={pomodoro.retomar}
+                  >
                     <Play className="size-4" />
                     Retomar
                   </Button>
                 ) : (
-                  <Button type="button" variant="outline" onClick={pomodoro.pausar}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 sm:h-9"
+                    onClick={pomodoro.pausar}
+                  >
                     <Pause className="size-4" />
                     Pausar
                   </Button>
                 )}
-                <Button type="button" variant="outline" onClick={pomodoro.pularFase}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 sm:h-9"
+                  onClick={pomodoro.pularFase}
+                >
                   <SkipForward className="size-4" />
                   Pular
                 </Button>
-                <Button type="button" variant="outline" onClick={pomodoro.reiniciar}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 sm:h-9"
+                  onClick={pomodoro.reiniciar}
+                >
                   <RotateCcw className="size-4" />
                   Reiniciar
                 </Button>
+              </div>
+
+              <div className="w-full border-t border-border pt-6">
+                <Button
+                  type="button"
+                  className="h-12 w-full text-base sm:h-9 sm:text-sm"
+                  onClick={handleFinalizar}
+                  disabled={finalizar.isPending}
+                >
+                  {finalizar.isPending ? "Finalizando..." : "Finalizar sessão"}
+                </Button>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  As revisões deste conteúdo serão agendadas automaticamente.
+                </p>
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
+                  className="mt-3 text-muted-foreground"
                   onClick={handleCancelar}
                   disabled={cancelar.isPending}
                 >
                   Cancelar sessão
                 </Button>
               </div>
-
-              <div className="w-full border-t border-border pt-6">
-  <Button
-    type="button"
-    className="w-full"
-    onClick={() => finalizar.mutate()}
-    disabled={finalizar.isPending}
-  >
-    {finalizar.isPending ? "Finalizando..." : "Finalizar sessão"}
-  </Button>
-  <p className="mt-2 text-center text-xs text-muted-foreground">
-    As revisões deste conteúdo serão agendadas automaticamente.
-  </p>
-</div>
             </div>
           </div>
         </div>
@@ -339,7 +413,7 @@ export function SessaoPage() {
 
   return (
     <div className="mx-auto max-w-md">
-      <h1 className="mb-6 text-2xl font-semibold">Nova Sessão de Estudos</h1>
+      <h1 className="mb-6 text-xl font-semibold sm:text-2xl">Nova Sessão de Estudos</h1>
 
       <form onSubmit={handleIniciar} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
@@ -451,6 +525,7 @@ export function SessaoPage() {
               <Input
                 id="foco"
                 type="number"
+                inputMode="numeric"
                 min="1"
                 value={focoMinutos}
                 onChange={(e) => setFocoMinutos(e.target.value)}
@@ -462,6 +537,7 @@ export function SessaoPage() {
               <Input
                 id="pausaCurta"
                 type="number"
+                inputMode="numeric"
                 min="1"
                 value={pausaCurtaMinutos}
                 onChange={(e) => setPausaCurtaMinutos(e.target.value)}
@@ -473,6 +549,7 @@ export function SessaoPage() {
               <Input
                 id="pausaLonga"
                 type="number"
+                inputMode="numeric"
                 min="1"
                 value={pausaLongaMinutos}
                 onChange={(e) => setPausaLongaMinutos(e.target.value)}
@@ -484,6 +561,7 @@ export function SessaoPage() {
               <Input
                 id="ciclos"
                 type="number"
+                inputMode="numeric"
                 min="1"
                 value={ciclosAtePausaLonga}
                 onChange={(e) => setCiclosAtePausaLonga(e.target.value)}
@@ -493,11 +571,7 @@ export function SessaoPage() {
           </div>
         </div>
 
-        {iniciar.isError && (
-          <p className="text-sm text-destructive">{iniciar.error.message}</p>
-        )}
-
-        <Button type="submit" disabled={!topicoId || iniciar.isPending}>
+        <Button type="submit" className="h-11 sm:h-9" disabled={!topicoId || iniciar.isPending}>
           {iniciar.isPending ? "Iniciando..." : "Iniciar sessão"}
         </Button>
       </form>

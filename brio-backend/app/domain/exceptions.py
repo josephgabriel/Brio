@@ -115,3 +115,6 @@ class QuestaoNaoEncontradaError(Exception):
 
 class MaterialNaoEncontradoError(Exception):
     pass
+
+class ConclusaoCronogramaInvalidaError(Exception):
+    pass

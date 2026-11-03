@@ -24,5 +24,6 @@ from app.infrastructure.db.models.historico_resposta import HistoricoRespostaMod
 from app.infrastructure.db.models.material_estudo import MaterialEstudoModel  # noqa: F401
 from app.infrastructure.db.models.questao import QuestaoModel  # noqa: F401
 from app.infrastructure.db.models.anotacao_versao import AnotacaoVersaoModel  # noqa: F401
+from app.infrastructure.db.models.cronograma_conclusao import CronogramaConclusaoModel  # noqa: F401
 
 __all__ = ["TopicoModel", "RevisaoModel", "AnotacaoModel"]

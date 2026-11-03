@@ -73,12 +73,17 @@ class ObterDashboard:
         itens_cronograma = self.cronograma_repository.listar_por_usuario(usuario_id)
         dia_semana_hoje = hoje.weekday()
         disciplinas_hoje: list[str] = []
+        
         for item in itens_cronograma:
             if item.dia_semana != dia_semana_hoje:
                 continue
-            disciplina = self.disciplina_repository.buscar_por_id(item.disciplina_id)
-            if disciplina is not None:
-                disciplinas_hoje.append(disciplina.nome)
+            if item.disciplina_id is None:
+                nome = item.titulo
+            else:
+                disciplina = self.disciplina_repository.buscar_por_id(item.disciplina_id)
+                nome = item.titulo or (disciplina.nome if disciplina else None)
+            if nome and nome not in disciplinas_hoje:
+                disciplinas_hoje.append(nome)
 
         return DashboardData(
             horas_hoje=calcular_horas_estudadas(duracoes_hoje),

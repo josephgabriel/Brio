@@ -1,5 +1,5 @@
-# app/application/interfaces/cronograma_repository.py
 from abc import ABC, abstractmethod
+from datetime import date
 
 from app.infrastructure.db.models.cronograma import CronogramaModel
 
@@ -19,3 +19,11 @@ class CronogramaRepository(ABC):
 
     @abstractmethod
     def deletar(self, item: CronogramaModel) -> None: ...
+
+    @abstractmethod
+    def listar_conclusoes(
+        self, item_ids: list[int], data_inicio: date, data_fim: date
+    ) -> set[tuple[int, date]]: ...
+
+    @abstractmethod
+    def definir_conclusao(self, item_id: int, data: date, concluido: bool) -> None: ...

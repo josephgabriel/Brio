@@ -1,238 +1,411 @@
 import { useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Plus, Trash2 } from "lucide-react"
-import { notificar } from "@/lib/toast"
-import { useConfirmar } from "@/features/confirmacao/confirmacao-context"
+import { useNavigate } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import {
+  CalendarDays,
+  CalendarPlus,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Plus,
+} from "lucide-react"
+
+import { FormularioAtividade } from "@/components/cronograma/FormularioAtividade"
+import { EstadoVazio } from "@/components/shared/EstadoVazio"
+import { Carregando } from "@/components/shared/Skeletons"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { paraISO } from "@/features/calendario/grade"
+import { obterSemanaCronograma } from "@/features/cronograma/api/cronograma-api"
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { listarDisciplinas } from "@/features/disciplinas/api/disciplinas-api"
-import {
-  criarItemCronograma,
-  excluirItemCronograma,
-  listarCronograma,
-} from "@/features/cronograma/api/cronograma-api"
-import { listarProvas } from "@/features/provas/api/provas-api"
+  DIAS_CURTOS,
+  dataDeISO,
+  diasDaSemana,
+  formatarDuracao,
+  inicioDaSemana,
+  nomeDoDia,
+  plural,
+  resumoSemana,
+  rotuloSemana,
+  somarDias,
+} from "@/features/cronograma/semana"
+import type { OcorrenciaCronograma } from "@/features/cronograma/types"
+import { useConcluirAtividade } from "@/features/cronograma/use-concluir-atividade"
+import { ICONES_TIPO, corDaAtividade } from "@/features/cronograma/visual"
+import { GRADIENTE_HERO } from "@/features/estatisticas/visual"
 
-const DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
+interface EstadoFormulario {
+  atividade: OcorrenciaCronograma | null
+}
 
-function formatarHorario(horario: string | null): string {
-  if (!horario) return ""
-  return horario.slice(0, 5)
+interface LinhaAtividadeProps {
+  atividade: OcorrenciaCronograma
+  futura: boolean
+  aoEditar: () => void
+  aoAlternar: () => void
+  aoIniciar: () => void
+}
+
+function LinhaAtividade({ atividade, futura, aoEditar, aoAlternar, aoIniciar }: LinhaAtividadeProps) {
+  const cor = corDaAtividade(atividade.disciplina_id)
+  const Icone = ICONES_TIPO[atividade.tipo]
+  const detalhes = [
+    atividade.foco,
+    atividade.horario_inicio?.slice(0, 5),
+    formatarDuracao(atividade.duracao_minutos),
+  ]
+    .filter(Boolean)
+    .join(" · ")
+
+  const podeIniciar =
+    atividade.disciplina_id !== null && atividade.prova_id !== null && !atividade.concluido
+
+  return (
+    <li className="flex items-center gap-3 py-3">
+      <div
+        aria-hidden
+        className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${cor.fundo} ${cor.texto}`}
+      >
+        <Icone className="size-4" />
+      </div>
+
+      <button
+        type="button"
+        onClick={aoEditar}
+        title="Editar atividade"
+        className="min-w-0 flex-1 cursor-pointer text-left"
+      >
+        <p
+          className={`truncate text-sm font-medium ${
+            atividade.concluido ? "text-muted-foreground line-through" : ""
+          }`}
+        >
+          {atividade.titulo}
+        </p>
+        <p className="truncate text-xs text-muted-foreground">{detalhes}</p>
+      </button>
+
+      {podeIniciar && (
+        <button
+          type="button"
+          onClick={aoIniciar}
+          aria-label={`Iniciar sessão de ${atividade.titulo}`}
+          title="Iniciar sessão de estudos"
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-emerald-500"
+        >
+          <Play className="size-4" />
+        </button>
+      )}
+
+      <button
+        type="button"
+        disabled={futura}
+        onClick={aoAlternar}
+        aria-pressed={atividade.concluido}
+        aria-label={
+          atividade.concluido
+            ? `Desmarcar ${atividade.titulo} como concluída`
+            : `Marcar ${atividade.titulo} como concluída`
+        }
+        title={futura ? "Disponível a partir do dia da atividade" : undefined}
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {atividade.concluido ? (
+          <CheckCircle2 className="size-5 text-emerald-500" />
+        ) : (
+          <span className="size-3.5 rounded-full bg-muted-foreground/40" />
+        )}
+      </button>
+    </li>
+  )
 }
 
 export function CronogramaPage() {
-  const [modalAberto, setModalAberto] = useState(false)
-  const [diaSelecionado, setDiaSelecionado] = useState(0)
+  const navigate = useNavigate()
+  const [inicioSemana, setInicioSemana] = useState(() => inicioDaSemana(new Date()))
+  const [diaSelecionado, setDiaSelecionado] = useState(() => paraISO(new Date()))
+  const [formulario, setFormulario] = useState<EstadoFormulario | null>(null)
 
-  const [provaId, setProvaId] = useState("")
-  const [disciplinaId, setDisciplinaId] = useState("")
-  const [horario, setHorario] = useState("")
-  const [duracao, setDuracao] = useState("60")
+  const hojeISO = paraISO(new Date())
+  const dias = diasDaSemana(inicioSemana)
+  const inicioISO = paraISO(dias[0])
+  const fimISO = paraISO(dias[6])
+  const chaveSemana = ["cronograma-semana", inicioISO] as const
 
-  const queryClient = useQueryClient()
-  const confirmar = useConfirmar()
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: chaveSemana,
+    queryFn: () => obterSemanaCronograma(inicioISO),
+  })
+  const concluir = useConcluirAtividade(chaveSemana)
 
-  const { data: itens } = useQuery({ queryKey: ["cronograma"], queryFn: listarCronograma })
-  const { data: provas } = useQuery({ queryKey: ["provas"], queryFn: listarProvas })
-  const { data: disciplinas } = useQuery({
-    queryKey: ["disciplinas", provaId],
-    queryFn: () => listarDisciplinas(Number(provaId)),
-    enabled: !!provaId,
+  const ocorrencias = data ?? []
+  const porDia = new Map<string, OcorrenciaCronograma[]>()
+  ocorrencias.forEach((o) => {
+    const lista = porDia.get(o.data) ?? []
+    lista.push(o)
+    porDia.set(o.data, lista)
   })
 
-  const criar = useMutation({
-    mutationFn: () =>
-      criarItemCronograma({
-        disciplina_id: Number(disciplinaId),
-        dia_semana: diaSelecionado,
-        duracao_minutos: Number(duracao),
-        horario_inicio: horario || null,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cronograma"] })
-      setModalAberto(false)
-      notificar.sucesso("Adicionado ao cronograma")
-    },
-    onError: (erro) => notificar.erro(erro),
-  })
+  const doDia = porDia.get(diaSelecionado) ?? []
+  const diaAtual = dataDeISO(diaSelecionado)
+  const indiceDiaAtual = (diaAtual.getDay() + 6) % 7
+  const minutosDoDia = doDia.reduce((soma, o) => soma + o.duracao_minutos, 0)
 
-  const excluir = useMutation({
-    mutationFn: excluirItemCronograma,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cronograma"] })
-      notificar.sucesso("Removido do cronograma")
-    },
-    onError: (erro) => notificar.erro(erro),
-  })
+  const total = ocorrencias.length
+  const concluidas = ocorrencias.filter((o) => o.concluido).length
+  const percentual = total > 0 ? Math.round((concluidas / total) * 100) : 0
+  const resumo = resumoSemana(ocorrencias, hojeISO, inicioISO, fimISO)
 
-  function abrirModal(dia: number) {
-    setDiaSelecionado(dia)
-    setProvaId("")
-    setDisciplinaId("")
-    setHorario("")
-    setDuracao("60")
-    setModalAberto(true)
-  }
-
-  async function handleExcluir(id: number) {
-    const confirmado = await confirmar({
-      titulo: "Excluir do cronograma?",
-      descricao: "Esta matéria deixará de aparecer neste dia do seu planejamento semanal.",
-      textoConfirmar: "Excluir",
-      destrutivo: true,
-    })
-
-    if (confirmado) {
-      excluir.mutate(id)
-    }
+  function irParaSemana(novoInicio: Date) {
+    setInicioSemana(novoInicio)
+    const novosDias = diasDaSemana(novoInicio)
+    // Se a semana tem o dia de hoje, seleciona hoje. Senão, mantém o mesmo dia da semana.
+    const hojeNaSemana = novosDias.find((d) => paraISO(d) === hojeISO)
+    setDiaSelecionado(paraISO(hojeNaSemana ?? novosDias[indiceDiaAtual]))
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Cronograma de Estudos</h1>
+    <div className="flex flex-col gap-8">
+      <section
+        className="relative overflow-hidden rounded-3xl p-5 text-white sm:p-8"
+        style={{ background: GRADIENTE_HERO }}
+      >
+        <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -bottom-16 right-28 size-40 rounded-full bg-white/10" />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
-        {DIAS_SEMANA.map((nomeDia, dia) => {
-          const itensDoDia = itens
-            ?.filter((item) => item.dia_semana === dia)
-            .sort((a, b) => (a.horario_inicio ?? "").localeCompare(b.horario_inicio ?? ""))
-
-          return (
-            <div key={dia} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-              <div className="flex items-center justify-between">
-                <p className="font-medium">{nomeDia}</p>
-                <button
-                  type="button"
-                  onClick={() => abrirModal(dia)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Plus className="size-4" />
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {itensDoDia?.length === 0 && (
-                  <p className="text-xs text-muted-foreground">Nada planejado</p>
-                )}
-                {itensDoDia?.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group flex flex-col gap-0.5 rounded-md bg-muted p-2 text-xs"
-                  >
-                    <div className="flex items-start justify-between gap-1">
-                      <span className="font-medium">{item.disciplina_nome}</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleExcluir(item.id)
-                        }}
-                        className="hidden text-muted-foreground hover:text-destructive group-hover:block"
-                      >
-                        <Trash2 className="size-3" />
-                      </button>
-                    </div>
-                    <span className="text-muted-foreground">{item.prova_nome}</span>
-                    <span className="text-muted-foreground">
-                      {item.horario_inicio && `${formatarHorario(item.horario_inicio)} · `}
-                      {item.duracao_minutos} min
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      <Dialog open={modalAberto} onOpenChange={setModalAberto}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Novo item — {DIAS_SEMANA[diaSelecionado]}</DialogTitle>
-          </DialogHeader>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="prova">Prova</Label>
-              <select
-                id="prova"
-                value={provaId}
-                onChange={(e) => {
-                  setProvaId(e.target.value)
-                  setDisciplinaId("")
-                }}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">Selecione uma prova</option>
-                {provas
-                  ?.filter((p) => p.status === "ativa")
-                  .map((prova) => (
-                    <option key={prova.id} value={String(prova.id)}>
-                      {prova.nome}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="disciplina">Matéria</Label>
-              <select
-                id="disciplina"
-                value={disciplinaId}
-                onChange={(e) => setDisciplinaId(e.target.value)}
-                disabled={!provaId}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">Selecione uma matéria</option>
-                {disciplinas?.map((disciplina) => (
-                  <option key={disciplina.id} value={String(disciplina.id)}>
-                    {disciplina.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="horario">Horário (opcional)</Label>
-                <Input
-                  id="horario"
-                  type="time"
-                  value={horario}
-                  onChange={(e) => setHorario(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="duracao">Duração (min)</Label>
-                <Input
-                  id="duracao"
-                  type="number"
-                  min="1"
-                  value={duracao}
-                  onChange={(e) => setDuracao(e.target.value)}
-                />
-              </div>
-            </div>
+        <div className="relative flex flex-wrap items-center justify-between gap-6">
+          <div className="max-w-md">
+            <p className="text-xs font-medium uppercase tracking-widest text-white/70">
+              Seu cronograma
+            </p>
+            {isLoading ? (
+              <>
+                <Skeleton className="mt-2 h-8 w-64 bg-white/20" />
+                <Skeleton className="mt-3 h-4 w-80 max-w-full bg-white/20" />
+              </>
+            ) : (
+              <>
+                <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">{resumo.titulo}</h1>
+                <p className="mt-2 text-sm text-white/85">{resumo.texto}</p>
+              </>
+            )}
           </div>
 
-          <DialogFooter>
+          {total > 0 && (
+            <div className="w-full rounded-2xl bg-black/20 p-5 backdrop-blur-sm sm:w-64">
+              <p className="text-xs font-medium uppercase tracking-widest text-white/70">
+                Progresso da semana
+              </p>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-4xl font-semibold leading-none tabular-nums">
+                  {concluidas}
+                </span>
+                <span className="text-sm text-white/70">de {total}</span>
+              </div>
+              <div
+                role="progressbar"
+                aria-valuenow={percentual}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Progresso da semana"
+                className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"
+              >
+                <div
+                  className="h-full rounded-full bg-white transition-all duration-700"
+                  style={{ width: `${percentual}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Minha semana</h2>
+            <p className="text-xs text-muted-foreground">{rotuloSemana(dias)}</p>
+          </div>
+          <div className="flex items-center gap-1">
             <Button
-              onClick={() => criar.mutate()}
-              disabled={!disciplinaId || Number(duracao) <= 0 || criar.isPending}
+              variant="ghost"
+              size="icon"
+              aria-label="Semana anterior"
+              onClick={() => irParaSemana(somarDias(inicioSemana, -7))}
             >
-              {criar.isPending ? "Salvando..." : "Adicionar"}
+              <ChevronLeft className="size-4" />
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Voltar para hoje"
+              title="Hoje"
+              onClick={() => irParaSemana(inicioDaSemana(new Date()))}
+            >
+              <CalendarDays className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Próxima semana"
+              onClick={() => irParaSemana(somarDias(inicioSemana, 7))}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div role="group" aria-label="Dias da semana" className="mt-4 grid grid-cols-7 gap-1.5 sm:gap-2">
+          {dias.map((dia, indice) => {
+            const iso = paraISO(dia)
+            const atividadesDoDia = porDia.get(iso) ?? []
+            const selecionado = iso === diaSelecionado
+            const hoje = iso === hojeISO
+            const tudoFeito =
+              atividadesDoDia.length > 0 && atividadesDoDia.every((o) => o.concluido)
+            const destaque = selecionado || hoje
+
+            return (
+              <button
+                key={iso}
+                type="button"
+                aria-pressed={selecionado}
+                aria-label={`${nomeDoDia(dia)}, ${dia.getDate()}, ${plural(atividadesDoDia.length, "atividade", "atividades")}`}
+                onClick={() => setDiaSelecionado(iso)}
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border px-1 py-2 transition-colors sm:py-3 ${
+                  selecionado
+                    ? "border-emerald-500 bg-emerald-500/10"
+                    : "border-border hover:bg-accent"
+                }`}
+              >
+                <span
+                  className={`text-[11px] sm:text-xs ${
+                    destaque ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                  }`}
+                >
+                  {DIAS_CURTOS[indice]}
+                </span>
+                <span
+                  className={`text-base font-semibold tabular-nums sm:text-lg ${
+                    destaque ? "text-emerald-600 dark:text-emerald-400" : ""
+                  }`}
+                >
+                  {dia.getDate()}
+                </span>
+                <span aria-hidden className="flex h-1.5 items-center gap-0.5">
+                  {Array.from({ length: Math.min(3, atividadesDoDia.length) }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`size-1 rounded-full ${
+                        tudoFeito || selecionado ? "bg-emerald-500" : "bg-muted-foreground/50"
+                      }`}
+                    />
+                  ))}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mt-6 border-t border-border pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="text-base font-semibold">
+                {nomeDoDia(diaAtual)}
+                {diaSelecionado === hojeISO && (
+                  <span className="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">
+                    hoje
+                  </span>
+                )}
+              </h3>
+              {doDia.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {formatarDuracao(minutosDoDia)} planejados
+                </p>
+              )}
+            </div>
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+              {plural(doDia.length, "atividade", "atividades")}
+            </span>
+          </div>
+
+          {isLoading ? (
+            <Carregando>
+              <ul className="mt-2 divide-y divide-border">
+                {[0, 1, 2].map((i) => (
+                  <li key={i} className="flex items-center gap-3 py-3">
+                    <Skeleton className="size-9 rounded-lg" />
+                    <div className="flex flex-1 flex-col gap-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                    <Skeleton className="size-8 rounded-full" />
+                  </li>
+                ))}
+              </ul>
+            </Carregando>
+          ) : isError ? (
+            <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm">
+              <p className="text-destructive">Não foi possível carregar o cronograma.</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
+                Tentar de novo
+              </Button>
+            </div>
+          ) : doDia.length === 0 ? (
+            <EstadoVazio
+              compacto
+              className="mt-4"
+              icone={CalendarPlus}
+              titulo={`Nada planejado para ${nomeDoDia(diaAtual).toLowerCase()}`}
+              descricao={
+                total === 0
+                  ? "Adicione uma atividade e ela se repete toda semana, nesse dia."
+                  : undefined
+              }
+              acao={{ rotulo: "Adicionar atividade", aoClicar: () => setFormulario({ atividade: null }) }}
+            />
+          ) : (
+            <>
+              <ul className="mt-2 divide-y divide-border">
+                {doDia.map((o) => (
+                  <LinhaAtividade
+                    key={`${o.item_id}-${o.data}`}
+                    atividade={o}
+                    futura={o.data > hojeISO}
+                    aoEditar={() => setFormulario({ atividade: o })}
+                    aoAlternar={() =>
+                      concluir.mutate({ itemId: o.item_id, data: o.data, concluido: !o.concluido })
+                    }
+                    aoIniciar={() =>
+                      navigate(`/sessoes?prova_id=${o.prova_id}&disciplina_id=${o.disciplina_id}`)
+                    }
+                  />
+                ))}
+              </ul>
+              <div className="mt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormulario({ atividade: null })}
+                >
+                  <Plus className="size-4" />
+                  Adicionar atividade
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {formulario && (
+        <FormularioAtividade
+          key={formulario.atividade?.item_id ?? "nova"}
+          atividade={formulario.atividade}
+          diaPadrao={indiceDiaAtual}
+          aoFechar={() => setFormulario(null)}
+        />
+      )}
     </div>
   )
 }
