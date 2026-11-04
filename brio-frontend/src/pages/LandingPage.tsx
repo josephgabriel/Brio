@@ -40,14 +40,14 @@ const RECURSOS = [
     icone: BarChart3,
     titulo: "Estatísticas e progresso",
     texto:
-      "Acompanhe horas estudadas, nível de conhecimento por matéria e seu índice de preparação por prova.",
+      "Acompanhe suas horas de estudo, o progresso de cada matéria e seu índice de preparação por prova.",
   },
   {
     numero: "04",
     icone: Calendar,
     titulo: "Calendário e cronograma",
     texto:
-      "Veja provas, sessões e revisões numa linha do tempo, e monte sua grade semanal de estudos.",
+      "Veja provas, tarefas e revisões num calendário, e monte sua grade semanal de estudos.",
   },
 ]
 
@@ -94,19 +94,19 @@ export function LandingPage() {
   return (
     <div className="dark flex min-h-dvh flex-col bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-3 sm:py-4">
           <span className="text-lg font-semibold">Brio</span>
           <div className="flex gap-2">
             {isAuthenticated ? (
-              <Button asChild>
+              <Button className="min-h-10 sm:min-h-0" asChild>
                 <Link to="/dashboard">Ir para o app</Link>
               </Button>
             ) : (
               <>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" className="min-h-10 sm:min-h-0" asChild>
                   <Link to="/login">Entrar</Link>
                 </Button>
-                <Button asChild>
+                <Button className="min-h-10 sm:min-h-0" asChild>
                   <Link to="/registro">Criar conta</Link>
                 </Button>
               </>
@@ -125,33 +125,38 @@ export function LandingPage() {
               backgroundSize: "24px 24px",
             }}
           />
-          <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-32">
+          <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-32">
             <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
               Feito para ENEM, vestibulares e concursos
             </span>
-            <h1 className="max-w-2xl text-4xl font-semibold tracking-tight sm:text-6xl">
+            <h1 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
               O sistema operacional da sua aprovação
             </h1>
-            <p className="max-w-xl text-lg text-muted-foreground">
+            <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
               Provas, matérias, sessões com Pomodoro, revisão espaçada e estatísticas — tudo
               integrado, sem precisar de planilha nem vários apps separados.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" asChild>
+            <div className="flex w-full max-w-xs flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row">
+              <Button size="lg" className="min-h-12 w-full sm:min-h-0 sm:w-auto" asChild>
                 <Link to={isAuthenticated ? "/dashboard" : "/registro"}>
                   Começar agora
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                className="min-h-12 w-full sm:min-h-0 sm:w-auto"
+                asChild
+              >
                 <a href="#planos">Ver planos</a>
               </Button>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl px-6 py-24">
-          <div className="mb-12 flex flex-col gap-2 text-center">
+        <section className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-24">
+          <div className="mb-8 flex flex-col gap-2 text-center sm:mb-12">
             <h2 className="text-2xl font-semibold sm:text-3xl">Tudo que você precisa, junto</h2>
             <p className="text-muted-foreground">
               Sem trocar de aba, sem planilha improvisada, sem caderno separado.
@@ -166,7 +171,7 @@ export function LandingPage() {
                     {recurso.numero}
                   </span>
                   <div className="mt-2 flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <recurso.icone className="size-5" />
                     </div>
                     <CardTitle className="text-base">{recurso.titulo}</CardTitle>
@@ -181,8 +186,8 @@ export function LandingPage() {
         </section>
 
         <section className="border-y border-border/60 bg-card/50">
-          <div className="mx-auto w-full max-w-5xl px-6 py-24">
-            <div className="mb-12 flex flex-col gap-2 text-center">
+          <div className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-24">
+            <div className="mb-8 flex flex-col gap-2 text-center sm:mb-12">
               <h2 className="text-2xl font-semibold sm:text-3xl">Como funciona</h2>
               <p className="text-muted-foreground">Três passos, sem enrolação.</p>
             </div>
@@ -201,15 +206,15 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="planos" className="mx-auto w-full max-w-5xl px-6 py-24">
-          <div className="mb-12 flex flex-col gap-2 text-center">
+        <section id="planos" className="mx-auto w-full max-w-5xl scroll-mt-20 px-6 py-16 sm:py-24">
+          <div className="mb-8 flex flex-col gap-2 text-center sm:mb-12">
             <h2 className="text-2xl font-semibold sm:text-3xl">Planos simples, sem pegadinha</h2>
             <p className="text-muted-foreground">
               Garantia de reembolso total em até 7 dias após a contratação.
             </p>
           </div>
 
-          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2 mb-10">
+          <div className="mx-auto mb-10 grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
             {/* Card Mensal */}
             <Card className="flex flex-col">
               <CardHeader>
@@ -221,14 +226,16 @@ export function LandingPage() {
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </p>
                 <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" /> Provas e matérias ilimitadas
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" /> Provas e matérias
+                    ilimitadas
                   </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" /> Todas as funcionalidades
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" /> Todas as
+                    funcionalidades
                   </li>
                 </ul>
-                <Button className="mt-auto w-full" asChild>
+                <Button className="mt-auto min-h-11 w-full sm:min-h-0" asChild>
                   <Link to="/registro">Começar</Link>
                 </Button>
               </CardContent>
@@ -237,9 +244,9 @@ export function LandingPage() {
             {/* Card Anual */}
             <Card className="flex flex-col border-primary">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <CardTitle>Anual</CardTitle>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
                     2 meses grátis
                   </span>
                 </div>
@@ -250,17 +257,20 @@ export function LandingPage() {
                   <span className="text-sm font-normal text-muted-foreground">/ano</span>
                 </p>
                 <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" /> Provas e matérias ilimitadas
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" /> Provas e matérias
+                    ilimitadas
                   </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" /> Todas as funcionalidades
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" /> Todas as
+                    funcionalidades
                   </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" /> Economize em relação ao mensal
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" /> Economize em relação
+                    ao mensal
                   </li>
                 </ul>
-                <Button className="mt-auto w-full" asChild>
+                <Button className="mt-auto min-h-11 w-full sm:min-h-0" asChild>
                   <Link to="/registro">Começar</Link>
                 </Button>
               </CardContent>
@@ -270,8 +280,8 @@ export function LandingPage() {
           <SeloConfianca className="w-full" />
         </section>
 
-        <section className="mx-auto w-full max-w-3xl px-6 py-24">
-          <div className="mb-12 flex flex-col gap-2 text-center">
+        <section className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
+          <div className="mb-8 flex flex-col gap-2 text-center sm:mb-12">
             <h2 className="text-2xl font-semibold sm:text-3xl">Perguntas frequentes</h2>
           </div>
 
@@ -289,11 +299,11 @@ export function LandingPage() {
         </section>
 
         <section className="border-t border-border/60">
-          <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-24 text-center">
+          <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-24">
             <h2 className="text-2xl font-semibold sm:text-3xl">
               Pronto para organizar seus estudos?
             </h2>
-            <Button size="lg" asChild>
+            <Button size="lg" className="min-h-12 sm:min-h-0" asChild>
               <Link to={isAuthenticated ? "/dashboard" : "/registro"}>
                 Começar agora
                 <ArrowRight className="size-4" />
@@ -305,11 +315,17 @@ export function LandingPage() {
 
       <footer className="border-t border-border/60 py-8">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-3 px-6 text-center text-sm text-muted-foreground">
-          <nav className="flex gap-4">
-            <Link to="/termos" className="hover:text-foreground hover:underline">
+          <nav className="flex flex-wrap justify-center gap-x-2">
+            <Link
+              to="/termos"
+              className="inline-flex min-h-10 items-center px-2 hover:text-foreground hover:underline"
+            >
               Termos de Uso
             </Link>
-            <Link to="/privacidade" className="hover:text-foreground hover:underline">
+            <Link
+              to="/privacidade"
+              className="inline-flex min-h-10 items-center px-2 hover:text-foreground hover:underline"
+            >
               Política de Privacidade
             </Link>
           </nav>

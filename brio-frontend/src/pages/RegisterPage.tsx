@@ -1,33 +1,80 @@
-import { useState, type FormEvent } from "react"
+import { useState, type FormEvent, type ReactNode } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
-import { useForceDarkMode } from "@/hooks/useForceDarkMode"
+import { Eye, EyeOff, Check, X } from "lucide-react"
+
 import logo3 from "@/assets/logo3.png"
 import logo2 from "@/assets/logo2.png"
-import { VERSAO_TERMOS } from "@/features/legal/constantes"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Check, X } from "lucide-react"
+import { VERSAO_TERMOS } from "@/features/legal/constantes"
+import { useForceDarkMode } from "@/hooks/useForceDarkMode"
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
+const MSG_SEM_CONEXAO = "Sem conexão com o servidor. Verifique sua internet e tente novamente."
+
+async function chamarApi(url: string, opcoes: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, opcoes)
+  } catch {
+    throw new Error(MSG_SEM_CONEXAO)
+  }
+}
+
+function mensagemDaResposta(erro: unknown, padrao: string): string {
+  const detalhe = (erro as { detail?: unknown } | null)?.detail
+  return typeof detalhe === "string" ? detalhe : padrao
+}
+
 async function registrarUsuario(nome: string, email: string, senha: string): Promise<void> {
-  const response = await fetch(`${API_URL}/api/v1/auth/register`, {
+  const response = await chamarApi(`${API_URL}/api/v1/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, email, senha, aceitou_termos: true, termos_versao: VERSAO_TERMOS }),
+    body: JSON.stringify({
+      nome,
+      email,
+      senha,
+      aceitou_termos: true,
+      termos_versao: VERSAO_TERMOS,
+    }),
   })
 
   if (!response.ok) {
-    const erro = await response.json()
-    throw new Error(erro.detail ?? "Não foi possível criar a conta")
+    const erro = await response.json().catch(() => null)
+    throw new Error(
+      mensagemDaResposta(erro, "Não foi possível criar a conta. Confira os dados e tente novamente."),
+    )
   }
+}
+
+interface RequisitoProps {
+  atendido: boolean
+  className?: string
+  children: ReactNode
+}
+
+function Requisito({ atendido, className = "", children }: RequisitoProps) {
+  return (
+    <span
+      className={`flex items-center gap-1.5 ${
+        atendido ? "font-medium text-emerald-500" : "text-muted-foreground"
+      } ${className}`}
+    >
+      {atendido ? (
+        <Check className="size-3.5 shrink-0" />
+      ) : (
+        <X className="size-3.5 shrink-0" />
+      )}
+      {children}
+    </span>
+  )
 }
 
 export function RegisterPage() {
   useForceDarkMode()
+
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [nome, setNome] = useState("")
   const [email, setEmail] = useState("")
@@ -51,7 +98,7 @@ export function RegisterPage() {
   const senhasCoincidem = senha === confirmarSenha && confirmarSenha.length > 0
 
   const mutation = useMutation({
-    mutationFn: () => registrarUsuario(nome, email, senha),
+    mutationFn: () => registrarUsuario(nome.trim(), email, senha),
     onSuccess: () => {
       navigate("/login", {
         state: {
@@ -82,16 +129,14 @@ export function RegisterPage() {
 
   return (
     <div className="flex min-h-dvh bg-background">
-      {/* Lado esquerdo */}
-      <section className="relative hidden w-1/2 overflow-hidden lg:flex items-center justify-center border-r border-border">
+      {/* Lado esquerdo (só aparece em telas grandes) */}
+      <section className="relative hidden w-1/2 items-center justify-center overflow-hidden border-r border-border lg:flex">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
 
         <div className="relative max-w-lg px-12">
           <div className="flex items-center gap-5">
             <img src={logo3} alt="Brio" className="h-25 w-30" />
-            <h1 className="text-7xl font-black tracking-tight text-primary">
-              Brio
-            </h1>
+            <h1 className="text-7xl font-black tracking-tight text-primary">Brio</h1>
           </div>
 
           <p className="mt-6 text-2xl font-medium">
@@ -99,22 +144,22 @@ export function RegisterPage() {
           </p>
 
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-            Organize provas, matérias, sessões de estudo, revisões e anotações
-            em uma única plataforma.
+            Organize provas, matérias, sessões de estudo, revisões e anotações em uma única
+            plataforma.
           </p>
         </div>
       </section>
 
-      {/* Lado direito (Card de Cadastro) */}
-      <section className="flex w-full items-center justify-center px-8 lg:w-1/2 py-10">
+      {/* Lado direito (cartão de cadastro) */}
+      <section className="flex w-full items-center justify-center px-4 py-8 sm:px-8 sm:py-10 lg:w-1/2">
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-md rounded-2xl border border-border bg-card p-10 shadow-xl"
+          className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl sm:p-10"
         >
-          <div className="mb-8 flex flex-col items-center">
+          <div className="mb-6 flex flex-col items-center sm:mb-8">
             <img src={logo2} alt="Brio" className="mb-4 h-14 w-20" />
-            <h2 className="text-3xl font-bold">Criar conta</h2>
-            <p className="mt-2 text-muted-foreground">
+            <h2 className="text-2xl font-bold sm:text-3xl">Criar conta</h2>
+            <p className="mt-2 text-center text-muted-foreground">
               Cadastre-se para começar seus estudos.
             </p>
           </div>
@@ -125,9 +170,11 @@ export function RegisterPage() {
               <Input
                 id="nome"
                 type="text"
+                autoComplete="name"
+                autoCapitalize="words"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                className="mt-2 h-11"
+                className="mt-2 h-11 text-base md:text-sm"
                 placeholder="Seu nome"
                 required
               />
@@ -138,9 +185,12 @@ export function RegisterPage() {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 h-11"
+                className="mt-2 h-11 text-base md:text-sm"
                 placeholder="Seu email"
                 required
               />
@@ -152,46 +202,34 @@ export function RegisterPage() {
                 <Input
                   id="senha"
                   type={mostrarSenha ? "text" : "password"}
+                  autoComplete="new-password"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
-                  className="h-11 pr-10"
+                  className="h-11 pr-12 text-base md:text-sm"
                   required
                 />
 
                 <button
                   type="button"
                   onClick={() => setMostrarSenha((v) => !v)}
-                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                  className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
                   aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
 
-              {/* Checklist de Validação da Senha */}
+              {/* Checklist de validação da senha: uma coluna no celular, duas de sm para cima */}
               <div className="mt-3 space-y-1.5 text-xs">
                 <p className="font-medium text-muted-foreground">A senha deve conter:</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <span className={`flex items-center gap-1.5 ${temMinimo ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                    {temMinimo ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
-                    Pelo menos 8 caracteres
-                  </span>
-                  <span className={`flex items-center gap-1.5 ${temMaiuscula ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                    {temMaiuscula ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
-                    Letra maiúscula
-                  </span>
-                  <span className={`flex items-center gap-1.5 ${temMinuscula ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                    {temMinuscula ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
-                    Letra minúscula
-                  </span>
-                  <span className={`flex items-center gap-1.5 ${temNumero ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                    {temNumero ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
-                    Número
-                  </span>
-                  <span className={`flex items-center gap-1.5 col-span-2 ${temEspecial ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                    {temEspecial ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  <Requisito atendido={temMinimo}>Pelo menos 8 caracteres</Requisito>
+                  <Requisito atendido={temMaiuscula}>Letra maiúscula</Requisito>
+                  <Requisito atendido={temMinuscula}>Letra minúscula</Requisito>
+                  <Requisito atendido={temNumero}>Número</Requisito>
+                  <Requisito atendido={temEspecial} className="sm:col-span-2">
                     Caractere especial (!@#$%^&*)
-                  </span>
+                  </Requisito>
                 </div>
               </div>
             </div>
@@ -202,63 +240,68 @@ export function RegisterPage() {
                 <Input
                   id="confirmarSenha"
                   type={mostrarConfirmarSenha ? "text" : "password"}
+                  autoComplete="new-password"
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}
-                  className="h-11 pr-10"
+                  className="h-11 pr-12 text-base md:text-sm"
                   required
                 />
 
                 <button
                   type="button"
                   onClick={() => setMostrarConfirmarSenha((v) => !v)}
-                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                  aria-label={mostrarConfirmarSenha ? "Ocultar confirmação" : "Mostrar confirmação"}
+                  className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
+                  aria-label={
+                    mostrarConfirmarSenha ? "Ocultar confirmação" : "Mostrar confirmação"
+                  }
                 >
-                  {mostrarConfirmarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {mostrarConfirmarSenha ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
               {confirmarSenha.length > 0 && !senhasCoincidem && (
-                <p className="mt-1.5 text-xs text-destructive">
-                  As senhas não coincidem.
-                </p>
+                <p className="mt-1.5 text-xs text-destructive">As senhas não coincidem.</p>
               )}
             </div>
 
             {/* Termos de Uso e Política */}
-          <div className="flex items-start space-x-3 pt-2">
-            <input
-              id="aceite-termos"
-              type="checkbox"
-              checked={aceitouTermos}
-              onChange={(e) => setAceitouTermos(e.target.checked)}
-              required
-              className="mt-1 size-4 rounded border-border text-primary focus:ring-primary/25 accent-primary cursor-pointer shrink-0"
-            />
-            <label
-              htmlFor="aceite-termos"
-              className="text-sm font-normal text-muted-foreground cursor-pointer select-none"
-            >
-              Li e aceito os{" "}
-              <Link
-                to="/termos"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-foreground font-medium"
+            <div className="flex items-start gap-3 pt-2">
+              <input
+                id="aceite-termos"
+                type="checkbox"
+                checked={aceitouTermos}
+                onChange={(e) => setAceitouTermos(e.target.checked)}
+                required
+                className="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary sm:mt-1 sm:size-4"
+              />
+              <label
+                htmlFor="aceite-termos"
+                className="cursor-pointer select-none text-sm font-normal leading-snug text-muted-foreground"
               >
-                Termos de Uso
-              </Link>{" "}
-              e a{" "}
-              <Link
-                to="/privacidade"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-foreground font-medium"
-              >
-                Política de Privacidade
-              </Link>
-              .
-            </label>
-          </div>
+                Li e aceito os{" "}
+                <Link
+                  to="/termos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline hover:text-foreground"
+                >
+                  Termos de Uso
+                </Link>{" "}
+                e a{" "}
+                <Link
+                  to="/privacidade"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline hover:text-foreground"
+                >
+                  Política de Privacidade
+                </Link>
+                .
+              </label>
+            </div>
           </div>
 
           {(erroFormulario || mutation.isError) && (
@@ -269,7 +312,7 @@ export function RegisterPage() {
 
           <Button
             type="submit"
-            className="mt-6 h-11 w-full"
+            className="mt-6 h-12 w-full sm:h-11"
             disabled={!aceitouTermos || mutation.isPending || !senhaEhValida || !senhasCoincidem}
           >
             {mutation.isPending ? "Criando conta..." : "Criar conta"}
@@ -277,10 +320,7 @@ export function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Já possui uma conta?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-primary hover:underline"
-            >
+            <Link to="/login" className="font-medium text-primary hover:underline">
               Entrar
             </Link>
           </p>
