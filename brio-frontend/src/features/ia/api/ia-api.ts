@@ -6,28 +6,33 @@ import type {
   ResultadoResposta,
 } from "@/features/ia/types"
 
+async function falhar(response: Response, padrao: string): Promise<never> {
+  const erro = await response.json().catch(() => null)
+  // Erros de validação do FastAPI trazem "detail" como lista: nesse caso usa a mensagem padrão
+  throw new Error(typeof erro?.detail === "string" ? erro.detail : padrao)
+}
+
 export async function obterCotaIA(): Promise<CotaIA> {
   const response = await apiFetch("/api/v1/ia/cota")
-  if (!response.ok) throw new Error("Não foi possível carregar a cota")
+  if (!response.ok) await falhar(response, "Não foi possível carregar a cota")
   return response.json()
 }
 
 export async function gerarQuestoes(
   arquivo: File,
+  quantidade: number,
   topicoId?: number,
 ): Promise<MaterialComQuestoes> {
   const formData = new FormData()
   formData.append("arquivo", arquivo)
+  formData.append("quantidade", String(quantidade))
   if (topicoId) formData.append("topico_id", String(topicoId))
 
   const response = await apiFetch("/api/v1/ia/questoes/gerar", {
     method: "POST",
     body: formData,
   })
-  if (!response.ok) {
-    const erro = await response.json().catch(() => null)
-    throw new Error(erro?.detail ?? "Não foi possível gerar as questões")
-  }
+  if (!response.ok) await falhar(response, "Não foi possível gerar as questões")
   return response.json()
 }
 
@@ -39,7 +44,7 @@ export async function responderQuestao(
     method: "POST",
     body: JSON.stringify({ alternativa }),
   })
-  if (!response.ok) throw new Error("Não foi possível registrar a resposta")
+  if (!response.ok) await falhar(response, "Não foi possível registrar a resposta")
   return response.json()
 }
 
@@ -48,6 +53,6 @@ export async function gerarAvaliacao(materialId: number): Promise<AvaliacaoDesem
     method: "POST",
     body: JSON.stringify({ material_id: materialId }),
   })
-  if (!response.ok) throw new Error("Não foi possível gerar a avaliação")
+  if (!response.ok) await falhar(response, "Não foi possível gerar o diagnóstico")
   return response.json()
 }

@@ -5,7 +5,13 @@ from app.application.use_cases.gerar_avaliacao_desempenho import GerarAvaliacaoD
 from app.application.use_cases.gerar_questoes_ia import GerarQuestoesIA
 from app.application.use_cases.obter_cota_ia import ObterCotaIA
 from app.application.use_cases.responder_questao import ResponderQuestao
-from app.domain.exceptions import ArquivoInvalidoError, CotaIAExcedidaError, QuestaoNaoEncontradaError
+from app.domain.exceptions import (
+    ArquivoInvalidoError,
+    CotaIAExcedidaError,
+    FalhaIAError,
+    QuestaoNaoEncontradaError,
+)
+from app.domain.regras.cota_ia import QUANTIDADE_PADRAO, QUANTIDADES_PERMITIDAS
 from app.infrastructure.db.models.usuario import UsuarioModel
 from app.infrastructure.db.repositories.ia_repository import (
     SQLAlchemyAvaliacaoDesempenhoRepository,
@@ -26,7 +32,7 @@ from app.interface.api.v1.schemas.ia import (
 
 router = APIRouter(prefix="/api/v1/ia", tags=["ia"])
 
-TAMANHO_MAXIMO_PDF = 8 * 1024 * 1024  # 8MB
+TAMANHO_MAXIMO_PDF = 8 * 1024 * 1024  # 8 MB
 
 
 @router.get("/cota", response_model=CotaIASchema)
@@ -36,28 +42,43 @@ def cota(
 ):
     repository = SQLAlchemyMaterialEstudoRepository(db)
     resultado = ObterCotaIA(repository).executar(usuario_id=usuario.id)
-    return CotaIASchema(usadas=resultado.usadas, limite=resultado.limite)
+    return CotaIASchema(
+        usadas=resultado.usadas,
+        limite=resultado.limite,
+        quantidades_permitidas=list(QUANTIDADES_PERMITIDAS),
+    )
 
 
+# "def" e não "async def": esta rota chama o Gemini e o banco, que bloqueiam.
+# Funções "def" rodam numa fila de threads; "async def" travaria o servidor inteiro.
 @router.post("/questoes/gerar", response_model=MaterialComQuestoesResponseSchema)
-async def gerar(
+def gerar(
     arquivo: UploadFile,
     topico_id: int | None = Form(default=None),
+    quantidade: int = Form(default=QUANTIDADE_PADRAO),
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
     if arquivo.content_type != "application/pdf":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Envie um arquivo PDF")
 
-    conteudo = await arquivo.read()
+    if quantidade not in QUANTIDADES_PERMITIDAS:
+        opcoes = ", ".join(str(q) for q in QUANTIDADES_PERMITIDAS)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Escolha uma quantidade entre: {opcoes}",
+        )
+
+    # Lê no máximo 1 byte além do limite: não carrega um arquivo gigante na memória
+    conteudo = arquivo.file.read(TAMANHO_MAXIMO_PDF + 1)
     if len(conteudo) > TAMANHO_MAXIMO_PDF:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="PDF muito grande (máximo 8MB)"
         )
 
-    material_repository = SQLAlchemyMaterialEstudoRepository(db)
-    questao_repository = SQLAlchemyQuestaoRepository(db)
-    use_case = GerarQuestoesIA(material_repository, questao_repository)
+    use_case = GerarQuestoesIA(
+        SQLAlchemyMaterialEstudoRepository(db), SQLAlchemyQuestaoRepository(db)
+    )
 
     try:
         material, questoes = use_case.executar(
@@ -65,11 +86,14 @@ async def gerar(
             nome_arquivo=arquivo.filename or "material.pdf",
             conteudo_pdf=conteudo,
             topico_id=topico_id,
+            quantidade=quantidade,
         )
     except CotaIAExcedidaError as erro:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(erro))
     except ArquivoInvalidoError as erro:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(erro))
+    except FalhaIAError as erro:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(erro))
 
     return MaterialComQuestoesResponseSchema(material_id=material.id, questoes=questoes)
 
@@ -81,10 +105,11 @@ def responder(
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
-    questao_repository = SQLAlchemyQuestaoRepository(db)
-    material_repository = SQLAlchemyMaterialEstudoRepository(db)
-    historico_repository = SQLAlchemyHistoricoRespostaRepository(db)
-    use_case = ResponderQuestao(questao_repository, material_repository, historico_repository)
+    use_case = ResponderQuestao(
+        SQLAlchemyQuestaoRepository(db),
+        SQLAlchemyMaterialEstudoRepository(db),
+        SQLAlchemyHistoricoRespostaRepository(db),
+    )
 
     try:
         resultado = use_case.executar(questao_id, usuario.id, dados.alternativa)
@@ -104,10 +129,13 @@ def avaliacao(
     usuario: UsuarioModel = Depends(get_usuario_assinante),
     db: Session = Depends(get_db),
 ):
-    questao_repository = SQLAlchemyQuestaoRepository(db)
-    historico_repository = SQLAlchemyHistoricoRespostaRepository(db)
-    avaliacao_repository = SQLAlchemyAvaliacaoDesempenhoRepository(db)
-    use_case = GerarAvaliacaoDesempenho(questao_repository, historico_repository, avaliacao_repository)
+    use_case = GerarAvaliacaoDesempenho(
+        SQLAlchemyQuestaoRepository(db),
+        SQLAlchemyHistoricoRespostaRepository(db),
+        SQLAlchemyAvaliacaoDesempenhoRepository(db),
+    )
 
-    resultado = use_case.executar(usuario_id=usuario.id, material_id=dados.material_id)
-    return resultado
+    try:
+        return use_case.executar(usuario_id=usuario.id, material_id=dados.material_id)
+    except FalhaIAError as erro:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(erro))

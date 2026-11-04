@@ -118,3 +118,6 @@ class MaterialNaoEncontradoError(Exception):
 
 class ConclusaoCronogramaInvalidaError(Exception):
     pass
+
+class FalhaIAError(Exception):
+    pass

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class CotaIASchema(BaseModel):
     usadas: int
     limite: int
+    quantidades_permitidas: list[int]
 
 
 class AlternativasResponseSchema(BaseModel):

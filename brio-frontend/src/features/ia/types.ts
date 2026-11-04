@@ -1,6 +1,7 @@
 export interface CotaIA {
   usadas: number
   limite: number
+  quantidades_permitidas: number[]
 }
 
 export interface Alternativas {

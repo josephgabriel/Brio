@@ -1,12 +1,13 @@
-from app.domain.regras.tempo import hoje_local
+from datetime import date
+
 from app.application.interfaces.ia_repository import MaterialEstudoRepository, QuestaoRepository
 from app.domain.exceptions import ArquivoInvalidoError, CotaIAExcedidaError
-from app.domain.regras.cota_ia import cota_disponivel
+from app.domain.regras.cota_ia import QUANTIDADE_PADRAO, cota_disponivel
 from app.infrastructure.config import settings
-from app.infrastructure.BrioIA.gemini_client import gerar_questoes
-from app.infrastructure.BrioIA.pdf_extrator import extrair_texto_pdf
 from app.infrastructure.db.models.material_estudo import MaterialEstudoModel
 from app.infrastructure.db.models.questao import QuestaoModel
+from app.infrastructure.BrioIA.gemini_client import gerar_questoes
+from app.infrastructure.BrioIA.pdf_extrator import extrair_texto_pdf
 
 
 class GerarQuestoesIA:
@@ -24,10 +25,9 @@ class GerarQuestoesIA:
         nome_arquivo: str,
         conteudo_pdf: bytes,
         topico_id: int | None = None,
-        quantidade: int = 5,
+        quantidade: int = QUANTIDADE_PADRAO,
     ) -> tuple[MaterialEstudoModel, list[QuestaoModel]]:
-        hoje = hoje_local()
-        inicio_do_mes = hoje.replace(day=1)
+        inicio_do_mes = date.today().replace(day=1)
         usadas = self.material_repository.contar_no_mes(usuario_id, inicio_do_mes)
 
         if not cota_disponivel(usadas, settings.gemini_cota_mensal):
@@ -39,26 +39,28 @@ class GerarQuestoesIA:
         texto = extrair_texto_pdf(conteudo_pdf)
         if not texto.strip():
             raise ArquivoInvalidoError(
-                "Não foi possível extrair texto deste PDF (pode ser um PDF escaneado/imagem)"
+                "Não foi possível extrair texto deste PDF (pode ser um PDF escaneado, em imagem)"
             )
+
+        # A IA vem ANTES de qualquer gravação: se falhar (FalhaIAError), nada foi
+        # criado e a cota continua intacta.
+        questoes_geradas = gerar_questoes(texto, quantidade)
 
         material = self.material_repository.criar(
             MaterialEstudoModel(
                 usuario_id=usuario_id, topico_id=topico_id, nome_arquivo=nome_arquivo
             )
         )
-
-        questoes_geradas = gerar_questoes(texto, quantidade)
-        questoes_modelo = [
-            QuestaoModel(
-                material_id=material.id,
-                enunciado=q.enunciado,
-                alternativas=q.alternativas.model_dump(),
-                resposta_correta=q.resposta_correta,
-                explicacao=q.explicacao,
-            )
-            for q in questoes_geradas
-        ]
-        questoes_salvas = self.questao_repository.criar_varias(questoes_modelo)
-
+        questoes_salvas = self.questao_repository.criar_varias(
+            [
+                QuestaoModel(
+                    material_id=material.id,
+                    enunciado=q.enunciado,
+                    alternativas=q.alternativas.model_dump(),
+                    resposta_correta=q.resposta_correta,
+                    explicacao=q.explicacao,
+                )
+                for q in questoes_geradas
+            ]
+        )
         return material, questoes_salvas
