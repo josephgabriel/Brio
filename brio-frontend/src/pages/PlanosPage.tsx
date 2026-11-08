@@ -12,6 +12,13 @@ import { useAuth } from "@/features/auth/auth-context"
 import { useForceDarkMode } from "@/hooks/useForceDarkMode"
 import { notificar } from "@/lib/toast"
 
+import {
+  EQUIVALENTE_MENSAL_ANUAL,
+  PERCENTUAL_ECONOMIA,
+  PRECOS,
+  formatarReais,
+} from "@/features/assinatura/precos"
+
 interface PlanoInfo {
   valor: Plano
   nome: string
@@ -25,15 +32,15 @@ const PLANOS: PlanoInfo[] = [
   {
     valor: "mensal",
     nome: "Mensal",
-    preco: "R$ 9,90",
+    preco: formatarReais(PRECOS.mensal),
     periodo: "/mês",
   },
   {
     valor: "anual",
     nome: "Anual",
-    preco: "R$ 99,00",
+    preco: formatarReais(PRECOS.anual),
     periodo: "/ano",
-    observacao: "Economize 2 meses em relação ao mensal",
+    observacao: `Equivale a ${formatarReais(EQUIVALENTE_MENSAL_ANUAL)}/mês · economize ${PERCENTUAL_ECONOMIA}%`,
     destaque: true,
   },
 ]

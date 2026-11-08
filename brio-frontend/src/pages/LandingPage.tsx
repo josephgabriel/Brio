@@ -22,6 +22,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/features/auth/auth-context"
 
+import {
+  EQUIVALENTE_MENSAL_ANUAL,
+  PERCENTUAL_ECONOMIA,
+  PRECOS,
+  formatarReais,
+} from "@/features/assinatura/precos"
+
 const RECURSOS = [
   {
     numero: "01",
@@ -238,7 +245,7 @@ export function LandingPage() {
               </CardHeader>
               <CardContent className="flex flex-1 flex-col gap-4">
                 <p className="text-3xl font-semibold">
-                  R$ 9,90{" "}
+                  {formatarReais(PRECOS.mensal)}{" "}
                   <span className="text-sm font-normal text-muted-foreground">/mês</span>
                 </p>
                 <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
@@ -263,13 +270,13 @@ export function LandingPage() {
                 <div className="flex items-center justify-between gap-2">
                   <CardTitle>Anual</CardTitle>
                   <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                    2 meses grátis
+                    {PERCENTUAL_ECONOMIA}% de desconto
                   </span>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-1 flex-col gap-4">
                 <p className="text-3xl font-semibold">
-                  R$ 99,00{" "}
+                  {formatarReais(PRECOS.anual)}{" "}
                   <span className="text-sm font-normal text-muted-foreground">/ano</span>
                 </p>
                 <ul className="flex flex-col gap-1.5 text-left text-sm text-muted-foreground">
@@ -282,8 +289,8 @@ export function LandingPage() {
                     funcionalidades
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" /> Economize em relação
-                    ao mensal
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" /> 
+                    Equivale a {formatarReais(EQUIVALENTE_MENSAL_ANUAL)}/mês
                   </li>
                 </ul>
                 <Button className="mt-auto min-h-11 w-full sm:min-h-0" asChild>

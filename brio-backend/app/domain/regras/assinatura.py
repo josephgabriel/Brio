@@ -8,8 +8,8 @@ DURACAO_DIAS: dict[Plano, int] = {
 }
 
 PRECOS: dict[Plano, float] = {
-    Plano.MENSAL: 9.90,
-    Plano.ANUAL: 99.00,
+    Plano.MENSAL: 12.50,
+    Plano.ANUAL: 120.00,
 }
 
 
