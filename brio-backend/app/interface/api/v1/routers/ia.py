@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.application.use_cases.listar_materiais_ia import ListarMateriaisIA
+from app.application.use_cases.listar_questoes_do_material import ListarQuestoesDoMaterial
+
 from app.application.use_cases.gerar_avaliacao_desempenho import GerarAvaliacaoDesempenho
 from app.application.use_cases.gerar_questoes_ia import GerarQuestoesIA
 from app.application.use_cases.obter_cota_ia import ObterCotaIA
@@ -10,6 +13,7 @@ from app.domain.exceptions import (
     CotaIAExcedidaError,
     FalhaIAError,
     QuestaoNaoEncontradaError,
+    MaterialNaoEncontradoError,
 )
 from app.domain.regras.cota_ia import QUANTIDADE_PADRAO, QUANTIDADES_PERMITIDAS
 from app.infrastructure.db.models.usuario import UsuarioModel
@@ -28,6 +32,7 @@ from app.interface.api.v1.schemas.ia import (
     MaterialComQuestoesResponseSchema,
     ResponderQuestaoSchema,
     ResultadoRespostaSchema,
+    MaterialDetalheSchema, MaterialResumoSchema,
 )
 
 router = APIRouter(prefix="/api/v1/ia", tags=["ia"])
@@ -83,7 +88,7 @@ def gerar(
     try:
         material, questoes = use_case.executar(
             usuario_id=usuario.id,
-            nome_arquivo=arquivo.filename or "material.pdf",
+            nome_arquivo=(arquivo.filename or "material.pdf")[:200],
             conteudo_pdf=conteudo,
             topico_id=topico_id,
             quantidade=quantidade,
@@ -139,3 +144,32 @@ def avaliacao(
         return use_case.executar(usuario_id=usuario.id, material_id=dados.material_id)
     except FalhaIAError as erro:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(erro))
+    
+@router.get("/materiais", response_model=list[MaterialResumoSchema])
+def listar_materiais(
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
+    db: Session = Depends(get_db),
+):
+    use_case = ListarMateriaisIA(
+        SQLAlchemyMaterialEstudoRepository(db),
+        SQLAlchemyQuestaoRepository(db),
+        SQLAlchemyHistoricoRespostaRepository(db),
+    )
+    return use_case.executar(usuario_id=usuario.id)
+
+
+@router.get("/materiais/{material_id}/questoes", response_model=MaterialDetalheSchema)
+def questoes_do_material(
+    material_id: int,
+    usuario: UsuarioModel = Depends(get_usuario_assinante),
+    db: Session = Depends(get_db),
+):
+    use_case = ListarQuestoesDoMaterial(
+        SQLAlchemyMaterialEstudoRepository(db),
+        SQLAlchemyQuestaoRepository(db),
+        SQLAlchemyHistoricoRespostaRepository(db),
+    )
+    try:
+        return use_case.executar(material_id=material_id, usuario_id=usuario.id)
+    except MaterialNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))

@@ -8,6 +8,8 @@ import {
   Calendar,
   Check,
   Timer,
+  FileText,
+  Sparkles,
 } from "lucide-react"
 
 import {
@@ -48,6 +50,20 @@ const RECURSOS = [
     titulo: "Calendário e cronograma",
     texto:
       "Veja provas, tarefas e revisões num calendário, e monte sua grade semanal de estudos.",
+  },
+    {
+    numero: "05",
+    icone: Sparkles,
+    titulo: "Questões com IA",
+    texto:
+      "Gere questões de múltipla escolha a partir do seu próprio PDF, com explicação de cada resposta e histórico para revisar.",
+  },
+  {
+    numero: "06",
+    icone: FileText,
+    titulo: "Resumos com IA",
+    texto:
+      "Envie um PDF e receba um resumo organizado em tópicos, conceitos-chave e pontos para memorizar.",
   },
 ]
 

@@ -31,6 +31,7 @@ const TITULOS: { path: string; titulo: string | null }[] = [
   { path: "/estatisticas", titulo: "Estatísticas" },
   { path: "/topicos/:id/anotacao", titulo: "Anotações" },
   { path: "/questoes", titulo: "Questões com IA" },
+  { path: "/resumos", titulo: "Resumos com IA" },
 ]
 
 export function tituloDaAba(pathname: string): string {

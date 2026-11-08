@@ -24,7 +24,7 @@ export const SECOES_PRIVACIDADE: Secao[] = [
       [
         "Dados da conta: nome, email e senha (protegida por hash, nunca guardada em texto puro)e a data e a versão dos Termos que você aceitou no cadastro.",
         "Dados que você cria ao estudar: provas, matérias, conteúdos, sessões de estudo (com data e duração), revisões, eventos do calendário, itens do cronograma e anotações (texto e imagens).",
-        "Dados do recurso de IA: o nome do PDF enviado, as questões geradas, as suas respostas e os diagnósticos de desempenho.",
+        "Dados do recurso de IA: o nome dos PDFs enviados, as questões e os resumos gerados, as suas respostas e os diagnósticos de desempenho.",
         "Dados da assinatura: plano, status, datas, valores e identificadores dos pagamentos. Os dados do seu cartão são digitados no ambiente do Mercado Pago e não chegam ao Brio.",
         "Dados de uso: registros de eventos como cadastro, login, início e fim de sessão e criação de provas, para entendermos e melhorarmos o produto.",
         "Dados técnicos: registros de acesso dos servidores, como endereço IP e data e hora, mantidos pela hospedagem para segurança e diagnóstico de falhas.",
@@ -65,9 +65,10 @@ export const SECOES_PRIVACIDADE: Secao[] = [
   },
   {
     titulo: "Inteligência artificial e seus PDFs",
-    blocos: [
-      "Quando você usa Questões IA, o Brio extrai o texto do seu PDF (apenas o trecho inicial, até um limite de tamanho) e o envia à API do Google Gemini para criar as questões. Para o diagnóstico de desempenho, enviamos um resumo dos seus acertos e erros, com trechos dos enunciados das questões que você errou.",
-      "O arquivo PDF em si não fica armazenado no Brio: guardamos o nome do arquivo, as questões geradas e o seu histórico de respostas.",
+      blocos: [
+      "O Brio tem dois recursos de IA que usam o texto dos PDFs que você envia: as Questões IA e os Resumos IA. Nos dois, o Brio extrai o texto do arquivo e o envia à API do Google Gemini para criar o resultado. O arquivo PDF em si não é enviado ao Google nem fica armazenado no Brio.",
+      "Quanto do PDF é lido: nas Questões IA, apenas o trecho inicial, de cerca de 8.000 caracteres (poucas páginas). Nos Resumos IA, um trecho maior, de até 60.000 caracteres (algo como 20 a 30 páginas de texto). O restante do documento não é lido.",
+      "O que o Brio guarda: o nome do arquivo, as questões e os resumos gerados e o seu histórico de respostas. O texto extraído do PDF não é guardado. Para o diagnóstico de desempenho, enviamos um resumo dos seus acertos e erros, com trechos dos enunciados das questões que você errou.",
       "O tratamento pelo Google segue os termos da API do Gemini. Por isso, não envie documentos sigilosos nem com dados pessoais de terceiros.",
       "As imagens que você insere nas anotações ficam hospedadas no Cloudinary e podem ser abertas por quem tiver o endereço delas.",
     ],
@@ -90,6 +91,7 @@ export const SECOES_PRIVACIDADE: Secao[] = [
     blocos: [
       "Mantemos seus dados enquanto a sua conta existir. Se você pedir a exclusão, apagamos ou anonimizamos os dados, exceto o que a lei exigir que guardemos, como registros de pagamento.",
       "Cópias de segurança do banco de dados podem conservar dados já apagados por um período limitado, até serem descartadas.",
+      "Resumos arquivados deixam de aparecer para você, mas continuam armazenados até a exclusão da conta ou de um pedido seu. O mesmo vale para os materiais das Questões IA, que hoje não podem ser excluídos pela tela.",
     ],
   },
   {

@@ -29,6 +29,7 @@ import { NaoEncontradaPage } from "@/pages/NaoEncontradaPage"
 import { PrivacidadePage } from "@/pages/PrivacidadePage"
 import { TermosPage } from "@/pages/TermosPage"
 import { RaizApp } from "@/routes/RaizApp"
+import { ResumosPage } from "@/pages/ResumosPage"
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +68,7 @@ export const router = createBrowserRouter([
                   { path: "/calendario", element: <CalendarioPage /> },
                   { path: "/cronograma", element: <CronogramaPage /> },
                   { path: "/questoes", element: <QuestoesPage /> },
+                  { path: "/resumos", element: <ResumosPage /> },
                   { path: "/conta", element: <MinhaAssinaturaPage /> },
                   { path: "*", element: <NaoEncontradaPage /> },
                 ],

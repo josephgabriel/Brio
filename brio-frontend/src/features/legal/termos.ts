@@ -8,6 +8,7 @@ import {
   PRECO_MENSAL,
   RESPONSAVEL,
   SITE,
+  LIMITE_MENSAL_RESUMOS,
 } from "@/features/legal/constantes"
 import type { Secao } from "@/features/legal/tipos"
 
@@ -33,7 +34,7 @@ export const SECOES_TERMOS: Secao[] = [
         "anotações com texto formatado e imagens, e exportação em PDF;",
         "calendário e cronograma semanal;",
         "estatísticas e Índice de Preparação;",
-        "geração de questões com inteligência artificial a partir de PDFs.",
+        "geração de questões e de resumos com inteligência artificial a partir de PDFs.",
       ],
       "O Brio é uma ferramenta de organização e apoio. Não garantimos aprovação em nenhuma prova nem resultados de aprendizagem. O Índice de Preparação mede a consistência do seu ritmo em relação à meta que você mesmo definiu e não é uma previsão de aprovação.",
     ],
@@ -82,16 +83,16 @@ export const SECOES_TERMOS: Secao[] = [
   {
     titulo: "Seu conteúdo",
     blocos: [
-      "As anotações, provas, matérias e demais conteúdos que você cria continuam sendo seus. Você nos autoriza apenas a armazená-los e processá-los para prestar o serviço a você, inclusive para gerar o PDF exportado e as questões que você pedir.",
+      "As anotações, provas, matérias e demais conteúdos que você cria continuam sendo seus. Você nos autoriza apenas a armazená-los e processá-los para prestar o serviço a você, inclusive para gerar o PDF exportado, as questões e os resumos que você pedir",
       "Você declara ter o direito de usar os materiais que insere ou envia, como PDFs e imagens. Não envie material protegido por direitos autorais de terceiros sem permissão, nem documentos sigilosos ou com dados pessoais de outras pessoas.",
     ],
   },
-  {
-    titulo: "Questões geradas por inteligência artificial",
+    {
+    titulo: "Recursos de inteligência artificial",
     blocos: [
-      "O recurso Questões IA cria perguntas de múltipla escolha a partir do texto dos PDFs que você envia, usando um modelo de inteligência artificial de terceiros.",
-      "As questões, os gabaritos e as explicações podem conter erros ou imprecisões. Confira sempre com o seu material oficial e não use o recurso como única fonte de estudo.",
-      `Há um limite mensal de gerações por conta (atualmente ${LIMITE_MENSAL_IA}), que pode mudar. Os detalhes de como o texto do seu PDF é tratado estão na Política de Privacidade.`,
+      "As Questões IA criam perguntas de múltipla escolha, e os Resumos IA criam resumos, ambos a partir do texto dos PDFs que você envia, usando um modelo de inteligência artificial de terceiros.",
+      "O conteúdo gerado pode conter erros, omissões ou imprecisões. Confira sempre com o seu material oficial e não use esses recursos como única fonte de estudo. Um resumo cobre apenas o trecho do documento que foi lido, e a tela informa quantas páginas foram incluídas.",
+      `Há limites mensais por conta, atualmente ${LIMITE_MENSAL_IA} gerações de questões e ${LIMITE_MENSAL_RESUMOS} resumos, que podem mudar. Resumos arquivados continuam contando no limite do mês. Os detalhes de como o texto do seu PDF é tratado estão na Política de Privacidade.`,
     ],
   },
   {

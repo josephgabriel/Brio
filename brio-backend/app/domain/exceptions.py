@@ -121,3 +121,6 @@ class ConclusaoCronogramaInvalidaError(Exception):
 
 class FalhaIAError(Exception):
     pass
+
+class ResumoNaoEncontradoError(Exception):
+    pass

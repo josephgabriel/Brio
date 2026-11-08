@@ -17,6 +17,9 @@ class MaterialEstudoRepository(ABC):
     @abstractmethod
     def contar_no_mes(self, usuario_id: int, inicio_do_mes: date) -> int: ...
 
+    @abstractmethod
+    def listar_por_usuario(self, usuario_id: int) -> list[MaterialEstudoModel]: ...
+
 
 class QuestaoRepository(ABC):
     @abstractmethod
@@ -27,6 +30,9 @@ class QuestaoRepository(ABC):
 
     @abstractmethod
     def listar_por_material(self, material_id: int) -> list[QuestaoModel]: ...
+
+    @abstractmethod
+    def listar_por_materiais(self, material_ids: list[int]) -> list[QuestaoModel]: ...
 
 
 class HistoricoRespostaRepository(ABC):

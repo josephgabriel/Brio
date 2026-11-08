@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+
 from app.application.use_cases.obter_comparacao_provas import ResumoComparacaoProva
 
 
@@ -8,7 +8,8 @@ class ResumoComparacaoProvaSchema(BaseModel):
     nome: str
     total_horas_estudadas: float
     total_sessoes: int
-    taxa_conclusao_revisoes: Optional[float] = 0.0
+    taxa_revisoes_em_dia: float | None
+    cobertura_conteudo: float | None
     indice_preparacao: int
     classificacao_indice: str
 

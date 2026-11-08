@@ -1,10 +1,15 @@
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import { GerarEPraticar } from "@/components/ia/GerarEPraticar"
+import { HistoricoMateriais } from "@/components/ia/HistoricoMateriais"
 import { GRADIENTE_HERO } from "@/features/estatisticas/visual"
 import { obterCotaIA } from "@/features/ia/api/ia-api"
 
+type Aba = "gerar" | "historico"
+
 export function QuestoesPage() {
+  const [aba, setAba] = useState<Aba>("gerar")
   const { data: cota } = useQuery({ queryKey: ["cota-ia"], queryFn: obterCotaIA })
 
   const restantes = cota ? Math.max(0, cota.limite - cota.usadas) : null
@@ -21,9 +26,7 @@ export function QuestoesPage() {
 
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="max-w-md">
-            <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-              BrioIA
-            </p>
+            <p className="text-xs font-medium uppercase tracking-widest text-white/70">Brio-IA</p>
             <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">Questões com IA</h1>
             <p className="mt-2 text-sm text-white/85">
               Transforme o seu material em questões para praticar. Responder sem consultar o
@@ -65,7 +68,34 @@ export function QuestoesPage() {
         </div>
       </section>
 
-      <GerarEPraticar cota={cota} />
+      <div
+        role="group"
+        aria-label="Seções"
+        className="mx-auto flex w-fit gap-1 rounded-full bg-muted p-1"
+      >
+        {(["gerar", "historico"] as const).map((opcao) => (
+          <button
+            key={opcao}
+            type="button"
+            aria-pressed={aba === opcao}
+            onClick={() => setAba(opcao)}
+            className={`min-h-10 cursor-pointer rounded-full px-5 text-sm font-medium transition-colors sm:min-h-0 sm:py-1.5 ${
+              aba === opcao
+                ? "bg-emerald-500 text-white"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {opcao === "gerar" ? "Gerar e praticar" : "Histórico"}
+          </button>
+        ))}
+      </div>
+
+      {/* A aba "Gerar" fica montada (só escondida): se saísse da tela, um quiz em andamento se perderia */}
+      <div className={aba === "gerar" ? "" : "hidden"}>
+        <GerarEPraticar cota={cota} />
+      </div>
+
+      {aba === "historico" && <HistoricoMateriais aoIrParaGerar={() => setAba("gerar")} />}
     </div>
   )
 }

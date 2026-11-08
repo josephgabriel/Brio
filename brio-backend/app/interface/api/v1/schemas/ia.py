@@ -50,3 +50,36 @@ class AvaliacaoDesempenhoResponseSchema(BaseModel):
     criado_em: datetime
 
     model_config = {"from_attributes": True}
+
+class MaterialResumoSchema(BaseModel):
+    id: int
+    nome_arquivo: str
+    criado_em: datetime
+    total_questoes: int
+    questoes_respondidas: int
+    questoes_acertadas: int
+    aproveitamento: float | None
+
+    model_config = {"from_attributes": True}
+
+
+class QuestaoRevisaoSchema(BaseModel):
+    id: int
+    enunciado: str
+    alternativas: AlternativasResponseSchema
+    resposta_correta: str
+    explicacao: str
+    ultima_resposta: str | None
+    ultima_acertou: bool | None
+    respondida_em: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class MaterialDetalheSchema(BaseModel):
+    id: int
+    nome_arquivo: str
+    criado_em: datetime
+    questoes: list[QuestaoRevisaoSchema]
+
+    model_config = {"from_attributes": True}

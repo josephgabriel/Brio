@@ -46,6 +46,7 @@ const BENEFICIOS = [
   "Cronograma de estudos",
   "Dashboard e estatísticas completas",
   "Gerador de Questões com IA (BrioIA)",
+  "Resumos de PDF com IA (BrioIA)",
 ]
 
 export function PlanosPage() {

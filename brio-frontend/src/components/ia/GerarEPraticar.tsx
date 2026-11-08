@@ -57,6 +57,7 @@ export function GerarEPraticar({ cota }: GerarEPraticarProps) {
     onSuccess: (res) => {
       setResultado(res)
       if (res.correta) setAcertos((anterior) => anterior + 1)
+      queryClient.invalidateQueries({ queryKey: ["ia-materiais"] })
     },
     onError: (erro) => notificar.erro(erro),
   })

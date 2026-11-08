@@ -4,6 +4,8 @@ import type {
   CotaIA,
   MaterialComQuestoes,
   ResultadoResposta,
+  MaterialDetalhe,
+  MaterialResumo,
 } from "@/features/ia/types"
 
 async function falhar(response: Response, padrao: string): Promise<never> {
@@ -54,5 +56,17 @@ export async function gerarAvaliacao(materialId: number): Promise<AvaliacaoDesem
     body: JSON.stringify({ material_id: materialId }),
   })
   if (!response.ok) await falhar(response, "Não foi possível gerar o diagnóstico")
+  return response.json()
+}
+
+export async function listarMateriais(): Promise<MaterialResumo[]> {
+  const response = await apiFetch("/api/v1/ia/materiais")
+  if (!response.ok) await falhar(response, "Não foi possível carregar o histórico")
+  return response.json()
+}
+
+export async function obterQuestoesDoMaterial(id: number): Promise<MaterialDetalhe> {
+  const response = await apiFetch(`/api/v1/ia/materiais/${id}/questoes`)
+  if (!response.ok) await falhar(response, "Não foi possível carregar as questões")
   return response.json()
 }

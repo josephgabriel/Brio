@@ -30,6 +30,14 @@ class SQLAlchemyMaterialEstudoRepository(MaterialEstudoRepository):
             .filter(MaterialEstudoModel.id == material_id)
             .first()
         )
+    
+    def listar_por_usuario(self, usuario_id: int) -> list[MaterialEstudoModel]:
+        return (
+            self.db.query(MaterialEstudoModel)
+            .filter(MaterialEstudoModel.usuario_id == usuario_id)
+            .order_by(MaterialEstudoModel.criado_em.desc(), MaterialEstudoModel.id.desc())
+            .all()
+        )
 
     def contar_no_mes(self, usuario_id: int, inicio_do_mes: date) -> int:
         return (
@@ -53,6 +61,16 @@ class SQLAlchemyQuestaoRepository(QuestaoRepository):
 
     def buscar_por_id(self, questao_id: int) -> QuestaoModel | None:
         return self.db.query(QuestaoModel).filter(QuestaoModel.id == questao_id).first()
+    
+    def listar_por_materiais(self, material_ids: list[int]) -> list[QuestaoModel]:
+        if not material_ids:
+            return []
+        return (
+            self.db.query(QuestaoModel)
+            .filter(QuestaoModel.material_id.in_(material_ids))
+            .order_by(QuestaoModel.id.asc())
+            .all()
+        )
 
     def listar_por_material(self, material_id: int) -> list[QuestaoModel]:
         return (

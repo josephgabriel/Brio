@@ -1,0 +1,6 @@
+NIVEIS_PERMITIDOS = ("curto", "medio", "detalhado")
+NIVEL_PADRAO = "medio"
+
+LIMITE_CARACTERES_PDF = 60_000
+
+TAMANHO_MAXIMO_PDF_BYTES = 8 * 1024 * 1024

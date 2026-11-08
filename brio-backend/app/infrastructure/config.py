@@ -26,8 +26,9 @@ class Settings(BaseSettings):
     cloudinary_api_secret: str = ""
     
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash-lite"
+    gemini_model: str = "gemini-3.5-flash-lite"
     gemini_cota_mensal: int = 20
+    gemini_cota_resumos_mensal: int = 20
 
 settings = Settings()
 

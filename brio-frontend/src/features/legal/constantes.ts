@@ -2,8 +2,8 @@ export const SITE = "www.brio-estudos.com.br"
 
 // Versão dos dois documentos (Termos e Política). Muda sempre que o texto mudar
 // de forma relevante: é este valor que será gravado no aceite do cadastro.
-export const VERSAO_TERMOS = "2026-10-27"
-export const DATA_ATUALIZACAO = "27 de outubro de 2026"
+export const VERSAO_TERMOS = "2026-11-06"
+export const DATA_ATUALIZACAO = "6 de novembro de 2026"
 
 // PREENCHA estes três campos antes de publicar
 export const RESPONSAVEL = "José Gabriel Soares dos Santos"
@@ -17,6 +17,7 @@ export const DIAS_GARANTIA = 7
 export const DIAS_AVISO_MUDANCA_PRECO = 30
 export const DIAS_RESPOSTA_DIREITOS = 15
 export const LIMITE_MENSAL_IA = 20
+export const LIMITE_MENSAL_RESUMOS = 20
 
 export function camposPendentes(): string[] {
   const campos: Record<string, string> = {

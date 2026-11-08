@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Sun,
   Timer,
+  FileText,
   type LucideIcon,
 } from "lucide-react"
 
@@ -50,6 +51,7 @@ const links = [
   { to: "/revisoes", label: "Revisões", icon: RotateCcw },
   { to: "/estatisticas", label: "Estatísticas", icon: BarChart3 },
   { to: "/questoes", label: "Gerador de Questões", icon: Brain },
+  { to: "/resumos", label: "Resumos com IA", icon: FileText },
 ]
 
 function iniciais(nome: string): string {
