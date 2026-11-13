@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
+import { CheckCircle2, Loader2, XCircle } from "lucide-react"
 
+import { TelaStatus } from "@/components/shared/TelaStatus"
+import { Button } from "@/components/ui/button"
 import { verificarEmail } from "@/features/auth/auth-api"
 import { useForceDarkMode } from "@/hooks/useForceDarkMode"
 
@@ -21,22 +24,35 @@ export function VerificarEmailPage() {
       .catch(() => setEstado("erro"))
   }, [searchParams])
 
+  if (estado === "carregando") {
+    return <TelaStatus icone={Loader2} girando titulo="Verificando seu e-mail..." />
+  }
+
+  if (estado === "sucesso") {
+    return (
+      <TelaStatus
+        icone={CheckCircle2}
+        tom="sucesso"
+        titulo="E-mail confirmado!"
+        texto="Sua conta está pronta. Agora é só entrar."
+      >
+        <Button asChild>
+          <Link to="/login">Ir para o login</Link>
+        </Button>
+      </TelaStatus>
+    )
+  }
+
   return (
-    <div className="flex min-h-dvh items-center justify-center text-center">
-      <div>
-        {estado === "carregando" && <p className="text-muted-foreground">Verificando...</p>}
-        {estado === "sucesso" && (
-          <>
-            <p className="mb-2 text-lg font-medium">Email confirmado!</p>
-            <Link to="/login" className="text-primary hover:underline">
-              Ir para o login
-            </Link>
-          </>
-        )}
-        {estado === "erro" && (
-          <p className="text-destructive">Link inválido ou expirado.</p>
-        )}
-      </div>
-    </div>
+    <TelaStatus
+      icone={XCircle}
+      tom="erro"
+      titulo="Link inválido ou expirado"
+      texto="Entre com seu e-mail e senha: se a conta ainda não estiver verificada, você poderá pedir um novo link."
+    >
+      <Button asChild>
+        <Link to="/login">Ir para o login</Link>
+      </Button>
+    </TelaStatus>
   )
 }

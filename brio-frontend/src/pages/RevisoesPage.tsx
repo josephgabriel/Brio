@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { CheckCircle2, FileText, RotateCcw } from "lucide-react"
 
+import { Abas } from "@/components/shared/Abas"
 import { EstadoVazio } from "@/components/shared/EstadoVazio"
+import { HeroPagina, PainelHero } from "@/components/shared/HeroPagina"
 import { Carregando } from "@/components/shared/Skeletons"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,7 +19,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { dataCurta, dataLonga, diasEntre, rotuloRelativo } from "@/features/calendario/datas"
 import { paraISO } from "@/features/calendario/grade"
 import { plural } from "@/features/cronograma/semana"
-import { GRADIENTE_HERO } from "@/features/estatisticas/visual"
 import { listarProvas } from "@/features/provas/api/provas-api"
 import {
   CHAVE_REVISOES,
@@ -116,7 +117,7 @@ function LinhaRevisao({ revisao, serie, hojeISO, aoAbrir, aoConcluir }: LinhaRev
           onClick={() => aoAbrir(revisao)}
           aria-label={`Abrir anotação de ${revisao.assunto}`}
           title="Abrir anotação"
-          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <FileText className="size-4" />
         </button>
@@ -129,7 +130,7 @@ function LinhaRevisao({ revisao, serie, hojeISO, aoAbrir, aoConcluir }: LinhaRev
         aria-pressed={feita}
         aria-label={feita ? `${revisao.assunto}: revisão concluída` : `Concluir revisão de ${revisao.assunto}`}
         title={feita ? "Revisão concluída" : "Marcar como concluída"}
-        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-accent disabled:cursor-default disabled:hover:bg-transparent"
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:hover:bg-transparent"
       >
         {feita ? (
           <CheckCircle2 className="size-5 text-emerald-500" />
@@ -257,73 +258,26 @@ export function RevisoesPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section
-        className="relative overflow-hidden rounded-3xl p-5 text-white sm:p-8"
-        style={{ background: GRADIENTE_HERO }}
-      >
-        <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute -bottom-16 right-28 size-40 rounded-full bg-white/10" />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="max-w-md">
-            <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-              Suas revisões
-            </p>
-            {carregando ? (
-              <>
-                <Skeleton className="mt-2 h-8 w-64 bg-white/20" />
-                <Skeleton className="mt-3 h-4 w-80 max-w-full bg-white/20" />
-              </>
-            ) : (
-              <>
-                <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">{titulo}</h1>
-                <p className="mt-2 text-sm text-white/85">{texto}</p>
-              </>
-            )}
-          </div>
-
-          {agendadasHoje.length > 0 && (
-            <div className="w-full rounded-2xl bg-black/20 p-5 backdrop-blur-sm sm:w-64">
-              <p className="text-xs font-medium uppercase tracking-widest text-white/70">Hoje</p>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-4xl font-semibold leading-none tabular-nums">{feitasHoje}</span>
-                <span className="text-sm text-white/70">de {agendadasHoje.length}</span>
-              </div>
-              <div
-                role="progressbar"
-                aria-valuenow={percentualHoje}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Revisões de hoje"
-                className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"
-              >
-                <div
-                  className="h-full rounded-full bg-white transition-all duration-700"
-                  style={{ width: `${percentualHoje}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+      <HeroPagina rotulo="Suas revisões" titulo={titulo} texto={texto} carregando={carregando}>
+        {agendadasHoje.length > 0 && (
+          <PainelHero
+            rotulo="Hoje"
+            valor={feitasHoje}
+            unidade={`de ${agendadasHoje.length}`}
+            progresso={{ percentual: percentualHoje, rotulo: "Revisões de hoje" }}
+          />
+        )}
+      </HeroPagina>
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div role="group" aria-label="Filtrar revisões" className="flex flex-wrap gap-1 rounded-full bg-muted p-1">
-            {ABAS.map(({ id, rotulo, total }) => (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={aba === id}
-                onClick={() => setAba(id)}
-                className={`cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  aba === id ? "bg-emerald-500 text-white" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {rotulo} ({total})
-              </button>
-            ))}
-          </div>
+          <Abas<Aba>
+            compacto
+            rotuloGrupo="Filtrar revisões"
+            valor={aba}
+            aoMudar={setAba}
+            opcoes={ABAS.map(({ id, rotulo, total }) => ({ id, rotulo: `${rotulo} (${total})` }))}
+          />
 
           {provasAtivas.length > 1 && (
             <Select value={provaFiltro} onValueChange={setProvaFiltro}>

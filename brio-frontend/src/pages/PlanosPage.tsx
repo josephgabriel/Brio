@@ -1,23 +1,25 @@
 import { Link } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Check, Sparkles } from "lucide-react"
+import { CheckCircle2, Check, Loader2 } from "lucide-react"
 
+import logo3 from "@/assets/logo3.png"
+import { CartaoPlano } from "@/components/shared/CartaoPlano"
 import { SeloConfianca } from "@/components/shared/SeloConfianca"
+import { TelaStatus } from "@/components/shared/TelaStatus"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { criarAssinatura, obterMinhaAssinatura } from "@/features/assinatura/api/assinatura-api"
-import { assinaturaEstaValida } from "@/features/assinatura/regras"
-import type { Plano } from "@/features/assinatura/types"
-import { useAuth } from "@/features/auth/auth-context"
-import { useForceDarkMode } from "@/hooks/useForceDarkMode"
-import { notificar } from "@/lib/toast"
-
+import { BENEFICIOS_PLANO } from "@/features/assinatura/beneficios"
 import {
   EQUIVALENTE_MENSAL_ANUAL,
   PERCENTUAL_ECONOMIA,
   PRECOS,
   formatarReais,
 } from "@/features/assinatura/precos"
+import { assinaturaEstaValida } from "@/features/assinatura/regras"
+import type { Plano } from "@/features/assinatura/types"
+import { useAuth } from "@/features/auth/auth-context"
+import { useForceDarkMode } from "@/hooks/useForceDarkMode"
+import { notificar } from "@/lib/toast"
 
 interface PlanoInfo {
   valor: Plano
@@ -25,6 +27,7 @@ interface PlanoInfo {
   preco: string
   periodo: string
   observacao?: string
+  selo?: string
   destaque?: boolean
 }
 
@@ -40,20 +43,10 @@ const PLANOS: PlanoInfo[] = [
     nome: "Anual",
     preco: formatarReais(PRECOS.anual),
     periodo: "/ano",
-    observacao: `Equivale a ${formatarReais(EQUIVALENTE_MENSAL_ANUAL)}/mês · economize ${PERCENTUAL_ECONOMIA}%`,
+    observacao: `Equivale a ${formatarReais(EQUIVALENTE_MENSAL_ANUAL)}/mês, economia de ${PERCENTUAL_ECONOMIA}%`,
+    selo: "Mais vantajoso",
     destaque: true,
   },
-]
-
-const BENEFICIOS = [
-  "Provas, matérias e conteúdos ilimitados",
-  "Sessões com Pomodoro e anotações",
-  "Revisão espaçada automática",
-  "Calendário personalizado",
-  "Cronograma de estudos",
-  "Dashboard e estatísticas completas",
-  "Gerador de Questões com IA (BrioIA)",
-  "Resumos de PDF com IA (BrioIA)",
 ]
 
 export function PlanosPage() {
@@ -74,128 +67,112 @@ export function PlanosPage() {
   })
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-background text-muted-foreground">
-        <p className="animate-pulse">Carregando planos...</p>
-      </div>
-    )
+    return <TelaStatus icone={Loader2} girando titulo="Carregando planos..." />
   }
 
   if (assinaturaEstaValida(assinatura) && assinatura) {
     return (
-      <div className="relative flex min-h-dvh w-full items-center justify-center bg-background px-4 text-foreground">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
-
-        <div className="relative z-10 mx-auto flex w-full max-w-md animate-[slideDown_0.6s_ease-out] flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card p-6 text-center shadow-xl motion-reduce:animate-none sm:p-8">
-          <h1 className="text-2xl font-bold tracking-tight text-primary">
-            Sua assinatura está ativa
-          </h1>
-          <p className="text-sm text-muted-foreground">
+      <TelaStatus
+        cartao
+        icone={CheckCircle2}
+        tom="sucesso"
+        titulo="Sua assinatura está ativa"
+        texto={
+          <>
             Plano {assinatura.plano === "mensal" ? "Mensal" : "Anual"}, válido até{" "}
             <span className="font-medium text-foreground">
               {assinatura.data_expiracao &&
                 new Date(`${assinatura.data_expiracao}T00:00:00`).toLocaleDateString("pt-BR")}
             </span>
             .
-          </p>
-
-          <div className="mt-2 flex w-full flex-col gap-3">
-            <Button className="h-11 w-full" asChild>
-              <Link to="/dashboard">Ir para o Dashboard</Link>
-            </Button>
-            <Button variant="outline" className="h-11 w-full" asChild>
-              <Link to="/conta">Gerenciar minha assinatura</Link>
-            </Button>
-          </div>
+          </>
+        }
+      >
+        <div className="flex w-full flex-col gap-3">
+          <Button className="h-11 w-full" asChild>
+            <Link to="/dashboard">Ir para o Dashboard</Link>
+          </Button>
+          <Button variant="outline" className="h-11 w-full" asChild>
+            <Link to="/conta">Gerenciar minha assinatura</Link>
+          </Button>
         </div>
-
-        <style>{`
-          @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-50px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
-      </div>
+      </TelaStatus>
     )
   }
 
-  return (
-    <div className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-background px-4 py-10 text-foreground sm:py-12">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
+  const assinaturaEncerrada = assinatura?.status === "cancelada" || assinatura?.status === "expirada"
 
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-8 text-center">
-        <div className="animate-[slideDown_0.6s_ease-out_both] motion-reduce:animate-none">
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+  return (
+    <div className="relative min-h-dvh w-full overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background"
+      />
+
+      <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-6 sm:py-10">
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <img src={logo3} alt="" className="h-7 w-auto" />
+            <span className="text-lg font-semibold">Brio</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="inline-flex min-h-10 cursor-pointer items-center text-sm text-muted-foreground underline hover:text-foreground"
+          >
+            Sair da conta
+          </button>
+        </header>
+
+        <div>
+          <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
             Escolha seu plano
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
-            {assinatura?.status === "cancelada" || assinatura?.status === "expirada"
+          <p className="mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
+            {assinaturaEncerrada
               ? "Sua assinatura não está mais ativa. Renove para continuar seus estudos no Brio."
               : "Assine para desbloquear todas as ferramentas de estudo da plataforma Brio."}
           </p>
         </div>
 
         <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
-          {PLANOS.map((plano, index) => {
+          {PLANOS.map((plano) => {
             const esteEstaSendoContratado = assinar.isPending && assinar.variables === plano.valor
 
             return (
-              <Card
+              <CartaoPlano
                 key={plano.valor}
-                style={{ animationDelay: `${(index + 1) * 150}ms` }}
-                className={`relative flex animate-[slideDown_0.6s_ease-out_both] flex-col justify-between border-border bg-card p-2 text-card-foreground shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl motion-reduce:animate-none ${
-                  plano.destaque ? "border-primary/60 ring-1 ring-primary/40" : ""
-                }`}
+                nome={plano.nome}
+                preco={plano.preco}
+                periodo={plano.periodo}
+                observacao={plano.observacao}
+                selo={plano.selo}
+                destaque={plano.destaque}
               >
-                {plano.destaque && (
-                  <div className="absolute left-1/2 top-2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow">
-                    <Sparkles className="h-3 w-3" /> Mais vantajoso
-                  </div>
-                )}
-
-                <CardHeader className="pt-6">
-                  <CardTitle className="text-2xl font-bold text-foreground">
-                    {plano.nome}
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="flex flex-col gap-6">
-                  <div>
-                    <span className="text-4xl font-black tracking-tight text-primary">
-                      {plano.preco}
-                    </span>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {" "}
-                      {plano.periodo}
-                    </span>
-                    {plano.observacao && (
-                      <p className="mt-1 text-xs font-medium text-emerald-500">
-                        {plano.observacao}
-                      </p>
-                    )}
-                  </div>
-
-                  <ul className="flex flex-col gap-3 text-left text-sm text-muted-foreground">
-                    {BENEFICIOS.map((beneficio) => (
-                      <li key={beneficio} className="flex items-start gap-2.5">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                        {beneficio}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    onClick={() => assinar.mutate(plano.valor)}
-                    disabled={assinar.isPending}
-                    className="mt-2 h-12 w-full text-base font-semibold transition-all sm:h-11"
-                    variant={plano.destaque ? "default" : "outline"}
-                  >
-                    {esteEstaSendoContratado ? "Redirecionando..." : `Assinar ${plano.nome}`}
-                  </Button>
-                </CardContent>
-              </Card>
+                <Button
+                  onClick={() => assinar.mutate(plano.valor)}
+                  disabled={assinar.isPending}
+                  className="h-12 w-full text-base font-semibold sm:h-11"
+                  variant={plano.destaque ? "default" : "outline"}
+                >
+                  {esteEstaSendoContratado ? "Redirecionando..." : `Assinar ${plano.nome}`}
+                </Button>
+              </CartaoPlano>
             )
           })}
+        </div>
+
+        <div>
+          <h2 className="font-medium">Os dois planos incluem</h2>
+          <ul className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 text-sm text-muted-foreground sm:grid-cols-2">
+            {BENEFICIOS_PLANO.map((beneficio) => (
+              <li key={beneficio} className="flex items-start gap-2.5">
+                <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+                {beneficio}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <SeloConfianca className="w-full" />
@@ -221,22 +198,7 @@ export function PlanosPage() {
           </a>
           .
         </p>
-
-        <button
-          type="button"
-          onClick={logout}
-          className="inline-flex min-h-10 cursor-pointer items-center text-sm text-muted-foreground underline hover:text-foreground"
-        >
-          Sair da conta
-        </button>
       </div>
-
-      <style>{`
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-50px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
 }

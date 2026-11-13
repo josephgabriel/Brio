@@ -2,41 +2,11 @@ import { Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { GraduationCap, Plus } from "lucide-react"
 
+import { CartaoProva } from "@/components/shared/CartaoProva"
 import { EstadoVazio } from "@/components/shared/EstadoVazio"
 import { Carregando, SkeletonCards } from "@/components/shared/Skeletons"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { listarProvas } from "@/features/provas/api/provas-api"
-
-function variantePrioridade(
-  prioridade: string,
-): "prioridade_alta" | "prioridade_media" | "prioridade_baixa" {
-  if (prioridade === "alta") return "prioridade_alta"
-  if (prioridade === "media") return "prioridade_media"
-  return "prioridade_baixa"
-}
-
-// O sistema guarda "media" e "ativa": aqui eles viram o texto que a pessoa lê.
-// Se aparecer um valor novo, o texto cru é mostrado como reserva.
-const ROTULO_PRIORIDADE: Record<string, string> = {
-  alta: "Alta",
-  media: "Média",
-  baixa: "Baixa",
-}
-
-const ROTULO_STATUS: Record<string, string> = {
-  ativa: "Ativa",
-  arquivada: "Arquivada",
-  concluida: "Concluída",
-}
-
-function textoDiasRestantes(dias: number | null): string {
-  if (dias === null) return "Data não definida"
-  if (dias < 0) return "Prova já passou"
-  if (dias === 0) return "A prova é hoje"
-  return dias === 1 ? "Falta 1 dia" : `Faltam ${dias} dias`
-}
 
 export function ProvasPage() {
   const {
@@ -49,8 +19,12 @@ export function ProvasPage() {
     queryFn: listarProvas,
   })
 
+  // Quem está estudando precisa ver primeiro o que está em andamento
+  const ativas = provas?.filter((prova) => prova.status === "ativa") ?? []
+  const encerradas = provas?.filter((prova) => prova.status !== "ativa") ?? []
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold sm:text-2xl">Minhas Provas</h1>
         <Button className="min-h-10 sm:min-h-0" asChild>
@@ -85,34 +59,28 @@ export function ProvasPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {provas?.map((prova) => (
-          <Link key={prova.id} to={`/provas/${prova.id}`} className="block">
-            <Card className="h-full transition-colors hover:border-primary">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="min-w-0 flex-1 truncate text-base" title={prova.nome}>
-                    {prova.nome}
-                  </CardTitle>
-                  <div className="flex shrink-0 gap-1.5">
-                    <Badge variant={variantePrioridade(prova.prioridade)}>
-                      {ROTULO_PRIORIDADE[prova.prioridade] ?? prova.prioridade}
-                    </Badge>
-                    <Badge variant={prova.status === "ativa" ? "default" : "secondary"}>
-                      {ROTULO_STATUS[prova.status] ?? prova.status}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {textoDiasRestantes(prova.dias_restantes)}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {provas && provas.length > 0 && ativas.length === 0 && (
+        <p className="text-sm text-muted-foreground">Nenhuma prova ativa no momento.</p>
+      )}
+
+      {ativas.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {ativas.map((prova) => (
+            <CartaoProva key={prova.id} prova={prova} />
+          ))}
+        </div>
+      )}
+
+      {encerradas.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">Arquivadas e concluídas</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {encerradas.map((prova) => (
+              <CartaoProva key={prova.id} prova={prova} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

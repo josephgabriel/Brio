@@ -1,7 +1,7 @@
 import { type SubmitEvent, useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Trash2 } from "lucide-react"
+import { ArrowLeft, Trash2 } from "lucide-react"
 
 import { Carregando } from "@/components/shared/Skeletons"
 import { Button } from "@/components/ui/button"
@@ -189,197 +189,236 @@ export function ProvaFormPage() {
     )
   }
 
+  const voltarPara = estaEditando ? `/provas/${provaId}` : "/provas"
+
   return (
     <div className="mx-auto max-w-xl">
+      <Link
+        to={voltarPara}
+        className="mb-4 inline-flex min-h-10 items-center gap-1 text-sm text-muted-foreground hover:text-foreground sm:min-h-0"
+      >
+        <ArrowLeft className="size-4" />
+        {estaEditando ? "Voltar para a prova" : "Minhas provas"}
+      </Link>
+
       <h1 className="mb-6 text-xl font-semibold sm:text-2xl">
         {estaEditando ? "Editar prova" : "Nova prova"}
       </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Nome */}
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="nome">Nome da prova</Label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+        {/* Sobre a prova */}
+        <fieldset className="flex flex-col gap-4">
+          <legend className="mb-3 text-base font-semibold">Sobre a prova</legend>
 
-          <Input
-            id="nome"
-            value={form.nome}
-            onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            className="text-base md:text-sm"
-            required
-          />
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="nome">Nome da prova</Label>
 
-        {/* Tipo */}
-        <div className="flex flex-col gap-1.5">
-          <Label>Tipo</Label>
+            <Input
+              id="nome"
+              value={form.nome}
+              onChange={(e) => setForm({ ...form, nome: e.target.value })}
+              className="text-base md:text-sm"
+              required
+            />
+          </div>
 
-          <Select
-            value={form.tipo}
-            onValueChange={(valor: ProvaFormData["tipo"]) =>
-              setForm({
-                ...form,
-                tipo: valor,
-                instituicao_banca: "",
-                cargo: "",
-              })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue>{ROTULO_TIPO[form.tipo]}</SelectValue>
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="enem">ENEM</SelectItem>
-              <SelectItem value="vestibular">Vestibular</SelectItem>
-              <SelectItem value="concurso">Concurso</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Instituição e cargo */}
-        {form.tipo !== "enem" && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="banca">{obterRotulosPorTipo(form.tipo).instituicao}</Label>
+              <Label>Tipo</Label>
+
+              <Select
+                value={form.tipo}
+                onValueChange={(valor: ProvaFormData["tipo"]) =>
+                  setForm({
+                    ...form,
+                    tipo: valor,
+                    instituicao_banca: "",
+                    cargo: "",
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue>{ROTULO_TIPO[form.tipo]}</SelectValue>
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="enem">ENEM</SelectItem>
+                  <SelectItem value="vestibular">Vestibular</SelectItem>
+                  <SelectItem value="concurso">Concurso</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Prioridade</Label>
+
+              <Select
+                value={form.prioridade}
+                onValueChange={(valor: ProvaFormData["prioridade"]) =>
+                  setForm({ ...form, prioridade: valor })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue>{ROTULO_PRIORIDADE[form.prioridade]}</SelectValue>
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="alta">Alta</SelectItem>
+                  <SelectItem value="media">Média</SelectItem>
+                  <SelectItem value="baixa">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {form.tipo !== "enem" && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="banca">{obterRotulosPorTipo(form.tipo).instituicao}</Label>
+
+                <Input
+                  id="banca"
+                  value={form.instituicao_banca}
+                  onChange={(e) => setForm({ ...form, instituicao_banca: e.target.value })}
+                  className="text-base md:text-sm"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="cargo">{obterRotulosPorTipo(form.tipo).cargo}</Label>
+
+                <Input
+                  id="cargo"
+                  value={form.cargo}
+                  onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+                  className="text-base md:text-sm"
+                />
+              </div>
+            </div>
+          )}
+        </fieldset>
+
+        {/* Datas */}
+        <fieldset className="flex flex-col gap-4 border-t border-border pt-6">
+          <legend className="mb-3 text-base font-semibold">Datas</legend>
+
+          <div
+            className={`grid grid-cols-1 gap-4 ${form.tipo === "concurso" ? "sm:grid-cols-2" : ""}`}
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="data_prova">Data da prova</Label>
 
               <Input
-                id="banca"
-                value={form.instituicao_banca}
-                onChange={(e) => setForm({ ...form, instituicao_banca: e.target.value })}
+                id="data_prova"
+                type="date"
+                value={form.data_prova}
+                onChange={(e) => setForm({ ...form, data_prova: e.target.value })}
                 className="text-base md:text-sm"
+              />
+            </div>
+
+            {form.tipo === "concurso" && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="data_divulgacao_edital">Divulgação do edital</Label>
+
+                <Input
+                  id="data_divulgacao_edital"
+                  type="date"
+                  value={form.data_divulgacao_edital}
+                  onChange={(e) => setForm({ ...form, data_divulgacao_edital: e.target.value })}
+                  className="text-base md:text-sm"
+                />
+              </div>
+            )}
+          </div>
+        </fieldset>
+
+        {/* Disponibilidade */}
+        <fieldset className="flex flex-col gap-4 border-t border-border pt-6">
+          <legend className="mb-1 text-base font-semibold">Seu ritmo de estudo</legend>
+          <p className="-mt-2 text-sm text-muted-foreground">
+            Horas por dia vezes dias por semana viram a meta semanal que aparece nas estatísticas
+            da prova.
+          </p>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="horas">Horas disponíveis/dia</Label>
+
+              <Input
+                id="horas"
+                type="number"
+                inputMode="decimal"
+                step="0.5"
+                min="0"
+                max="24"
+                value={form.horas_disponiveis_dia}
+                onChange={(e) =>
+                  setForm({ ...form, horas_disponiveis_dia: Number(e.target.value) })
+                }
+                className="text-base md:text-sm"
+                required
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="cargo">{obterRotulosPorTipo(form.tipo).cargo}</Label>
+              <Label htmlFor="dias">Dias disponíveis/semana</Label>
 
               <Input
-                id="cargo"
-                value={form.cargo}
-                onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+                id="dias"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="7"
+                value={form.dias_disponiveis_semana}
+                onChange={(e) =>
+                  setForm({ ...form, dias_disponiveis_semana: Number(e.target.value) })
+                }
                 className="text-base md:text-sm"
+                required
               />
             </div>
           </div>
-        )}
-
-        {/* Data da prova */}
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="data_prova">Data da prova</Label>
-
-          <Input
-            id="data_prova"
-            type="date"
-            value={form.data_prova}
-            onChange={(e) => setForm({ ...form, data_prova: e.target.value })}
-            className="text-base md:text-sm"
-          />
-        </div>
-
-        {/* Data do edital */}
-        {form.tipo === "concurso" && (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="data_divulgacao_edital">Data de divulgação do edital</Label>
-
-            <Input
-              id="data_divulgacao_edital"
-              type="date"
-              value={form.data_divulgacao_edital}
-              onChange={(e) => setForm({ ...form, data_divulgacao_edital: e.target.value })}
-              className="text-base md:text-sm"
-            />
-          </div>
-        )}
-
-        {/* Disponibilidade */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="horas">Horas disponíveis/dia</Label>
-
-            <Input
-              id="horas"
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              min="0"
-              max="24"
-              value={form.horas_disponiveis_dia}
-              onChange={(e) =>
-                setForm({ ...form, horas_disponiveis_dia: Number(e.target.value) })
-              }
-              className="text-base md:text-sm"
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="dias">Dias disponíveis/semana</Label>
-
-            <Input
-              id="dias"
-              type="number"
-              inputMode="numeric"
-              min="1"
-              max="7"
-              value={form.dias_disponiveis_semana}
-              onChange={(e) =>
-                setForm({ ...form, dias_disponiveis_semana: Number(e.target.value) })
-              }
-              className="text-base md:text-sm"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Prioridade */}
-        <div className="flex flex-col gap-1.5">
-          <Label>Prioridade</Label>
-
-          <Select
-            value={form.prioridade}
-            onValueChange={(valor: ProvaFormData["prioridade"]) =>
-              setForm({ ...form, prioridade: valor })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue>{ROTULO_PRIORIDADE[form.prioridade]}</SelectValue>
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="alta">Alta</SelectItem>
-              <SelectItem value="media">Média</SelectItem>
-              <SelectItem value="baixa">Baixa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        </fieldset>
 
         {/* Ações */}
-        <div className="mt-2 flex flex-col gap-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              type="submit"
-              className="h-11 w-full sm:h-9 sm:w-auto"
-              disabled={salvar.isPending}
-            >
-              {salvar.isPending ? "Salvando..." : "Salvar"}
-            </Button>
+        <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-end">
+          <Button type="button" variant="ghost" className="h-11 sm:h-9" asChild>
+            <Link to={voltarPara}>Cancelar</Link>
+          </Button>
 
-            {estaEditando && (
-              <Button
-                type="button"
-                variant="destructive"
-                className="h-11 w-full sm:h-9 sm:w-auto"
-                onClick={handleExcluir}
-                disabled={excluir.isPending}
-              >
-                <Trash2 className="size-4" />
-                Excluir
-              </Button>
-            )}
+          <Button type="submit" className="h-11 sm:h-9" disabled={salvar.isPending}>
+            {salvar.isPending ? "Salvando..." : "Salvar"}
+          </Button>
+        </div>
+      </form>
+
+      {/* Excluir fica longe do Salvar, para um toque sem querer não apagar a prova */}
+      {estaEditando && (
+        <section className="mt-10 flex flex-col gap-3 rounded-xl border border-destructive/30 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold">Excluir prova</h2>
+              <p className="text-sm text-muted-foreground">Essa ação não pode ser desfeita.</p>
+            </div>
+
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-11 sm:h-9"
+              onClick={handleExcluir}
+              disabled={excluir.isPending}
+            >
+              <Trash2 className="size-4" />
+              Excluir
+            </Button>
           </div>
 
           {excluir.isError && (
-            <div className="flex flex-col gap-2 rounded-md border border-destructive/50 bg-destructive/10 p-3">
+            <div
+              role="alert"
+              className="flex flex-col items-start gap-2 rounded-md border border-destructive/50 bg-destructive/10 p-3"
+            >
               {excluir.error instanceof TypeError ? (
                 // Falha de conexão: arquivar não resolveria, então não oferecemos
                 <p className="text-sm text-destructive">
@@ -403,11 +442,11 @@ export function ProvaFormPage() {
               )}
             </div>
           )}
-        </div>
-      </form>
+        </section>
+      )}
 
       {estaEditando && provaExistente?.status === "arquivada" && (
-        <div className="mt-4 rounded-md border border-border p-3">
+        <div className="mt-4 rounded-xl border border-border p-4">
           <p className="mb-2 text-sm text-muted-foreground">Esta prova está arquivada.</p>
           <Button
             type="button"

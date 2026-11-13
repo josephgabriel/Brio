@@ -13,6 +13,7 @@ import {
 import { CartaoNumero } from "@/components/shared/CartaoNumero"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
 import { GraficoRosca } from "@/components/shared/GraficoRosca"
+import { HeroPagina, PainelHero } from "@/components/shared/HeroPagina"
 import { BarraProgresso } from "@/components/shared/Progresso"
 import { Carregando, SkeletonGrafico, SkeletonMetricas } from "@/components/shared/Skeletons"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -20,7 +21,7 @@ import { listarDisciplinas } from "@/features/disciplinas/api/disciplinas-api"
 import { obterEstatisticasProva } from "@/features/estatisticas/api/estatisticas-api"
 import { formatarNumero, formatarPercentual } from "@/features/estatisticas/motivacao"
 import type { ClassificacaoIndice } from "@/features/estatisticas/types"
-import { ESMERALDA, GRADIENTE_HERO } from "@/features/estatisticas/visual"
+import { ESMERALDA } from "@/features/estatisticas/visual"
 import { obterProva } from "@/features/provas/api/provas-api"
 
 const ROTULOS_CLASSIFICACAO: Record<ClassificacaoIndice, string> = {
@@ -126,74 +127,48 @@ export function ProvaEstatisticasPage() {
           Voltar para a prova
         </Link>
 
-        <section
-          className="relative overflow-hidden rounded-3xl p-5 text-white sm:p-8"
-          style={{ background: GRADIENTE_HERO }}
-        >
-          <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
-          <div className="pointer-events-none absolute -bottom-16 right-28 size-40 rounded-full bg-white/10" />
-
-          <div className="relative flex flex-wrap items-center justify-between gap-6">
-            <div className="max-w-md">
-              <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-                Estatísticas da prova
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">
-                {prova?.nome ?? "Sua prova"}
-              </h1>
-              <p className="mt-3 flex items-center gap-2 text-sm text-white/85">
-                <CalendarDays className="size-4" />
+        <HeroPagina
+          rotulo="Estatísticas da prova"
+          titulo={prova?.nome ?? "Sua prova"}
+          texto={
+            <>
+              <p className="flex items-center gap-2">
+                <CalendarDays aria-hidden className="size-4" />
                 {textoContagem(prova?.dias_restantes)}
               </p>
               {metaSemanal > 0 && (
-                <p className="mt-1 text-sm text-white/85">
+                <p className="mt-1">
                   Esta semana: {formatarNumero(estaSemana)} h de {formatarNumero(metaSemanal)} h
                   planejadas
                 </p>
               )}
-            </div>
-
-            <div className="w-full rounded-2xl bg-black/20 p-5 backdrop-blur-sm sm:w-64">
-              <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-                Índice de preparação
+            </>
+          }
+        >
+          {indice === null ? (
+            <PainelHero rotulo="Índice de preparação">
+              <p className="mt-2 text-sm text-white/85">
+                {semHistorico
+                  ? "Seu índice aparece depois da primeira sessão de estudos nesta prova."
+                  : "Ainda sem dados suficientes."}
               </p>
-              {indice === null ? (
-                <p className="mt-2 text-sm text-white/85">
-                  {semHistorico
-                    ? "Seu índice aparece depois da primeira sessão de estudos nesta prova."
-                    : "Ainda sem dados suficientes."}
-                </p>
-              ) : (
-                <>
-                  <div className="mt-1 flex items-baseline gap-1">
-                    <span className="text-5xl font-semibold leading-none tabular-nums">
-                      {indice}
-                    </span>
-                    <span className="text-sm text-white/70">/ 100</span>
-                  </div>
-                  <div
-                    role="progressbar"
-                    aria-valuenow={indice}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Índice de preparação"
-                    className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"
-                  >
-                    <div
-                      className="h-full rounded-full bg-white transition-all duration-700"
-                      style={{ width: `${indice}%` }}
-                    />
-                  </div>
-                  {rotuloIndice && (
-                    <span className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
-                      {rotuloIndice}
-                    </span>
-                  )}
-                </>
+            </PainelHero>
+          ) : (
+            <PainelHero
+              grande
+              rotulo="Índice de preparação"
+              valor={indice}
+              unidade="/ 100"
+              progresso={{ percentual: indice, rotulo: "Índice de preparação" }}
+            >
+              {rotuloIndice && (
+                <span className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
+                  {rotuloIndice}
+                </span>
               )}
-            </div>
-          </div>
-        </section>
+            </PainelHero>
+          )}
+        </HeroPagina>
       </div>
 
       {!semHistorico && data.motivos.length > 0 && (
@@ -368,7 +343,7 @@ export function ProvaEstatisticasPage() {
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-emerald-500/20">
                         <div
-                          className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                          className="h-full rounded-full bg-emerald-500 transition-all duration-500 motion-reduce:transition-none"
                           style={{ width: `${parte}%` }}
                         />
                       </div>

@@ -66,6 +66,7 @@ export function SessaoPage() {
   const [pausaCurtaMinutos, setPausaCurtaMinutos] = useState("5")
   const [pausaLongaMinutos, setPausaLongaMinutos] = useState("10")
   const [ciclosAtePausaLonga, setCiclosAtePausaLonga] = useState("2")
+  const [configAberta, setConfigAberta] = useState(false)
 
   const confirmar = useConfirmar()
   const [exportando, setExportando] = useState(false)
@@ -249,8 +250,6 @@ export function SessaoPage() {
   if (sessaoAtiva) {
     return (
       <div className="relative">
-        <h1 className="sr-only">Sessão de estudos em andamento</h1>
-
         <Sheet open={menuAberto} onOpenChange={setMenuAberto}>
           <SheetContent side="left" className="w-80 max-w-[90vw] overflow-y-auto">
             <SheetHeader>
@@ -265,25 +264,32 @@ export function SessaoPage() {
           </SheetContent>
         </Sheet>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mb-4 h-10 sm:h-8"
-          onClick={() => setMenuAberto(true)}
-        >
-          <BookOpen className="size-4" />
-          Matérias e conteúdos
-        </Button>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-semibold sm:text-2xl">{sessaoAtiva.assunto}</h1>
+            <p className="text-sm text-muted-foreground">{sessaoAtiva.disciplina}</p>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 shrink-0 sm:h-8"
+            onClick={() => setMenuAberto(true)}
+          >
+            <BookOpen className="size-4" />
+            Matérias e conteúdos
+          </Button>
+        </div>
 
         {/* min-w-0 nos filhos: sem ele, o conteúdo largo do editor alarga a grade inteira */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {/* Anotações: abaixo do cronômetro no celular, à esquerda no desktop */}
           <div className="order-2 min-w-0 text-left lg:order-1">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground">
+              <h2 className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground">
                 Anotações — {topicoAtual?.nome}
-              </p>
+              </h2>
               <Button
                 type="button"
                 variant="outline"
@@ -309,26 +315,24 @@ export function SessaoPage() {
             )}
           </div>
 
-          {/* Cronômetro e controles: primeiro no celular, à direita no desktop */}
-          <div className="order-1 flex min-w-0 flex-col items-center gap-6 text-center lg:order-2">
-            <div className="flex w-full flex-col items-center gap-6">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {sessaoAtiva.disciplina} — {sessaoAtiva.assunto}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Ciclo {pomodoro.cicloAtual} de {sessaoAtiva.configPomodoro.ciclosAtePausaLonga}
-                </p>
-              </div>
-
+          {/* Cronômetro e controles: primeiro no celular, à direita (e fixo ao rolar) no desktop */}
+          <div className="order-1 flex min-w-0 flex-col items-center gap-6 text-center lg:order-2 lg:sticky lg:top-6 lg:self-start">
+            <div className="flex w-full flex-col items-center gap-4">
               <LiquidTimer
                 progresso={pomodoro.progresso}
                 tempoFormatado={pomodoro.tempoFormatado}
                 label={ROTULO_FASE[pomodoro.fase]}
               />
 
+              <p className="text-sm text-muted-foreground">
+                Ciclo {pomodoro.cicloAtual} de {sessaoAtiva.configPomodoro.ciclosAtePausaLonga}
+              </p>
+
               {pomodoro.pausado ? (
-                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                <p
+                  role="status"
+                  className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-400"
+                >
                   Cronômetro pausado: o tempo não está sendo contado
                 </p>
               ) : (
@@ -341,12 +345,7 @@ export function SessaoPage() {
             <div className="flex w-full flex-col items-center gap-6">
               <div className="flex flex-wrap justify-center gap-2">
                 {pomodoro.pausado ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-11 sm:h-9"
-                    onClick={pomodoro.retomar}
-                  >
+                  <Button type="button" className="h-11 sm:h-9" onClick={pomodoro.retomar}>
                     <Play className="size-4" />
                     Retomar
                   </Button>
@@ -397,7 +396,7 @@ export function SessaoPage() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="mt-3 text-muted-foreground"
+                  className="mt-3 text-muted-foreground hover:text-destructive"
                   onClick={handleCancelar}
                   disabled={cancelar.isPending}
                 >
@@ -411,167 +410,216 @@ export function SessaoPage() {
     )
   }
 
+  // Pomodoro: só mostra os campos quando a pessoa quer mudar. Se algum valor ficar
+  // inválido, o painel fica aberto e o botão de iniciar espera a correção.
+  const configValida = [
+    focoMinutos,
+    pausaCurtaMinutos,
+    pausaLongaMinutos,
+    ciclosAtePausaLonga,
+  ].every((valor) => Number(valor) >= 1)
+  const mostrarConfig = configAberta || !configValida
+
   return (
     <div className="mx-auto max-w-md">
       <h1 className="mb-6 text-xl font-semibold sm:text-2xl">Nova Sessão de Estudos</h1>
 
-      <form onSubmit={handleIniciar} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label>Prova</Label>
-          <Select
-            value={provaId}
-            onValueChange={(v) => {
-              setProvaId(v)
-              setDisciplinaId("")
-              setTopicoId("")
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma prova">
-                {provasAtivas?.find((p) => String(p.id) === provaId)?.nome}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {provasAtivas?.map((prova) => (
-                <SelectItem key={prova.id} value={String(prova.id)}>
-                  {prova.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <form onSubmit={handleIniciar} className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label>Prova</Label>
+            <Select
+              value={provaId}
+              onValueChange={(v) => {
+                setProvaId(v)
+                setDisciplinaId("")
+                setTopicoId("")
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma prova">
+                  {provasAtivas?.find((p) => String(p.id) === provaId)?.nome}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {provasAtivas?.map((prova) => (
+                  <SelectItem key={prova.id} value={String(prova.id)}>
+                    {prova.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          {provasAtivas !== undefined && provasAtivas.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma prova cadastrada.{" "}
-              <Link to="/provas/nova" className="text-primary hover:underline">
-                Cadastre uma
-              </Link>
-              .
-            </p>
-          )}
-        </div>
+            {provasAtivas !== undefined && provasAtivas.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma prova cadastrada.{" "}
+                <Link to="/provas/nova" className="text-primary hover:underline">
+                  Cadastre uma
+                </Link>
+                .
+              </p>
+            )}
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label>Matéria</Label>
-          <Select
-            value={disciplinaId}
-            onValueChange={(v) => {
-              setDisciplinaId(v)
-              setTopicoId("")
-            }}
-            disabled={!provaId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma matéria">
-                {disciplinas?.find((d) => String(d.id) === disciplinaId)?.nome}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {disciplinas?.map((disciplina) => (
-                <SelectItem key={disciplina.id} value={String(disciplina.id)}>
-                  {disciplina.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {provaId && disciplinas !== undefined && disciplinas.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma matéria cadastrada.{" "}
-              <Link to={`/provas/${provaId}`} className="text-primary hover:underline">
-                Cadastre uma
-              </Link>
-              .
-            </p>
-          )}
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Matéria</Label>
+            <Select
+              value={disciplinaId}
+              onValueChange={(v) => {
+                setDisciplinaId(v)
+                setTopicoId("")
+              }}
+              disabled={!provaId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma matéria">
+                  {disciplinas?.find((d) => String(d.id) === disciplinaId)?.nome}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {disciplinas?.map((disciplina) => (
+                  <SelectItem key={disciplina.id} value={String(disciplina.id)}>
+                    {disciplina.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {provaId && disciplinas !== undefined && disciplinas.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma matéria cadastrada.{" "}
+                <Link to={`/provas/${provaId}`} className="text-primary hover:underline">
+                  Cadastre uma
+                </Link>
+                .
+              </p>
+            )}
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label>Conteúdo</Label>
-          <Select value={topicoId} onValueChange={setTopicoId} disabled={!disciplinaId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um conteúdo">
-                {topicos?.find((t) => String(t.id) === topicoId)?.nome}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {topicos?.map((topico) => (
-                <SelectItem key={topico.id} value={String(topico.id)}>
-                  {topico.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {disciplinaId && topicos !== undefined && topicos.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhum tópico cadastrado.{" "}
-              <Link to={`/provas/${provaId}`} className="text-primary hover:underline">
-                Cadastre um
-              </Link>
-              .
-            </p>
-          )}
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Conteúdo</Label>
+            <Select value={topicoId} onValueChange={setTopicoId} disabled={!disciplinaId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um conteúdo">
+                  {topicos?.find((t) => String(t.id) === topicoId)?.nome}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {topicos?.map((topico) => (
+                  <SelectItem key={topico.id} value={String(topico.id)}>
+                    {topico.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {disciplinaId && topicos !== undefined && topicos.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhum tópico cadastrado.{" "}
+                <Link to={`/provas/${provaId}`} className="text-primary hover:underline">
+                  Cadastre um
+                </Link>
+                .
+              </p>
+            )}
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="objetivo">Objetivo (opcional)</Label>
-          <Input id="objetivo" value={objetivo} onChange={(e) => setObjetivo(e.target.value)} />
-        </div>
-
-        <div className="rounded-lg border border-border p-4">
-          <p className="mb-3 text-sm font-medium">Configuração do Pomodoro</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="foco">Foco (min)</Label>
-              <Input
-                id="foco"
-                type="number"
-                inputMode="numeric"
-                min="1"
-                value={focoMinutos}
-                onChange={(e) => setFocoMinutos(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pausaCurta">Pausa curta (min)</Label>
-              <Input
-                id="pausaCurta"
-                type="number"
-                inputMode="numeric"
-                min="1"
-                value={pausaCurtaMinutos}
-                onChange={(e) => setPausaCurtaMinutos(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pausaLonga">Pausa longa (min)</Label>
-              <Input
-                id="pausaLonga"
-                type="number"
-                inputMode="numeric"
-                min="1"
-                value={pausaLongaMinutos}
-                onChange={(e) => setPausaLongaMinutos(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ciclos">Ciclos até pausa longa</Label>
-              <Input
-                id="ciclos"
-                type="number"
-                inputMode="numeric"
-                min="1"
-                value={ciclosAtePausaLonga}
-                onChange={(e) => setCiclosAtePausaLonga(e.target.value)}
-                required
-              />
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="objetivo">Objetivo (opcional)</Label>
+            <Input
+              id="objetivo"
+              value={objetivo}
+              onChange={(e) => setObjetivo(e.target.value)}
+              placeholder="Ex.: resolver 10 questões"
+              className="text-base md:text-sm"
+            />
           </div>
         </div>
 
-        <Button type="submit" className="h-11 sm:h-9" disabled={!topicoId || iniciar.isPending}>
+        <div className="rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Pomodoro</p>
+              {!mostrarConfig && (
+                <p className="text-sm text-muted-foreground">
+                  Foco de {focoMinutos} min, pausa de {pausaCurtaMinutos} min. Pausa longa de{" "}
+                  {pausaLongaMinutos} min a cada {ciclosAtePausaLonga}{" "}
+                  {Number(ciclosAtePausaLonga) === 1 ? "ciclo" : "ciclos"}.
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
+              aria-expanded={mostrarConfig}
+              aria-controls="config-pomodoro"
+              disabled={!configValida}
+              onClick={() => setConfigAberta((aberta) => !aberta)}
+            >
+              {mostrarConfig ? "Fechar" : "Alterar"}
+            </Button>
+          </div>
+
+          {mostrarConfig && (
+            <div id="config-pomodoro" className="mt-4 grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="foco">Foco (min)</Label>
+                <Input
+                  id="foco"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={focoMinutos}
+                  onChange={(e) => setFocoMinutos(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="pausaCurta">Pausa curta (min)</Label>
+                <Input
+                  id="pausaCurta"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={pausaCurtaMinutos}
+                  onChange={(e) => setPausaCurtaMinutos(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="pausaLonga">Pausa longa (min)</Label>
+                <Input
+                  id="pausaLonga"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={pausaLongaMinutos}
+                  onChange={(e) => setPausaLongaMinutos(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ciclos">Ciclos até pausa longa</Label>
+                <Input
+                  id="ciclos"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={ciclosAtePausaLonga}
+                  onChange={(e) => setCiclosAtePausaLonga(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          className="h-12 sm:h-11"
+          disabled={!topicoId || !configValida || iniciar.isPending}
+        >
           {iniciar.isPending ? "Iniciando..." : "Iniciar sessão"}
         </Button>
       </form>

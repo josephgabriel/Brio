@@ -6,7 +6,9 @@ import { CalendarCheck, CalendarPlus, ChevronLeft, ChevronRight, Plus } from "lu
 import { AdicionarRapido } from "@/components/calendario/AdicionarRapido"
 import { FormularioEvento } from "@/components/calendario/FormularioEvento"
 import { ItemDoDia } from "@/components/calendario/ItemDoDia"
+import { Abas } from "@/components/shared/Abas"
 import { EstadoVazio } from "@/components/shared/EstadoVazio"
+import { HeroPagina, PainelHero } from "@/components/shared/HeroPagina"
 import { Carregando } from "@/components/shared/Skeletons"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -32,7 +34,6 @@ import { resumoCalendario } from "@/features/calendario/resumo"
 import type { ItemCalendario, TipoItemCalendario } from "@/features/calendario/types"
 import { useConcluirItem } from "@/features/calendario/use-concluir-item"
 import { plural, somarDias } from "@/features/cronograma/semana"
-import { GRADIENTE_HERO } from "@/features/estatisticas/visual"
 
 type Visao = "mes" | "agenda"
 
@@ -249,49 +250,25 @@ export function CalendarioPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section
-        className="relative overflow-hidden rounded-3xl p-5 text-white sm:p-8"
-        style={{ background: GRADIENTE_HERO }}
+      <HeroPagina
+        rotulo="Seu calendário"
+        titulo={resumo.titulo}
+        texto={resumo.texto}
+        carregando={janelaQuery.isLoading}
       >
-        <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute -bottom-16 right-28 size-40 rounded-full bg-white/10" />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="max-w-md">
-            <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-              Seu calendário
+        {proximaProva && proxima && (
+          <PainelHero
+            grande
+            rotulo="Próxima prova"
+            valor={proxima.dias}
+            unidade={proxima.dias === 1 ? "dia" : "dias"}
+          >
+            <p className="mt-2 truncate text-sm text-white/85">
+              {proxima.nome} · {dataCurta(proximaProva.data)}
             </p>
-            {janelaQuery.isLoading ? (
-              <>
-                <Skeleton className="mt-2 h-8 w-64 bg-white/20" />
-                <Skeleton className="mt-3 h-4 w-80 max-w-full bg-white/20" />
-              </>
-            ) : (
-              <>
-                <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">{resumo.titulo}</h1>
-                <p className="mt-2 text-sm text-white/85">{resumo.texto}</p>
-              </>
-            )}
-          </div>
-
-          {proximaProva && proxima && (
-            <div className="w-full rounded-2xl bg-black/20 p-5 backdrop-blur-sm sm:w-64">
-              <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-                Próxima prova
-              </p>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-5xl font-semibold leading-none tabular-nums">
-                  {proxima.dias}
-                </span>
-                <span className="text-sm text-white/70">{proxima.dias === 1 ? "dia" : "dias"}</span>
-              </div>
-              <p className="mt-2 truncate text-sm text-white/85">
-                {proxima.nome} · {dataCurta(proximaProva.data)}
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
+          </PainelHero>
+        )}
+      </HeroPagina>
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -327,23 +304,16 @@ export function CalendarioPage() {
                 Hoje
               </Button>
             )}
-            <div className="flex gap-1 rounded-full bg-muted p-1">
-              {(["mes", "agenda"] as const).map((opcao) => (
-                <button
-                  key={opcao}
-                  type="button"
-                  aria-pressed={visao === opcao}
-                  onClick={() => setVisao(opcao)}
-                  className={`cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    visao === opcao
-                      ? "bg-emerald-500 text-white"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {opcao === "mes" ? "Mês" : "Agenda"}
-                </button>
-              ))}
-            </div>
+            <Abas<Visao>
+              compacto
+              rotuloGrupo="Visão do calendário"
+              valor={visao}
+              aoMudar={setVisao}
+              opcoes={[
+                { id: "mes", rotulo: "Mês" },
+                { id: "agenda", rotulo: "Agenda" },
+              ]}
+            />
             <Button
               size="sm"
               onClick={() =>
@@ -366,7 +336,7 @@ export function CalendarioPage() {
                 type="button"
                 aria-pressed={ativa}
                 onClick={() => alternarCamada(tipo)}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   ativa
                     ? "border-border"
                     : "border-transparent bg-muted text-muted-foreground opacity-60"
@@ -408,7 +378,7 @@ export function CalendarioPage() {
                     aria-current={ehHoje ? "date" : undefined}
                     aria-label={`${dataLonga(iso)}, ${plural(itens.length, "item", "itens")}`}
                     onClick={() => selecionarDia(dia)}
-                    className={`flex min-h-[4.5rem] cursor-pointer flex-col items-stretch gap-1 p-1 text-left transition-colors sm:min-h-24 ${
+                    className={`flex min-h-[4.5rem] cursor-pointer flex-col items-stretch gap-1 p-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-24 ${
                       selecionado
                         ? "bg-emerald-50 dark:bg-emerald-950/40"
                         : "bg-card hover:bg-accent"

@@ -14,6 +14,7 @@ import { CartaoNumero } from "@/components/shared/CartaoNumero"
 import { GraficoEvolucao } from "@/components/shared/GraficoEvolucao"
 import { GraficoRosca } from "@/components/shared/GraficoRosca"
 import { Carregando, SkeletonGrafico, SkeletonMetricas } from "@/components/shared/Skeletons"
+import { HeroPagina } from "@/components/shared/HeroPagina"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { obterDashboard } from "@/features/dashboard/api/dashboard-api"
@@ -29,7 +30,7 @@ import {
   mensagemMotivacional,
   type ProgressoTrilha,
 } from "@/features/estatisticas/motivacao"
-import { ESMERALDA, GRADIENTE_HERO } from "@/features/estatisticas/visual"
+import { ESMERALDA } from "@/features/estatisticas/visual"
 
 const CORES_CLASSIFICACAO: Record<string, string> = {
   excelente: "bg-status-excelente text-white",
@@ -137,33 +138,17 @@ export function EstatisticasPage() {
     <div className="flex flex-col gap-10">
       <h1 className="sr-only">Estatísticas</h1>
 
-      <section
-        className="relative overflow-hidden rounded-3xl p-5 text-white sm:p-8"
-        style={{ background: GRADIENTE_HERO }}
-      >
-        <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute -bottom-16 right-28 size-40 rounded-full bg-white/10" />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="max-w-md">
-            <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-              Sua jornada
+      <HeroPagina nivelTitulo={2} rotulo="Sua jornada" titulo={mensagem.titulo} texto={mensagem.texto}>
+        <div className="flex items-center gap-3 rounded-2xl bg-black/20 px-5 py-4">
+          <Flame aria-hidden className="size-8" />
+          <div>
+            <p className="text-2xl font-semibold leading-none tabular-nums">{sequencia}</p>
+            <p className="mt-1 text-xs text-white/80">
+              {sequencia === 1 ? "dia seguido" : "dias seguidos"}
             </p>
-            <h2 className="mt-1 text-2xl font-semibold sm:text-3xl">{mensagem.titulo}</h2>
-            <p className="mt-2 text-sm text-white/85">{mensagem.texto}</p>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-2xl bg-black/20 px-5 py-4 backdrop-blur-sm">
-            <Flame className="size-8" />
-            <div>
-              <p className="text-2xl font-semibold leading-none tabular-nums">{sequencia}</p>
-              <p className="mt-1 text-xs text-white/80">
-                {sequencia === 1 ? "dia seguido" : "dias seguidos"}
-              </p>
-            </div>
           </div>
         </div>
-      </section>
+      </HeroPagina>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <CartaoNumero
@@ -261,20 +246,21 @@ export function EstatisticasPage() {
           <h2 className="mb-4 text-lg font-semibold">Comparação entre provas</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">Comparação entre as suas provas</caption>
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">
-                  <th className="pb-2 pr-4">Prova</th>
-                  <th className="pb-2 pr-4">Conteúdos</th>
-                  <th className="pb-2 pr-4">Revisões em dia</th>
-                  <th className="pb-2 pr-4">Horas</th>
-                  <th className="pb-2 pr-4">Sessões</th>
-                  <th className="pb-2">Índice</th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">Prova</th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">Conteúdos</th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">Revisões em dia</th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">Horas</th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">Sessões</th>
+                  <th scope="col" className="pb-2 font-medium">Índice</th>
                 </tr>
               </thead>
               <tbody>
                 {comparacao.map((prova) => (
                   <tr key={prova.prova_id} className="border-b border-border last:border-0">
-                    <td className="py-2 pr-4 font-medium">{prova.nome}</td>
+                    <th scope="row" className="py-2 pr-4 text-left font-medium">{prova.nome}</th>
                     <td className="py-2 pr-4">{formatarPercentual(prova.cobertura_conteudo)}</td>
                     <td className="py-2 pr-4">{formatarPercentual(prova.taxa_revisoes_em_dia)}</td>
                     <td className="py-2 pr-4">{prova.total_horas_estudadas}h</td>

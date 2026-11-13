@@ -1,11 +1,12 @@
 import { type FormEvent, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, BarChart3, BookOpen, FileText, Pencil, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, BarChart3, BookOpen, FileText, Pencil, Play, Plus, Trash2 } from "lucide-react"
 
 import { EstadoVazio } from "@/components/shared/EstadoVazio"
 import { CheckboxConcluido, ProgressoDisciplina } from "@/components/shared/Progresso"
 import { Carregando, SkeletonCards } from "@/components/shared/Skeletons"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,11 @@ import {
 } from "@/features/disciplinas/api/disciplinas-api"
 import { obterProva } from "@/features/provas/api/provas-api"
 import {
+  ROTULO_PRIORIDADE,
+  textoDiasRestantes,
+  variantePrioridade,
+} from "@/features/provas/apresentacao"
+import {
   atualizarTopico,
   criarTopico,
   deletarTopico,
@@ -25,6 +31,15 @@ import {
 } from "@/features/topicos/api/topicos-api"
 import { useConcluirTopico } from "@/features/topicos/use-concluir-topico"
 import { notificar } from "@/lib/toast"
+
+const ROTULO_TIPO: Record<string, string> = {
+  enem: "ENEM",
+  vestibular: "Vestibular",
+  concurso: "Concurso",
+}
+
+const CLASSE_BOTAO_CARTAO =
+  "min-w-0 flex-1 cursor-pointer truncate text-left outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
 
 export function ProvaDetalhePage() {
   const navigate = useNavigate()
@@ -230,12 +245,21 @@ export function ProvaDetalhePage() {
     )
   }
 
+  const naVisaoDeConteudos = disciplinaSelecionadaId !== null
+  const dadosDaProva = [
+    ROTULO_TIPO[prova.tipo] ?? prova.tipo,
+    prova.instituicao_banca,
+    prova.cargo,
+  ]
+    .filter(Boolean)
+    .join(", ")
+
   return (
     <div className="flex flex-col gap-6">
       {/* Cabeçalho */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          {disciplinaSelecionadaId !== null ? (
+          {naVisaoDeConteudos ? (
             <button
               type="button"
               onClick={() => {
@@ -248,15 +272,43 @@ export function ProvaDetalhePage() {
               <span className="truncate">{prova.nome}</span>
             </button>
           ) : (
-            <p className="text-sm text-muted-foreground">Prova</p>
+            <Link
+              to="/provas"
+              className="flex min-h-10 w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" />
+              Minhas provas
+            </Link>
           )}
 
           <h1 className="break-words text-xl font-semibold sm:text-2xl">
-            {disciplinaSelecionadaId !== null ? disciplinaSelecionada?.nome : prova.nome}
+            {naVisaoDeConteudos ? disciplinaSelecionada?.nome : prova.nome}
           </h1>
+
+          {!naVisaoDeConteudos && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              {dadosDaProva && <span>{dadosDaProva}</span>}
+              <span>{textoDiasRestantes(prova.dias_restantes ?? null)}</span>
+              <Badge variant={variantePrioridade(prova.prioridade)}>
+                <span className="sr-only">Prioridade </span>
+                {ROTULO_PRIORIDADE[prova.prioridade] ?? prova.prioridade}
+              </Badge>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {naVisaoDeConteudos && (
+            <Button className="min-h-10 sm:min-h-0" asChild>
+              <Link
+                to={`/sessoes?prova_id=${provaId}&disciplina_id=${disciplinaSelecionadaId}`}
+              >
+                <Play className="size-4" />
+                Estudar esta matéria
+              </Link>
+            </Button>
+          )}
+
           <Button variant="outline" className="min-h-10 sm:min-h-0" asChild>
             <Link to={`/provas/${provaId}/estatisticas`}>
               <BarChart3 className="size-4" />
@@ -274,7 +326,7 @@ export function ProvaDetalhePage() {
       </div>
 
       {/* Barra de progresso na visão de conteúdos */}
-      {disciplinaSelecionadaId !== null && disciplinaComProgressoAtualizado && (
+      {naVisaoDeConteudos && disciplinaComProgressoAtualizado && (
         <Card className="p-4">
           <ProgressoDisciplina disciplina={disciplinaComProgressoAtualizado} />
         </Card>
@@ -322,13 +374,11 @@ export function ProvaDetalhePage() {
           )}
 
           {disciplinas?.map((disciplina) => (
+            // O nome é um botão esticado sobre o card: o card inteiro abre a matéria,
+            // com foco de teclado, e renomear/excluir ficam acima (z-10)
             <Card
               key={disciplina.id}
-              className="cursor-pointer transition-colors hover:border-primary"
-              onClick={() => {
-                setDisciplinaSelecionadaId(disciplina.id)
-                setNovoNome("")
-              }}
+              className="relative transition-colors hover:border-primary"
             >
               <CardHeader>
                 <div className="flex items-center justify-between gap-2">
@@ -337,29 +387,34 @@ export function ProvaDetalhePage() {
                       autoFocus
                       value={nomeDisciplinaEditado}
                       onChange={(e) => setNomeDisciplinaEditado(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
                       onBlur={() => handleSalvarDisciplina(disciplina)}
                       onKeyDown={(e) => e.key === "Enter" && handleSalvarDisciplina(disciplina)}
-                      className="h-9 min-w-0 flex-1 text-base sm:h-7 sm:text-sm"
+                      className="relative z-10 h-9 min-w-0 flex-1 text-base sm:h-7 sm:text-sm"
                     />
                   ) : (
-                    <CardTitle
-                      className="min-w-0 flex-1 truncate text-base"
-                      title={disciplina.nome}
-                    >
-                      {disciplina.nome}
+                    <CardTitle className="min-w-0 flex-1 text-base">
+                      <button
+                        type="button"
+                        title={disciplina.nome}
+                        className={CLASSE_BOTAO_CARTAO}
+                        onClick={() => {
+                          setDisciplinaSelecionadaId(disciplina.id)
+                          setNovoNome("")
+                        }}
+                      >
+                        {disciplina.nome}
+                      </button>
                     </CardTitle>
                   )}
 
-                  <div className="flex shrink-0 items-center">
+                  <div className="relative z-10 flex shrink-0 items-center">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="size-10 sm:size-8"
                       aria-label={`Renomear ${disciplina.nome}`}
                       title="Renomear"
-                      onClick={(event) => {
-                        event.stopPropagation()
+                      onClick={() => {
                         setEditandoDisciplinaId(disciplina.id)
                         setNomeDisciplinaEditado(disciplina.nome)
                       }}
@@ -372,10 +427,7 @@ export function ProvaDetalhePage() {
                       className="size-10 sm:size-8"
                       aria-label={`Excluir ${disciplina.nome}`}
                       title="Excluir"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        handleExcluirDisciplina(disciplina.id)
-                      }}
+                      onClick={() => handleExcluirDisciplina(disciplina.id)}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -390,84 +442,86 @@ export function ProvaDetalhePage() {
           ))}
         </div>
       ) : (
-        /* Lista de conteúdos */
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        /* Lista de conteúdos: muitos itens curtos leem melhor numa lista só do que em cards */
+        <>
           {topicos?.length === 0 && (
             <EstadoVazio
               compacto
-              className="col-span-full"
               icone={FileText}
               titulo="Nenhum conteúdo nesta matéria"
               descricao="Adicione o primeiro no campo acima. Cada conteúdo ganha uma anotação própria e uma caixa para marcar como concluído."
             />
           )}
 
-          {topicos?.map((topico) => (
-            <Card
-              key={topico.id}
-              className="cursor-pointer transition-colors hover:border-primary"
-              onClick={() => navigate(`/topicos/${topico.id}/anotacao`)}
-            >
-              <CardContent className="flex items-center justify-between gap-2 py-4">
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <CheckboxConcluido
-                    checked={topico.concluido}
-                    rotulo={`Marcar "${topico.nome}" como concluído`}
-                    onChange={(concluido) =>
-                      concluirTopico.mutate({ topicoId: topico.id, concluido })
-                    }
-                  />
+          {topicos && topicos.length > 0 && (
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+              {topicos.map((topico) => (
+                <li
+                  key={topico.id}
+                  className="relative flex items-center gap-2 px-3 transition-colors hover:bg-accent/50"
+                >
+                  <div className="relative z-10 flex shrink-0 items-center">
+                    <CheckboxConcluido
+                      checked={topico.concluido}
+                      rotulo={`Marcar "${topico.nome}" como concluído`}
+                      onChange={(concluido) =>
+                        concluirTopico.mutate({ topicoId: topico.id, concluido })
+                      }
+                    />
+                  </div>
 
                   {editandoTopicoId === topico.id ? (
                     <Input
                       autoFocus
                       value={nomeTopicoEditado}
                       onChange={(e) => setNomeTopicoEditado(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
                       onBlur={() => handleSalvarTopico(topico)}
                       onKeyDown={(e) => e.key === "Enter" && handleSalvarTopico(topico)}
-                      className="h-9 min-w-0 flex-1 text-base sm:h-7 sm:text-sm"
+                      className="relative z-10 my-2 h-9 min-w-0 flex-1 text-base sm:h-7 sm:text-sm"
                     />
                   ) : (
-                    <span className="min-w-0 flex-1 truncate" title={topico.nome}>
+                    <button
+                      type="button"
+                      title={topico.nome}
+                      className={`${CLASSE_BOTAO_CARTAO} py-4 after:rounded-none ${
+                        topico.concluido ? "text-muted-foreground" : ""
+                      }`}
+                      onClick={() => navigate(`/topicos/${topico.id}/anotacao`)}
+                    >
                       {topico.nome}
-                    </span>
+                    </button>
                   )}
-                </div>
 
-                <div className="flex shrink-0 items-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-10 sm:size-8"
-                    aria-label={`Renomear ${topico.nome}`}
-                    title="Renomear"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditandoTopicoId(topico.id)
-                      setNomeTopicoEditado(topico.nome)
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-10 sm:size-8"
-                    aria-label={`Excluir ${topico.nome}`}
-                    title="Excluir"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleExcluirTopico(topico.id)
-                    }}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="relative z-10 flex shrink-0 items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-10 sm:size-8"
+                      aria-label={`Renomear ${topico.nome}`}
+                      title="Renomear"
+                      onClick={() => {
+                        setEditandoTopicoId(topico.id)
+                        setNomeTopicoEditado(topico.nome)
+                      }}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-10 sm:size-8"
+                      aria-label={`Excluir ${topico.nome}`}
+                      title="Excluir"
+                      onClick={() => handleExcluirTopico(topico.id)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
   )

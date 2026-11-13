@@ -13,6 +13,7 @@ import {
 
 import { FormularioAtividade } from "@/components/cronograma/FormularioAtividade"
 import { EstadoVazio } from "@/components/shared/EstadoVazio"
+import { HeroPagina, PainelHero } from "@/components/shared/HeroPagina"
 import { Carregando } from "@/components/shared/Skeletons"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -33,7 +34,6 @@ import {
 import type { OcorrenciaCronograma } from "@/features/cronograma/types"
 import { useConcluirAtividade } from "@/features/cronograma/use-concluir-atividade"
 import { ICONES_TIPO, corDaAtividade } from "@/features/cronograma/visual"
-import { GRADIENTE_HERO } from "@/features/estatisticas/visual"
 
 interface EstadoFormulario {
   atividade: OcorrenciaCronograma | null
@@ -74,7 +74,7 @@ function LinhaAtividade({ atividade, futura, aoEditar, aoAlternar, aoIniciar }: 
         type="button"
         onClick={aoEditar}
         title="Editar atividade"
-        className="min-w-0 flex-1 cursor-pointer text-left"
+        className="min-w-0 flex-1 cursor-pointer rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <p
           className={`truncate text-sm font-medium ${
@@ -92,7 +92,7 @@ function LinhaAtividade({ atividade, futura, aoEditar, aoAlternar, aoIniciar }: 
           onClick={aoIniciar}
           aria-label={`Iniciar sessão de ${atividade.titulo}`}
           title="Iniciar sessão de estudos"
-          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-emerald-500"
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Play className="size-4" />
         </button>
@@ -109,7 +109,7 @@ function LinhaAtividade({ atividade, futura, aoEditar, aoAlternar, aoIniciar }: 
             : `Marcar ${atividade.titulo} como concluída`
         }
         title={futura ? "Disponível a partir do dia da atividade" : undefined}
-        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         {atividade.concluido ? (
           <CheckCircle2 className="size-5 text-emerald-500" />
@@ -167,59 +167,21 @@ export function CronogramaPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section
-        className="relative overflow-hidden rounded-3xl p-5 text-white sm:p-8"
-        style={{ background: GRADIENTE_HERO }}
+      <HeroPagina
+        rotulo="Seu cronograma"
+        titulo={resumo.titulo}
+        texto={resumo.texto}
+        carregando={isLoading}
       >
-        <div className="pointer-events-none absolute -right-10 -top-10 size-56 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute -bottom-16 right-28 size-40 rounded-full bg-white/10" />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="max-w-md">
-            <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-              Seu cronograma
-            </p>
-            {isLoading ? (
-              <>
-                <Skeleton className="mt-2 h-8 w-64 bg-white/20" />
-                <Skeleton className="mt-3 h-4 w-80 max-w-full bg-white/20" />
-              </>
-            ) : (
-              <>
-                <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">{resumo.titulo}</h1>
-                <p className="mt-2 text-sm text-white/85">{resumo.texto}</p>
-              </>
-            )}
-          </div>
-
-          {total > 0 && (
-            <div className="w-full rounded-2xl bg-black/20 p-5 backdrop-blur-sm sm:w-64">
-              <p className="text-xs font-medium uppercase tracking-widest text-white/70">
-                Progresso da semana
-              </p>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-4xl font-semibold leading-none tabular-nums">
-                  {concluidas}
-                </span>
-                <span className="text-sm text-white/70">de {total}</span>
-              </div>
-              <div
-                role="progressbar"
-                aria-valuenow={percentual}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Progresso da semana"
-                className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"
-              >
-                <div
-                  className="h-full rounded-full bg-white transition-all duration-700"
-                  style={{ width: `${percentual}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+        {total > 0 && (
+          <PainelHero
+            rotulo="Progresso da semana"
+            valor={concluidas}
+            unidade={`de ${total}`}
+            progresso={{ percentual, rotulo: "Progresso da semana" }}
+          />
+        )}
+      </HeroPagina>
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
@@ -273,7 +235,7 @@ export function CronogramaPage() {
                 aria-pressed={selecionado}
                 aria-label={`${nomeDoDia(dia)}, ${dia.getDate()}, ${plural(atividadesDoDia.length, "atividade", "atividades")}`}
                 onClick={() => setDiaSelecionado(iso)}
-                className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border px-1 py-2 transition-colors sm:py-3 ${
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border px-1 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:py-3 ${
                   selecionado
                     ? "border-emerald-500 bg-emerald-500/10"
                     : "border-border hover:bg-accent"

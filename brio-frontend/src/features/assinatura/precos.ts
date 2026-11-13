@@ -4,7 +4,7 @@ import type { Plano } from "@/features/assinatura/types"
 // (PRECOS em app/application/use_cases/criar_assinatura.py): os dois precisam ser iguais.
 export const PRECOS: Record<Plano, number> = {
   mensal: 12.5,
-  anual: 120,
+  anual: 99.0,
 }
 
 export function formatarReais(valor: number): string {

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
+import { Clock, Loader2 } from "lucide-react"
 
+import { TelaStatus } from "@/components/shared/TelaStatus"
 import { Button } from "@/components/ui/button"
 import { obterMinhaAssinatura } from "@/features/assinatura/api/assinatura-api"
 import { assinaturaEstaValida } from "@/features/assinatura/regras"
@@ -32,23 +34,27 @@ export function AssinaturaRetornoPage() {
     return () => clearTimeout(timeout)
   }, [tentativas, confirmado, navigate, queryClient])
 
+  if (tentativas < MAX_TENTATIVAS) {
+    return (
+      <TelaStatus
+        icone={Loader2}
+        girando
+        titulo="Confirmando seu pagamento..."
+        texto="Isso pode levar alguns segundos. Pode deixar esta página aberta."
+      />
+    )
+  }
+
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 text-center">
-      {tentativas < MAX_TENTATIVAS ? (
-        <>
-          <p className="text-muted-foreground">Confirmando seu pagamento...</p>
-          <p className="text-xs text-muted-foreground">Isso pode levar alguns segundos.</p>
-        </>
-      ) : (
-        <>
-          <p className="text-muted-foreground">
-            Ainda estamos processando seu pagamento. Isso pode levar mais alguns minutos.
-          </p>
-          <Button variant="outline" onClick={() => setTentativas(0)}>
-            Verificar novamente
-          </Button>
-        </>
-      )}
-    </div>
+    <TelaStatus
+      icone={Clock}
+      titulo="Ainda estamos processando seu pagamento"
+      texto="Isso pode levar mais alguns minutos. Se você já pagou, seu acesso será liberado assim que o pagamento for confirmado."
+    >
+      <Button onClick={() => setTentativas(0)}>Verificar novamente</Button>
+      <Button variant="outline" asChild>
+        <Link to="/conta">Ver minha assinatura</Link>
+      </Button>
+    </TelaStatus>
   )
 }
