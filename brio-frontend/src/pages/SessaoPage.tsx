@@ -249,7 +249,8 @@ export function SessaoPage() {
   // ==========================================
   if (sessaoAtiva) {
     return (
-      <div className="relative">
+      // pt-*: a barra global do cronômetro fica logo acima da página, então o conteúdo precisa de respiro
+      <div className="relative pt-5 sm:pt-7">
         <Sheet open={menuAberto} onOpenChange={setMenuAberto}>
           <SheetContent side="left" className="w-80 max-w-[90vw] overflow-y-auto">
             <SheetHeader>

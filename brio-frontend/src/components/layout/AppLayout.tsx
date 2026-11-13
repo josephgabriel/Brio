@@ -360,17 +360,17 @@ export function AppLayout() {
           </div>
         )}
 
-        {sessaoAtiva && (
-          <Link
-            to="/sessoes"
-            className="ml-auto flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm text-primary"
-          >
-            <Timer aria-hidden className="size-4" />
-            <span className="font-mono tabular-nums">{pomodoro.tempoFormatado}</span>
-            {pomodoro.pausado && <span className="text-xs">pausado</span>}
-            <span className="sr-only">Sessão em andamento, voltar</span>
-          </Link>
-        )}
+        {mostrarCronometro && (
+  <Link
+    to="/sessoes"
+    className="mb-4 ml-auto hidden w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm text-primary md:flex"
+  >
+    <Timer aria-hidden className="size-4" />
+    <span className="font-mono tabular-nums">{pomodoro.tempoFormatado}</span>
+    {pomodoro.pausado && <span className="text-xs">pausado</span>}
+    <span className="sr-only">Sessão em andamento, voltar</span>
+  </Link>
+)}
         
  <AvisoTempoAusente />
         <Outlet />
